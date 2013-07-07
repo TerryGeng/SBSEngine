@@ -11,15 +11,19 @@ Class Grammar
     End Structure
 
     Public Name As String
-    Public Sequences() As GrammarSequence ' A sentence rule only have one Sequence, but a element can have more.
+    Public Sequences As New ArrayList() ' A sentence rule only have one Sequence, but a element can have more.
 
     Public Sub New(ByVal mname As String, ByVal text As String)
         Dim element() As String
+        Dim separater() As String = {"|||"}
         Name = mname
-        element = text.Split("|||")
+        element = text.Split(separater, StringSplitOptions.RemoveEmptyEntries)
 
         For i As Integer = 0 To UBound(element)
-            Sequences(i).Element = element(i).Split("+++")
+            Dim mSequences As New GrammarSequence
+            Dim mseparater() As String = {"+++"}
+            mSequences.Element = element(i).Split(mseparater, StringSplitOptions.RemoveEmptyEntries)
+            Sequences.Add(mSequences)
         Next
     End Sub
 

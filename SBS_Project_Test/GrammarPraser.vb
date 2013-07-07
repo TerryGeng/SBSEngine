@@ -6,28 +6,62 @@
 ' XVG Planning branch 2013.7
 
 Class GrammarPraser
+    Const Version As Double = 0.1
+
+    Declare Function GetTickCount Lib "kernel32" () As Long
+
     Dim SentenceRules As New ArrayList()
     Dim ElementRules As New ArrayList()
 
     Dim LastMatchPosition As Integer = 0
-    Dim CurrentLineNum As Integer = 0
+    Dim CurrentLineNum As Integer = 1
 
     Public Sub New()
-        ElementRules.Add(New Grammar("CONSTANT", "'a'|||'b'|||'b'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'m'|||'l'|||'n'"))
+        Debug_Output("SBS Grammar Praser - version " + CStr(Version))
+        Debug_Output("-----------------")
+        ElementRules.Add(New Grammar("CONSTANT", "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'m'|||'l'|||'n'"))
 
         SentenceRules.Add(New Grammar("FUNC_CALL", "*CONSTANT+++'('+++*CONSTANT+++')'"))
         SentenceRules.Add(New Grammar("VAR_DEF", "'$'+++*CONSTANT+++'='+++*CONSTANT"))
+
+        Debug_Output("Rules Loaded (ElementR " + CStr(ElementRules.Count) + ", SentenceR " + CStr(SentenceRules.Count) + ")")
+        Debug_Output("")
     End Sub
 
     Public Function PraseCode(ByRef code As String)
+        Dim start_time As Long = GetTickCount()
+        Debug_Output("Prase start at " + CStr(start_time) + ".")
+
+        If code.Length = 0 Then
+            Return Nothing
+        End If
+
+        Dim sentence_list As New ArrayList()
+        Dim mSentence As New Sentence
+
+        While True
+            mSentence = MatchSentenceOnce(code)
+
+            If mSentence.RuleName <> "" Then
+                sentence_list.Add(mSentence)
+            Else
+                Debug_Output("Prase end at " + CStr(start_time) + ". Total " + CStr(GetTickCount() - start_time) + "ms.")
+
+                Return sentence_list
+            End If
+        End While
+
+        Return Nothing
 
     End Function
 
     Public Function MatchSentenceOnce(ByRef code As String) As Sentence
-        Dim last_char As Char = ""
+        Dim last_char_offset As Integer
+        Dim mSentence As New Sentence
 
         If LastMatchPosition = code.Length Then
-            Return Nothing
+            mSentence.RuleName = ""
+            Return mSentence
         End If
 
         For i As Integer = 0 To SentenceRules.Count - 1
@@ -37,18 +71,20 @@ Class GrammarPraser
 
             words.Add("")
 
-            For j As Integer = 0 To code.Length
+            For j As Integer = 0 To code.Length - 1
                 Dim mChar As Char = code.Substring(j, 1)
+
+                If last_char_offset < j Then
+                    last_char_offset = j
+                End If
 
                 If mChar = vbCrLf Then
                     CurrentLineNum = CurrentLineNum + 1
                     Continue For
                 End If
 
-                Dim word As String
-                Dim element As String = SentenceRules(i).Sequences(0).Element(offset)
-
-                word = words(words.Count - 1) + mChar
+                Dim word As String = words(words.Count - 1) + mChar
+                Dim element As String = SentenceRules(i).Sequences(0).Element(offset) ' TODO
 
                 Dim element_first_char As Char = element.Substring(0, 1)
 
@@ -57,10 +93,18 @@ Class GrammarPraser
                     If CheckCharType(element_name, mChar) Then
                         words(words.Count - 1) = word
                         ' *XXXXX is a set of XXXXXs. If some chars match the XXXXX, then they match *XXXXX.
-                        Continue For ' Read more chars.
+                        If j <> code.Length - 1 Then
+                            Continue For ' Read more chars.
+                        Else
+                            words.Add("")
+                        End If
+
                     ElseIf word.Length = 1 Then
                         Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
-                        'The reason of why there isn't any else: If the last char doesn't match this element, it may be the member of the next element.
+                    Else
+                        words.Add("")
+                        word = ""
+                        j = j - 1 'The reason of this line: If the last char doesn't match this element, it may be the member of the next element.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
                     End If
                 ElseIf element_first_char = "'" Then ' Todo: if there are more chars in a quote
@@ -88,28 +132,36 @@ Class GrammarPraser
                     Exit For
                 Else
                     offset = offset + 1
-                    last_char = mChar
                 End If
             Next
 
             If matched_rule_name <> "" Then
-                Dim sentence As New Sentence
-                sentence.RuleName = matched_rule_name
-                Return sentence
+                mSentence.RuleName = matched_rule_name
+                mSentence.WordsList = words
+                Return mSentence
             End If
         Next
 
-        Debug_Error("Syntax Error: Unexpected '" + last_char + "' on line " + CStr(CurrentLineNum) + ". No rules matched.")
-        Return Nothing
+        Debug_Error("Syntax Error: Unexpected '" + code.Substring(last_char_offset, 1) + "' on line " + CStr(CurrentLineNum) + ":" + CStr(last_char_offset) + ". No rules matched.")
+        mSentence.RuleName = ""
+        Return mSentence
     End Function
 
     Function CheckCharType(ByVal type As String, ByVal mChar As Char) ' Todo: expand to check word type.
         Dim element As Grammar = GetElementRuleByName(type)
         If element IsNot Nothing Then
-            For i As Integer = 0 To UBound(element.Sequences)
-                If mChar = element.Sequences(i).Element(0) Then
-                    Return True
+            For i As Integer = 0 To element.Sequences.Count - 1
+                Dim rule As String = element.Sequences(i).Element(0)
+                If rule.Substring(0, 1) = "'" Then
+                    If mChar = rule.Substring(1, 1) Then
+                        Return True
+                    End If
+                Else
+                    If CheckCharType(rule, mChar) Then
+                        Return True
+                    End If
                 End If
+                
             Next
         End If
 
@@ -127,8 +179,12 @@ Class GrammarPraser
         Return Nothing
     End Function
 
-    Sub Debug_Error(ByVal error_msg As String)
-        Form1.DebugText.AppendText(error_msg)
+    Sub Debug_Output(ByVal msg As String)
+        Form1.DebugText.AppendText(msg + vbCrLf)
+    End Sub
+
+    Sub Debug_Error(ByVal msg As String)
+        Debug_Output(msg + vbCrLf)
     End Sub
 
 End Class
