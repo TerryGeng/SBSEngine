@@ -3,7 +3,7 @@
 ' This file is a part of SBS
 ' project.
 ' =========================
-' XVG Planning branch 2013.7
+' XVG Developing Branch 2013.7
 
 Class GrammarPraser
     Const Version As Double = 0.1
@@ -17,14 +17,24 @@ Class GrammarPraser
     Dim CurrentLineNum As Integer = 1
 
     Public Sub New()
-        Debug_Output("SBS Grammar Praser - version " + CStr(Version))
+        Dim start_time As Long = GetTickCount()
+        Debug_Output("SBS Grammar Praser - Version " + CStr(Version) + " - Time " + CStr(start_time))
         Debug_Output("-----------------")
-        ElementRules.Add(New Grammar("CONSTANT", "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'m'|||'l'|||'n'"))
+        ElementRules.Add(New Grammar("CONST_NUM", "'0'|||'1'|||'2'|||'3'|||'4'|||'5'|||'6'|||'7'|||'8'|||'9'"))
+        ElementRules.Add(New Grammar("CONST_ALP", _
+                                     "'A'|||'B'|||'C'|||'D'|||'E'|||'F'|||'G'|||'H'|||'I'|||'J'|||" & _
+                                     "'K'|||'L'|||'M'|||'N'|||'O'|||'P'|||'Q'|||'R'|||'S'|||'T'|||'U'|||'V'|||" & _
+                                     "'W'|||'X'|||'Y'|||'Z'" & _
+                                     "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'l'|||" & _
+                                     "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
+                                     "'y'|||'z'"))
+        ElementRules.Add(New Grammar("CONSTANT", "CONST_NUM|||CONST_ALP"))
 
         SentenceRules.Add(New Grammar("FUNC_CALL", "*CONSTANT+++'('+++*CONSTANT+++')'"))
         SentenceRules.Add(New Grammar("VAR_DEF", "'$'+++*CONSTANT+++'='+++*CONSTANT"))
 
         Debug_Output("Rules Loaded (ElementR " + CStr(ElementRules.Count) + ", SentenceR " + CStr(SentenceRules.Count) + ")")
+        Debug_Output("Total Time: " + CStr(GetTickCount() - start_time))
         Debug_Output("")
     End Sub
 
@@ -47,9 +57,15 @@ Class GrammarPraser
             Else
                 Debug_Output("Prase end at " + CStr(start_time) + ". Total " + CStr(GetTickCount() - start_time) + "ms.")
 
+                LastMatchPosition = 0
+                CurrentLineNum = 1
+
                 Return sentence_list
             End If
         End While
+
+        LastMatchPosition = 0
+        CurrentLineNum = 1
 
         Return Nothing
 
@@ -57,6 +73,7 @@ Class GrammarPraser
 
     Public Function MatchSentenceOnce(ByRef code As String) As Sentence
         Dim last_char_offset As Integer
+        Dim original_line_num As Integer = CurrentLineNum
         Dim mSentence As New Sentence
 
         If LastMatchPosition = code.Length Then
@@ -68,19 +85,23 @@ Class GrammarPraser
             Dim offset As Integer = 0 ' Which element we are matching
             Dim words As New ArrayList() ' A word list for a sentence to store
             Dim matched_rule_name As String = ""
+            Dim line_offset As Integer = 0
 
             words.Add("")
 
-            For j As Integer = 0 To code.Length - 1
-                Dim mChar As Char = code.Substring(j, 1)
+            For j As Integer = LastMatchPosition To code.Length - 1
+                Dim mChar As Char = GetChar(code, j)
 
                 If last_char_offset < j Then
                     last_char_offset = j
                 End If
 
-                If mChar = vbCrLf Then
-                    CurrentLineNum = CurrentLineNum + 1
-                    Continue For
+                If mChar = vbCr Then
+                    line_offset = line_offset + 1
+
+                    If CurrentLineNum < original_line_num + line_offset Then
+                        CurrentLineNum = original_line_num + line_offset
+                    End If
                 End If
 
                 Dim word As String = words(words.Count - 1) + mChar
@@ -131,18 +152,19 @@ Class GrammarPraser
                     LastMatchPosition = j + 1
                     Exit For
                 Else
-                    offset = offset + 1
+                offset = offset + 1
                 End If
             Next
 
             If matched_rule_name <> "" Then
                 mSentence.RuleName = matched_rule_name
                 mSentence.WordsList = words
+
                 Return mSentence
             End If
         Next
 
-        Debug_Error("Syntax Error: Unexpected '" + code.Substring(last_char_offset, 1) + "' on line " + CStr(CurrentLineNum) + ":" + CStr(last_char_offset) + ". No rules matched.")
+        Debug_Error("Syntax Error: Unexpected '" + code.Substring(last_char_offset, 1) + "' on line " + CStr(CurrentLineNum) + ". No rules matched.")
         mSentence.RuleName = ""
         Return mSentence
     End Function
@@ -177,6 +199,10 @@ Class GrammarPraser
 
         Debug_Error("Rules Error: Unknow rule '" + name + "'.")
         Return Nothing
+    End Function
+
+    Function GetChar(ByRef str As String, ByVal offset As Integer)
+        Return str.Substring(offset, 1)
     End Function
 
     Sub Debug_Output(ByVal msg As String)
