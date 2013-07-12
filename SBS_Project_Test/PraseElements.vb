@@ -3,12 +3,13 @@
 ' This file is a part of SBS
 ' project.
 ' =========================
-' XVG Planning branch 2013.7
+' XVG Developing branch 2013.7
+
+Structure GrammarSequence
+    Dim Element() As String ' A word only have one element, but a sentence can have more.
+End Structure
 
 Class Grammar
-    Structure GrammarSequence
-        Dim Element() As String ' A word only have one element, but a sentence can have more.
-    End Structure
 
     Public Name As String
     Public Sequences As New ArrayList() ' A sentence rule only have one Sequence, but a element can have more.
@@ -26,12 +27,29 @@ Class Grammar
             Sequences.Add(mSequences)
         Next
     End Sub
-
-
 End Class
 
-Structure Sentence
-    Dim RuleName As String
-    Dim WordsList As ArrayList
-End Structure
+Class CodeSequence
+    Public Type As String = "Index"
+    Public RuleName As String = ""
+    Public WordsList As ArrayList
+    Public Value As String
+
+    Sub New(ByVal name As String, ByRef words As ArrayList)
+        Type = "Index"
+        RuleName = name
+        WordsList = words
+    End Sub
+
+    Sub New(ByVal name As String, ByVal val As String)
+        Type = "Value"
+        Value = val
+        RuleName = name
+        WordsList = Nothing
+    End Sub
+
+    Function GetSeqType()
+        Return Type
+    End Function
+End Class
 
