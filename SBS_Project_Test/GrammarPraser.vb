@@ -12,8 +12,6 @@ Class GrammarPraser
 
     Dim Rules As New ArrayList()
 
-    Dim LastMatchPosition As New CodeReaderPosStatus
-
     Public Sub New()
         Dim start_time As Long = GetTickCount()
         Debug_Output("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
@@ -21,7 +19,7 @@ Class GrammarPraser
 
         Rules.Add(New Grammar("ENTRANCE", "EXPRESSION"))
 
-        Rules.Add(New Grammar("CONST_NUM", "'0'|||'1'|||'2'|||'3'|||'4'|||'5'|||'6'|||'7'|||'8'|||'9'"))
+        Rules.Add(New Grammar("CONST_NUM", "'0'|||'1'")) '|||'2'|||'3'|||'4'|||'5'|||'6'|||'7'|||'8'|||'9'"))
         Rules.Add(New Grammar("CONST_ALP", _
                                      "'A'|||'B'|||'C'|||'D'|||'E'|||'F'|||'G'|||'H'|||'I'|||'J'|||" & _
                                      "'K'|||'L'|||'M'|||'N'|||'O'|||'P'|||'Q'|||'R'|||'S'|||'T'|||'U'|||'V'|||" & _
@@ -29,13 +27,13 @@ Class GrammarPraser
                                      "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'l'|||" & _
                                      "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
                                      "'y'|||'z'"))
-        Rules.Add(New Grammar("CONST_LF", vbLf))
+        Rules.Add(New Grammar("CONST_LF", "'" + vbLf + "'"))
         Rules.Add(New Grammar("CONSTANT", "CONST_NUM|||CONST_ALP"))
         Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'|||'>'|||'<'|||'<='|||'>='"))
 
         Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++CONST_LF|||EXP_ELEMENT+++*EXP_OP_ELEMENT+++CONST_LF"))
         Rules.Add(New Grammar("EXP_ELEMENT", "*CONST_NUM|||VARIABLE"))
-        Rules.Add(New Grammar("EXP_OP_ELEMENT", "ELE_OP+++EXPRESSION"))
+        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT"))
 
         Rules.Add(New Grammar("FUNC_CALL", "*CONSTANT+++'('+++*CONSTANT+++')'"))
         Rules.Add(New Grammar("VARIABLE", "'$'+++*CONSTANT"))
@@ -59,23 +57,26 @@ Class GrammarPraser
         Dim sentence_list As New ArrayList()
         Dim mSentence As CodeSequence
 
+        Dim is_error As Boolean = False
+
         While code_reader.IsEOF() <> True
             mSentence = MatchGrammarRule("ENTRANCE", code_reader)
 
-            If mSentence.RuleName <> "" Then
+            If mSentence IsNot Nothing Then
                 sentence_list.Add(mSentence)
             Else
-                Debug_Output("Prase end at " + CStr(start_time) + ". Total " + CStr(GetTickCount() - start_time) + "ms.")
-
-                LastMatchPosition = New CodeReaderPosStatus
-
-                Return sentence_list
+                Debug_Error("Syntax Error: Unexpected '" + code_reader.GetDeepestChar + "' on line " + CStr(code_reader.GetDeepestLine))
+                is_error = True
+                Exit While
             End If
         End While
 
-        LastMatchPosition = New CodeReaderPosStatus
-
-        Return Nothing
+        Debug_Output("Prase end at " + CStr(start_time) + ". Total " + CStr(GetTickCount() - start_time) + "ms.")
+        If is_error Then
+            Return Nothing
+        Else
+            Return sentence_list
+        End If
 
     End Function
 
@@ -179,6 +180,11 @@ Class GrammarPraser
 
     Function MatchGrammarRule(ByVal rulename As String, ByRef code As CodeReader)
         Dim rule As Grammar = GetRuleByName(rulename)
+
+        If rule Is Nothing Then
+            Return Nothing
+        End If
+
         Dim seq As ArrayList = rule.Sequences
 
         For seq_offset As Integer = 0 To seq.Count - 1
@@ -194,10 +200,8 @@ Class GrammarPraser
 
     Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As CodeReader) As ArrayList
         Dim words As New ArrayList()
-        Dim start_position As CodeReaderPosStatus = LastMatchPosition
+        Dim start_position As Integer = code.GetPosStat().Position
         Dim unmatch As Boolean = False
-
-        words.Add("")
 
         For offset As Integer = 0 To sequence.Element.Count - 1
             Dim ele As String = sequence.Element(offset)
@@ -208,31 +212,31 @@ Class GrammarPraser
                 Dim element_name As String = ele.Substring(1, ele.Length - 1)
 
                 While True
-                    Dim origin_pos As CodeReaderPosStatus = code.GetPosStat()
+                    Dim origin_pos As Integer = code.GetPosStat().Position
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
-                    If matched_element.RuleName <> "" Then
-                        word.Add(matched_element)
+                    If matched_element IsNot Nothing Then
+                        word.Add(matched_element.WordsList)
                         ' *XXXXX is a set of XXXXXs. If some chars match the XXXXX, then they match *XXXXX.
 
                     ElseIf word.Count = 0 Then
                         unmatch = True
                         Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
                     Else
-                        code.SetPosStat(origin_pos)
+                        code.SetPosition(origin_pos)
                         Exit While
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
                     End If
                 End While
 
+                words.Add(New CodeSequence(ele, word))
+
             ElseIf element_first_char = "'" Then
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
                 Dim mChar As Char = ""
                 If expected_str.Length = 1 Then
                     mChar = code.GetNextChar
-                    If mChar = expected_str Then
-                        word.Add(expected_str)
-                    Else
+                    If mChar <> expected_str Then
                         unmatch = True
                         Exit For
                     End If
@@ -249,30 +253,30 @@ Class GrammarPraser
                             Exit For
                         End If
                     Next
-                    If unmatch = False Then
-                        word.Add(New CodeSequence("-KEYWORD-", expected_str))
-                    Else
-                        Exit For
-                    End If
+                End If
+                If unmatch = False Then
+                    word.Add(New CodeSequence("-KEYWORD-", expected_str))
+                Else
+                    Exit For
                 End If
             Else
                 Dim matched_element As CodeSequence = MatchGrammarRule(ele, code)
-                If matched_element.RuleName <> "" Then
+                If matched_element IsNot Nothing Then
                     word.Add(matched_element)
                 Else
                     unmatch = True
                     Exit For
                 End If
-            End If
 
-            words.Add(New CodeSequence(ele, word))
+                words.Add(New CodeSequence(ele, word))
+            End If
 
         Next
 
         If unmatch = False Then
             Return words
         Else
-            code.SetPosStat(start_position)
+            code.SetPosition(start_position)
             Return Nothing
         End If
 
@@ -308,8 +312,8 @@ Class CodeReader
         LoadCode(code)
     End Sub
 
-    Sub LoadCode(ByRef code As String)
-        code = code
+    Sub LoadCode(ByRef mCode As String)
+        Code = mCode
         PosStat.Position = 0
     End Sub
 
@@ -332,7 +336,8 @@ Class CodeReader
         End If
 
         If PosStat.Position > DeepestPos.Position Then
-            DeepestPos = PosStat
+            DeepestPos.Position = PosStat.Position
+            DeepestPos.Lines = PosStat.Lines
         End If
 
         Return mChar
@@ -351,6 +356,10 @@ Class CodeReader
             Return False
         End If
     End Function
+
+    Sub SetPosition(ByVal position As Integer)
+        PosStat.Position = position
+    End Sub
 
     Function IsEOF()
         If PosStat.Position >= Code.Length Then
@@ -375,5 +384,5 @@ End Class
 
 Class CodeReaderPosStatus
     Public Position As Integer = 0
-    Public Lines As Integer = 0
+    Public Lines As Integer = 1
 End Class
