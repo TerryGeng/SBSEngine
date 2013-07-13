@@ -28,7 +28,8 @@ Class GrammarPraser
                                      "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
                                      "'y'|||'z'"))
         Rules.Add(New Grammar("CONST_LF", "'" + vbLf + "'"))
-        Rules.Add(New Grammar("CONSTANT", "CONST_NUM|||CONST_ALP"))
+        'Rules.Add(New Grammar("CONSTANT", "CONST_NUM|||CONST_ALP"))
+        Rules.Add(New Grammar("CONSTANT", "CONST_NUM"))
         Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'|||'>'|||'<'|||'<='|||'>='"))
 
         Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++CONST_LF|||EXP_ELEMENT+++*EXP_OP_ELEMENT+++CONST_LF"))
@@ -80,105 +81,8 @@ Class GrammarPraser
 
     End Function
 
-    'Public Function MatchSentence(ByVal rule_name As String, ByRef code As CodeReader)
-    '    Dim last_char_offset As Integer
-    '    Dim original_line_num As Integer = CurrentLineNum
-    '    Dim mSentence As New CodeSequence
-
-    '    If LastMatchPosition = code.Length Then
-    '        mSentence.RuleName = ""
-    '        Return mSentence
-    '    End If
-
-    '    For i As Integer = 0 To SentenceRules.Count - 1
-    '        Dim offset As Integer = 0 ' Which element we are matching
-    '        Dim words As New ArrayList() ' A word list for a sentence to store
-    '        Dim matched_rule_name As String = ""
-    '        Dim line_offset As Integer = 0
-
-    '        words.Add("")
-
-    '        For j As Integer = LastMatchPosition To code.Length - 1
-    '            Dim mChar As Char = GetChar(code, j)
-
-    '            If last_char_offset < j Then
-    '                last_char_offset = j
-    '            End If
-
-    '            If mChar = vbCr Then
-    '                line_offset = line_offset + 1
-
-    '                If CurrentLineNum < original_line_num + line_offset Then
-    '                    CurrentLineNum = original_line_num + line_offset
-    '                End If
-    '            End If
-
-    '            Dim word As String = words(words.Count - 1) + mChar
-    '            Dim element As String = SentenceRules(i).Sequences(0).Element(offset) ' TODO
-
-    '            Dim element_first_char As Char = element.Substring(0, 1)
-
-    '            If element_first_char = "*" Then
-    '                Dim element_name As String = element.Substring(1, element.Length - 1)
-    '                If CheckCharType(element_name, mChar) Then
-    '                    words(words.Count - 1) = word
-    '                    ' *XXXXX is a set of XXXXXs. If some chars match the XXXXX, then they match *XXXXX.
-    '                    If j <> code.Length - 1 Then
-    '                        Continue For ' Read more chars.
-    '                    Else
-    '                        words.Add("")
-    '                    End If
-
-    '                ElseIf word.Length = 1 Then
-    '                    Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
-    '                Else
-    '                    words.Add("")
-    '                    word = ""
-    '                    j = j - 1 'The reason of this line: If the last char doesn't match this element, it may be the member of the next element.
-    '                    ' If this sentence doesn't match the rule at all, this char won't match the next element either.
-    '                End If
-    '            ElseIf element_first_char = "'" Then ' Todo: if there are more chars in a quote
-    '                Dim quote_char As String = element.Substring(1, element.Length - 2)
-    '                If mChar = quote_char Then
-    '                    words(words.Count - 1) = quote_char
-    '                    words.Add("")
-    '                    word = ""
-    '                Else
-    '                    Exit For
-    '                End If
-    '            Else
-    '                If CheckCharType(element, word) Then
-    '                    words(words.Count - 1) = word
-    '                    words.Add("")
-    '                    word = ""
-    '                Else
-    '                    Exit For
-    '                End If
-    '            End If
-
-    '            If UBound(SentenceRules(i).Sequences(0).Element) = offset Then
-    '                matched_rule_name = SentenceRules(i).Name
-    '                LastMatchPosition = j + 1
-    '                Exit For
-    '            Else
-    '                offset = offset + 1
-    '            End If
-    '        Next
-
-    '        If matched_rule_name <> "" Then
-    '            mSentence.RuleName = matched_rule_name
-    '            mSentence.WordsList = words
-
-    '            Return mSentence
-    '        End If
-    '    Next
-
-    '    Debug_Error("Syntax Error: Unexpected '" + code.Substring(last_char_offset, 1) + "' on line " + CStr(CurrentLineNum) + ". No rules matched.")
-    '    mSentence.RuleName = ""
-    '    Return mSentence
-    'End Function
-
     Function MatchGrammarRule(ByVal rulename As String, ByRef code As CodeReader)
+        'Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosStat().Position))
         Dim rule As Grammar = GetRuleByName(rulename)
 
         If rule Is Nothing Then
@@ -191,10 +95,11 @@ Class GrammarPraser
             Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
 
             If match_result IsNot Nothing Then
+                'Debug_Output("Done on matching " + rulename)
                 Return New CodeSequence(rule.Name, match_result)
             End If
         Next
-
+        'Debug_Output("Fault on matching " + rulename)
         Return Nothing
     End Function
 
@@ -206,16 +111,16 @@ Class GrammarPraser
         For offset As Integer = 0 To sequence.Element.Count - 1
             Dim ele As String = sequence.Element(offset)
             Dim element_first_char As Char = ele.Substring(0, 1)
-            Dim word As New ArrayList()
 
             If element_first_char = "*" Then
+                Dim word As New ArrayList()
                 Dim element_name As String = ele.Substring(1, ele.Length - 1)
 
                 While True
                     Dim origin_pos As Integer = code.GetPosStat().Position
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
-                        word.Add(matched_element.WordsList)
+                        word.Add(matched_element)
                         ' *XXXXX is a set of XXXXXs. If some chars match the XXXXX, then they match *XXXXX.
 
                     ElseIf word.Count = 0 Then
@@ -227,9 +132,9 @@ Class GrammarPraser
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
                     End If
-                End While
 
-                words.Add(New CodeSequence(ele, word))
+                    words.Add(New CodeSequence(ele, word))
+                End While
 
             ElseIf element_first_char = "'" Then
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
@@ -255,20 +160,18 @@ Class GrammarPraser
                     Next
                 End If
                 If unmatch = False Then
-                    word.Add(New CodeSequence("-KEYWORD-", expected_str))
+                    words.Add(New CodeSequence("-KEYWORD-", expected_str))
                 Else
                     Exit For
                 End If
             Else
                 Dim matched_element As CodeSequence = MatchGrammarRule(ele, code)
                 If matched_element IsNot Nothing Then
-                    word.Add(matched_element)
+                    words.Add(matched_element)
                 Else
                     unmatch = True
                     Exit For
                 End If
-
-                words.Add(New CodeSequence(ele, word))
             End If
 
         Next
@@ -293,7 +196,7 @@ Class GrammarPraser
         Return Nothing
     End Function
 
-    Sub Debug_Output(ByVal msg As String)
+    Sub Debug_Output(ByVal msg As String, Optional ByVal able_not_show As Boolean = False)
         Form1.DebugText.AppendText(msg + vbCrLf)
     End Sub
 
