@@ -11,8 +11,13 @@ End Structure
 
 Class Grammar
 
+    Public Const MATCH_METHOD_SPECIFY_FUNC As Short = 1
+    Public Const MATCH_METHOD_NORMAL As Short = 0
+
     Public Name As String
     Public Sequences As New ArrayList() ' A sentence rule only have one Sequence, but a element can have more.
+    Delegate Function SpecFunc(ByRef code As CodeReader) As CodeSequence
+    Dim MatchMethod As Short = MATCH_METHOD_NORMAL
 
     Public Sub New(ByVal mname As String, ByVal text As String)
         Dim element() As String
