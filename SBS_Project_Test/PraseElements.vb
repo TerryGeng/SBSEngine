@@ -5,19 +5,22 @@
 ' =========================
 ' XVG Developing branch 2013.7
 
-Structure GrammarSequence
+Public Structure GrammarSequence
     Dim Element() As String ' A word only have one element, but a sentence can have more.
 End Structure
 
-Class Grammar
+Public Class Grammar
 
     Public Const MATCH_METHOD_SPECIFY_FUNC As Short = 1
     Public Const MATCH_METHOD_NORMAL As Short = 0
 
+    Delegate Function MatchFunc(ByRef code As TextReader) As CodeSequence
+
     Public Name As String
     Public Sequences As New ArrayList() ' A sentence rule only have one Sequence, but a element can have more.
-    Delegate Function SpecFunc(ByRef code As CodeReader) As CodeSequence
-    Dim MatchMethod As Short = MATCH_METHOD_NORMAL
+    Public SpecFunc As MatchFunc
+
+    Public MatchMethod As Short = MATCH_METHOD_NORMAL
 
     Public Sub New(ByVal mname As String, ByVal text As String)
         Dim element() As String
@@ -32,9 +35,15 @@ Class Grammar
             Sequences.Add(mSequences)
         Next
     End Sub
+
+    Public Sub New(ByVal mname As String, ByRef func As MatchFunc)
+        MatchMethod = MATCH_METHOD_SPECIFY_FUNC
+        Name = mname
+        SpecFunc = func
+    End Sub
 End Class
 
-Class CodeSequence
+Public Class CodeSequence
     Public Type As String = "Index"
     Public RuleName As String = ""
     Public WordsList As ArrayList

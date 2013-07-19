@@ -72,6 +72,7 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TextReader.vb" />
     <Compile Include="GrammarPraser.vb" />
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>

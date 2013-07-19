@@ -5,7 +5,7 @@
 ' =========================
 ' XVG Developing Branch 2013.7
 
-Class GrammarPraser
+Public Class GrammarPraser
     Const Version As String = "0.2a"
 
     Declare Function GetTickCount Lib "kernel32" () As Long
@@ -17,28 +17,7 @@ Class GrammarPraser
         Debug_Output("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
         Debug_Output("-----------------")
 
-        Rules.Add(New Grammar("ENTRANCE", "EXPRESSION"))
-
-        Rules.Add(New Grammar("CONST_NUM", "'0'|||'1'")) '|||'2'|||'3'|||'4'|||'5'|||'6'|||'7'|||'8'|||'9'"))
-        Rules.Add(New Grammar("CONST_ALP", _
-                                     "'A'|||'B'|||'C'|||'D'|||'E'|||'F'|||'G'|||'H'|||'I'|||'J'|||" & _
-                                     "'K'|||'L'|||'M'|||'N'|||'O'|||'P'|||'Q'|||'R'|||'S'|||'T'|||'U'|||'V'|||" & _
-                                     "'W'|||'X'|||'Y'|||'Z'" & _
-                                     "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'l'|||" & _
-                                     "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
-                                     "'y'|||'z'"))
-        Rules.Add(New Grammar("CONST_LF", "'" + vbLf + "'"))
-        'Rules.Add(New Grammar("CONSTANT", "CONST_NUM|||CONST_ALP"))
-        Rules.Add(New Grammar("CONSTANT", "CONST_NUM"))
-        Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'|||'>'|||'<'|||'<='|||'>='"))
-
-        Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++CONST_LF|||EXP_ELEMENT+++*EXP_OP_ELEMENT+++CONST_LF"))
-        Rules.Add(New Grammar("EXP_ELEMENT", "*CONST_NUM|||VARIABLE"))
-        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT"))
-
-        Rules.Add(New Grammar("FUNC_CALL", "*CONSTANT+++'('+++*CONSTANT+++')'"))
-        Rules.Add(New Grammar("VARIABLE", "'$'+++*CONSTANT"))
-        Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++*CONSTANT"))
+        GrammarRulesList.LoadRules(Rules)
 
         Debug_Output(CStr(Rules.Count) + " Rules Loaded")
         Debug_Output("Total Time: " + CStr(GetTickCount() - start_time))
@@ -53,7 +32,7 @@ Class GrammarPraser
             Return Nothing
         End If
 
-        Dim code_reader As New CodeReader(code)
+        Dim code_reader As New TextReader(code)
 
         Dim sentence_list As New ArrayList()
         Dim mSentence As CodeSequence
@@ -61,7 +40,7 @@ Class GrammarPraser
         Dim is_error As Boolean = False
 
         While code_reader.IsEOF() <> True
-            mSentence = MatchGrammarRule("ENTRANCE", code_reader)
+            mSentence = MatchGrammarRule("STATMENT", code_reader)
 
             If mSentence IsNot Nothing Then
                 sentence_list.Add(mSentence)
@@ -81,29 +60,36 @@ Class GrammarPraser
 
     End Function
 
-    Function MatchGrammarRule(ByVal rulename As String, ByRef code As CodeReader)
-        'Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosStat().Position))
+    Function MatchGrammarRule(ByVal rulename As String, ByRef code As TextReader) As CodeSequence
+        Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosStat().Position))
         Dim rule As Grammar = GetRuleByName(rulename)
 
         If rule Is Nothing Then
             Return Nothing
         End If
 
-        Dim seq As ArrayList = rule.Sequences
+        If rule.MatchMethod = Grammar.MATCH_METHOD_NORMAL Then
 
-        For seq_offset As Integer = 0 To seq.Count - 1
-            Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
+            Dim seq As ArrayList = rule.Sequences
 
-            If match_result IsNot Nothing Then
-                'Debug_Output("Done on matching " + rulename)
-                Return New CodeSequence(rule.Name, match_result)
-            End If
-        Next
-        'Debug_Output("Fault on matching " + rulename)
+            For seq_offset As Integer = 0 To seq.Count - 1
+                Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
+
+                If match_result IsNot Nothing Then
+                    Debug_Output("Done on matching " + rulename)
+                    Return New CodeSequence(rule.Name, match_result)
+                End If
+            Next
+            Debug_Output("Fault on matching " + rulename)
+            Return Nothing
+        ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
+            Debug_Output("Try to use specify function to match " + rulename)
+            Return rule.SpecFunc(code)
+        End If
         Return Nothing
     End Function
 
-    Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As CodeReader) As ArrayList
+    Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As TextReader) As ArrayList
         Dim words As New ArrayList()
         Dim start_position As Integer = code.GetPosStat().Position
         Dim unmatch As Boolean = False
@@ -206,86 +192,96 @@ Class GrammarPraser
 
 End Class
 
-Class CodeReader
-    Dim Code As String = ""
-    Dim PosStat As New CodeReaderPosStatus
-    Dim DeepestPos As New CodeReaderPosStatus
+Public Class GrammarRulesList
+    Public Shared Sub LoadRules(ByRef Rules As ArrayList)
 
-    Sub New(ByRef code As String)
-        LoadCode(code)
+        Rules.Add(New Grammar("STATMENT", "VARIABLE"))
+
+        Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
+        Rules.Add(New Grammar("STRING", AddressOf PackString))
+        Rules.Add(New Grammar("NAME", AddressOf PackName))
+        Rules.Add(New Grammar("CONST_ALP", _
+                                     "'A'|||'B'|||'C'|||'D'|||'E'|||'F'|||'G'|||'H'|||'I'|||'J'|||" & _
+                                     "'K'|||'L'|||'M'|||'N'|||'O'|||'P'|||'Q'|||'R'|||'S'|||'T'|||'U'|||'V'|||" & _
+                                     "'W'|||'X'|||'Y'|||'Z'|||" & _
+                                     "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'l'|||" & _
+                                     "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
+                                     "'y'|||'z'"))
+        Rules.Add(New Grammar("CHAR_LF", "'" + vbLf + "'"))
+        Rules.Add(New Grammar("tCONSTANT", "NUMBER|||CONST_ALP"))
+        Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'|||'>'|||'<'|||'<='|||'>='"))
+
+        Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||EXP_ELEMENT"))
+        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE"))
+        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT"))
+
+        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'('+++*tCONSTANT+++')'"))
+        Rules.Add(New Grammar("VARIABLE", "'$'+++NAME"))
+        Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
+
     End Sub
 
-    Sub LoadCode(ByRef mCode As String)
-        Code = mCode
-        PosStat.Position = 0
-    End Sub
+    Public Shared Function PackString(ByRef code As TextReader) As CodeSequence
+        Dim str As String = ""
+        While True
+            Dim mChar As Char = code.GetNextChar
+            If mChar <> Chr(34) Then
+                str += mChar
+            Else
+                Return New CodeSequence("STRING", str)
+            End If
+        End While
 
-    Function GetChar(ByVal offset As Integer) As Char
-        If offset >= Code.Length Then
-            Return ""
-        End If
-
-        Return Code.Substring(offset, 1)
+        Return Nothing
     End Function
 
-    Function GetNextChar() As Char
-        Dim mChar As Char = GetChar(PosStat.Position)
-        PosStat.Position += 1
+    Public Shared Function PackNumber(ByRef code As TextReader) As CodeSequence
+        Dim nums As String = ""
+        While True
+            Dim mChar As Char = code.GetNextChar
 
-        If mChar = vbCr Then
-            Return GetNextChar()
-        ElseIf mChar = vbLf Then
-            PosStat.Lines += 1
-        End If
+            If IsNumeric(mChar) Then
+                nums += mChar
+            ElseIf nums <> "" Then
+                Return New CodeSequence("NUMBER", nums)
+            Else
+                Return Nothing
+            End If
+        End While
 
-        If PosStat.Position > DeepestPos.Position Then
-            DeepestPos.Position = PosStat.Position
-            DeepestPos.Lines = PosStat.Lines
-        End If
-
-        Return mChar
+        Return Nothing
     End Function
 
-    Function GetPosStat() As CodeReaderPosStatus
-        Return PosStat
+    Public Shared Function PackName(ByRef code As TextReader) As CodeSequence
+        Dim name As String = ""
+        While True
+            Dim mChar As Char = code.GetNextChar
+
+            If IsNameChar(mChar) And (name.Length <> 0 Or (IsNumeric(mChar) <> True)) Then
+                name += mChar
+
+            ElseIf name <> "" Then
+                Return New CodeSequence("NAME", name)
+            Else
+                Return Nothing
+            End If
+        End While
+
+        Return Nothing
     End Function
 
-    Function SetPosStat(ByVal pos As CodeReaderPosStatus) As Boolean
-        If pos.Position < Code.Length Then
-            PosStat.Position = pos.Position
-            PosStat.Lines = pos.Lines
+    Shared Function IsNameChar(ByVal mChar As Char) As Boolean
+        Dim ascii As Integer = AscW(mChar)
+
+        If IsNumeric(mChar) Or _
+            ascii >= 65 And ascii <= 90 Or _
+            ascii >= 97 And ascii <= 122 Or _
+            ascii >= 128 Then
             Return True
         Else
             Return False
         End If
     End Function
 
-    Sub SetPosition(ByVal position As Integer)
-        PosStat.Position = position
-    End Sub
-
-    Function IsEOF()
-        If PosStat.Position >= Code.Length Then
-            Return True
-        Else
-            Return False
-        End If
-    End Function
-
-    Function GetLength()
-        Return Code.Length
-    End Function
-
-    Function GetDeepestChar()
-        Return GetChar(DeepestPos.Position)
-    End Function
-
-    Function GetDeepestLine()
-        Return DeepestPos.Lines
-    End Function
 End Class
 
-Class CodeReaderPosStatus
-    Public Position As Integer = 0
-    Public Lines As Integer = 1
-End Class
