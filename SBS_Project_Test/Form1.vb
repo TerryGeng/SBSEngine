@@ -3,11 +3,11 @@
     Dim origin_window_height As Integer
     Dim origin_textbox_height As Integer
 
-    Dim mPraser As GrammarPraser
+    Dim mPraser As SBSPraser
     Dim sentenceList As New ArrayList()
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        mPraser = New GrammarPraser()
+        mPraser = New SBSPraser()
     End Sub
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
