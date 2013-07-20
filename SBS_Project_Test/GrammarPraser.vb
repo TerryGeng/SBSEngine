@@ -5,6 +5,8 @@
 ' =========================
 ' XVG Developing Branch 2013.7
 
+#Const OUTPUT_MATCH_PROCESS = False
+
 Public Class GrammarPraser
     Const Version As String = "0.2a"
 
@@ -61,7 +63,11 @@ Public Class GrammarPraser
     End Function
 
     Function MatchGrammarRule(ByVal rulename As String, ByRef code As TextReader) As CodeSequence
-        Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosStat().Position))
+
+#If OUTPUT_MATCH_PROCESS Then
+        Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
+#End If
+
         Dim rule As Grammar = GetRuleByName(rulename)
 
         If rule Is Nothing Then
@@ -76,14 +82,23 @@ Public Class GrammarPraser
                 Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
 
                 If match_result IsNot Nothing Then
+
+#If OUTPUT_MATCH_PROCESS Then
                     Debug_Output("Done on matching " + rulename)
+#End If
+
                     Return New CodeSequence(rule.Name, match_result)
                 End If
             Next
+
+#If OUTPUT_MATCH_PROCESS Then
             Debug_Output("Fault on matching " + rulename)
+#End If
             Return Nothing
         ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
+#If OUTPUT_MATCH_PROCESS Then
             Debug_Output("Try to use specify function to match " + rulename)
+#End If
             Return rule.SpecFunc(code)
         End If
         Return Nothing
@@ -91,7 +106,7 @@ Public Class GrammarPraser
 
     Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As TextReader) As ArrayList
         Dim words As New ArrayList()
-        Dim start_position As Integer = code.GetPosStat().Position
+        Dim start_position As Integer = code.GetPosition().Position
         Dim unmatch As Boolean = False
 
         For offset As Integer = 0 To sequence.Element.Count - 1
@@ -103,7 +118,7 @@ Public Class GrammarPraser
                 Dim element_name As String = ele.Substring(1, ele.Length - 1)
 
                 While True
-                    Dim origin_pos As Integer = code.GetPosStat().Position
+                    Dim origin_pos As Integer = code.GetPosition().Position
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
                         word.Add(matched_element)
@@ -195,19 +210,12 @@ End Class
 Public Class GrammarRulesList
     Public Shared Sub LoadRules(ByRef Rules As ArrayList)
 
-        Rules.Add(New Grammar("STATMENT", "VARIABLE"))
+        Rules.Add(New Grammar("STATMENT", "EXPRESSION+++LINE_END"))
 
         Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
         Rules.Add(New Grammar("STRING", AddressOf PackString))
         Rules.Add(New Grammar("NAME", AddressOf PackName))
-        Rules.Add(New Grammar("CONST_ALP", _
-                                     "'A'|||'B'|||'C'|||'D'|||'E'|||'F'|||'G'|||'H'|||'I'|||'J'|||" & _
-                                     "'K'|||'L'|||'M'|||'N'|||'O'|||'P'|||'Q'|||'R'|||'S'|||'T'|||'U'|||'V'|||" & _
-                                     "'W'|||'X'|||'Y'|||'Z'|||" & _
-                                     "'a'|||'b'|||'c'|||'d'|||'e'|||'f'|||'g'|||'h'|||'i'|||'j'|||'k'|||'l'|||" & _
-                                     "'m'|||'n'|||'o'|||'p'|||'q'|||'r'|||'s'|||'t'|||'u'|||'v'|||'w'|||'x'|||" & _
-                                     "'y'|||'z'"))
-        Rules.Add(New Grammar("CHAR_LF", "'" + vbLf + "'"))
+        Rules.Add(New Grammar("LINE_END", AddressOf PackLineEnd))
         Rules.Add(New Grammar("tCONSTANT", "NUMBER|||CONST_ALP"))
         Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'|||'>'|||'<'|||'<='|||'>='"))
 
@@ -215,7 +223,7 @@ Public Class GrammarRulesList
         Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE"))
         Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT"))
 
-        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'('+++*tCONSTANT+++')'"))
+        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'('+++EXPRESSION+++')'"))
         Rules.Add(New Grammar("VARIABLE", "'$'+++NAME"))
         Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
 
@@ -228,6 +236,7 @@ Public Class GrammarRulesList
             If mChar <> Chr(34) Then
                 str += mChar
             Else
+                code.PositionBack()
                 Return New CodeSequence("STRING", str)
             End If
         End While
@@ -237,14 +246,17 @@ Public Class GrammarRulesList
 
     Public Shared Function PackNumber(ByRef code As TextReader) As CodeSequence
         Dim nums As String = ""
+        Dim origin_pos As Integer = code.GetPosition().Position
         While True
             Dim mChar As Char = code.GetNextChar
 
             If IsNumeric(mChar) Then
                 nums += mChar
             ElseIf nums <> "" Then
+                code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
+                code.SetPosition(origin_pos)
                 Return Nothing
             End If
         End While
@@ -254,20 +266,32 @@ Public Class GrammarRulesList
 
     Public Shared Function PackName(ByRef code As TextReader) As CodeSequence
         Dim name As String = ""
+        Dim origin_pos As Integer = code.GetPosition().Position
         While True
             Dim mChar As Char = code.GetNextChar
 
             If IsNameChar(mChar) And (name.Length <> 0 Or (IsNumeric(mChar) <> True)) Then
                 name += mChar
-
             ElseIf name <> "" Then
+                code.PositionBack()
                 Return New CodeSequence("NAME", name)
             Else
+                code.SetPosition(origin_pos)
                 Return Nothing
             End If
         End While
 
         Return Nothing
+    End Function
+
+    Public Shared Function PackLineEnd(ByRef code As TextReader) As CodeSequence
+        Dim origin_pos As Integer = code.GetPosition().Position
+        If code.GetNextChar() = vbLf Or code.IsEOF() Then
+            Return New CodeSequence("LINE_END", "")
+        Else
+            code.SetPosition(origin_pos)
+            Return Nothing
+        End If
     End Function
 
     Shared Function IsNameChar(ByVal mChar As Char) As Boolean

@@ -1,15 +1,15 @@
 ﻿Public Class TextReader
     Dim Code As String = ""
-    Dim PosStat As New TextReaderPosStatus
-    Dim DeepestPos As New TextReaderPosStatus
+    Dim Pos As New TextReaderPosition
+    Dim DeepestPos As New TextReaderPosition
 
     Sub New(ByRef code As String)
-        LoadCode(code)
+        LoadText(code)
     End Sub
 
-    Sub LoadCode(ByRef mCode As String)
+    Sub LoadText(ByRef mCode As String)
         Code = mCode
-        PosStat.Position = 0
+        Pos.Position = 0
     End Sub
 
     Function GetChar(ByVal offset As Integer) As Char
@@ -21,31 +21,31 @@
     End Function
 
     Function GetNextChar() As Char
-        Dim mChar As Char = GetChar(PosStat.Position)
-        PosStat.Position += 1
+        Dim mChar As Char = GetChar(Pos.Position)
+        Pos.Position += 1
 
         If mChar = vbCr Then
             Return GetNextChar()
         ElseIf mChar = vbLf Then
-            PosStat.Lines += 1
+            Pos.Lines += 1
         End If
 
-        If PosStat.Position > DeepestPos.Position Then
-            DeepestPos.Position = PosStat.Position
-            DeepestPos.Lines = PosStat.Lines
+        If Pos.Position > DeepestPos.Position Then
+            DeepestPos.Position = Pos.Position
+            DeepestPos.Lines = Pos.Lines
         End If
 
         Return mChar
     End Function
 
-    Function GetPosStat() As TextReaderPosStatus
-        Return PosStat
+    Function GetPosition() As TextReaderPosition
+        Return Pos
     End Function
 
-    Function SetPosStat(ByVal pos As TextReaderPosStatus) As Boolean
+    Function SetPos(ByVal pos As TextReaderPosition) As Boolean
         If pos.Position < Code.Length Then
-            PosStat.Position = pos.Position
-            PosStat.Lines = pos.Lines
+            Pos.Position = pos.Position
+            Pos.Lines = pos.Lines
             Return True
         Else
             Return False
@@ -53,11 +53,15 @@
     End Function
 
     Sub SetPosition(ByVal position As Integer)
-        PosStat.Position = position
+        Pos.Position = position
+    End Sub
+
+    Sub PositionBack(Optional ByVal len As Integer = 1)
+        Pos.Position -= len
     End Sub
 
     Function IsEOF()
-        If PosStat.Position >= Code.Length Then
+        If Pos.Position >= Code.Length Then
             Return True
         Else
             Return False
@@ -77,7 +81,7 @@
     End Function
 End Class
 
-Public Class TextReaderPosStatus
+Public Class TextReaderPosition
     Public Position As Integer = 0
     Public Lines As Integer = 1
 End Class
