@@ -12,6 +12,11 @@
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         sentenceList = mPraser.PraseCode(CodeArea.Text)
+        If sentenceList IsNot Nothing Then
+            Dim performer As New SBSPerform(sentenceList)
+            Debug_Output("")
+            performer.Run()
+        End If
         Debug_Output("")
     End Sub
 

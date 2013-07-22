@@ -47,13 +47,13 @@ Public Class SBSPraser
             If mSentence IsNot Nothing Then
                 sentence_list.Add(mSentence)
             Else
-                Debug_Error("Syntax Error: Unexpected '" + code_reader.GetDeepestChar + "' on line " + CStr(code_reader.GetDeepestLine))
+                Debug_Error("Syntax Error: Unexpected '" + code_reader.GetDeepestChar() + "' on line " + CStr(code_reader.GetDeepestLine))
                 is_error = True
                 Exit While
             End If
         End While
 
-        Debug_Output("Prase end at " + CStr(start_time) + ". Total " + CStr(GetTickCount() - start_time) + "ms.")
+        Debug_Output("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
         If is_error Then
             Return Nothing
         Else
@@ -133,9 +133,9 @@ Public Class SBSPraser
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
                     End If
-
-                    words.Add(New CodeSequence(ele, word))
                 End While
+
+                words.Add(New CodeSequence(ele, word))
 
             ElseIf element_first_char = "'" Then
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)

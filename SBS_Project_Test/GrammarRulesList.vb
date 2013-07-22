@@ -1,7 +1,7 @@
 ﻿Public Class GrammarRulesList
     Public Shared Sub LoadRules(ByRef Rules As ArrayList)
 
-        Rules.Add(New Grammar("STATMENT", "VAR_DEF+++LINE_END"))
+        Rules.Add(New Grammar("STATMENT", "EXPRESSION+++LINE_END"))
 
         Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
         Rules.Add(New Grammar("STRING", AddressOf PackString))
@@ -11,8 +11,8 @@
         Rules.Add(New Grammar("EXP_OP", "'<='|||'>='|||'+'|||'-'|||'*'|||'/'|||'>'|||'<'"))
 
         Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||EXP_ELEMENT"))
-        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE"))
-        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT"))
+        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE|||'('+++EXPRESSION+++')'"))
+        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT|||EXP_OP+++'('+++EXPRESSION+++')'"))
 
         Rules.Add(New Grammar("FUNC_CALL", "NAME+++'('+++EXPRESSION+++')'"))
         Rules.Add(New Grammar("VARIABLE", "'$'+++NAME"))

@@ -46,20 +46,20 @@ End Class
 Public Class CodeSequence
     Public Type As String = "Index"
     Public RuleName As String = ""
-    Public WordsList As ArrayList
+    Public SeqsList As ArrayList
     Public Value As String
 
     Sub New(ByVal name As String, ByRef words As ArrayList)
         Type = "Index"
         RuleName = name
-        WordsList = words
+        SeqsList = words
     End Sub
 
     Sub New(ByVal name As String, ByVal val As String)
         Type = "Value"
         Value = val
         RuleName = name
-        WordsList = Nothing
+        SeqsList = Nothing
     End Sub
 
     Function GetSeqType()

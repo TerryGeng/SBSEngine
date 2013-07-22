@@ -61,7 +61,15 @@
     End Sub
 
     Function IsEOF()
-        If Pos.Position >= Code.Length Then
+        If pos.Position >= Code.Length Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
+    Function IsEOF(ByVal position As TextReaderPosition)
+        If position.Position >= Code.Length Then
             Return True
         Else
             Return False
@@ -73,7 +81,11 @@
     End Function
 
     Function GetDeepestChar()
-        Return GetChar(DeepestPos.Position)
+        If (IsEOF(DeepestPos)) Then
+            Return "END"
+        Else
+            Return GetChar(DeepestPos.Position - 1)
+        End If
     End Function
 
     Function GetDeepestLine()
