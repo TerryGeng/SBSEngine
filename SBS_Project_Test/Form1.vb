@@ -5,18 +5,24 @@
 
     Dim mPraser As SBSPraser
     Dim sentenceList As New ArrayList()
+    Dim IO As New TestStandardIO
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        mPraser = New SBSPraser()
+        mPraser = New SBSPraser(IO)
     End Sub
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
-        sentenceList = mPraser.PraseCode(CodeArea.Text)
-        If sentenceList IsNot Nothing Then
-            Dim performer As New SBSPerform(sentenceList)
-            Debug_Output("")
-            performer.Run()
-        End If
+        Try
+            sentenceList = mPraser.PraseCode(CodeArea.Text)
+            If sentenceList IsNot Nothing Then
+                Dim performer As New SBSPerform(sentenceList, IO)
+                Debug_Output("")
+                performer.Run()
+            End If
+        Catch excep As ApplicationException
+            IO.PrintError(excep.Message)
+        End Try
+
         Debug_Output("")
     End Sub
 

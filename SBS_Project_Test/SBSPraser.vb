@@ -13,22 +13,25 @@ Public Class SBSPraser
     Declare Function GetTickCount Lib "kernel32" () As Long
 
     Dim Rules As New ArrayList()
+    Dim StdIO As StandardIO
 
-    Public Sub New()
+    Public Sub New(ByRef _stdIO As StandardIO)
+        StdIO = _stdIO
+
         Dim start_time As Long = GetTickCount()
-        Debug_Output("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
-        Debug_Output("-----------------")
+        StdIO.PrintLine("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
+        StdIO.PrintLine("-----------------")
 
         GrammarRulesList.LoadRules(Rules)
 
-        Debug_Output(CStr(Rules.Count) + " Rules Loaded")
-        Debug_Output("Total Time: " + CStr(GetTickCount() - start_time))
-        Debug_Output("")
+        StdIO.PrintLine(CStr(Rules.Count) + " Rules Loaded")
+        StdIO.PrintLine("Total Time: " + CStr(GetTickCount() - start_time))
+        StdIO.PrintLine("")
     End Sub
 
     Public Function PraseCode(ByRef code As String)
         Dim start_time As Long = GetTickCount()
-        Debug_Output("Prase start at " + CStr(start_time) + ".")
+        StdIO.PrintLine("Prase start at " + CStr(start_time) + ".")
 
         If code.Length = 0 Then
             Return Nothing
@@ -47,13 +50,13 @@ Public Class SBSPraser
             If mSentence IsNot Nothing Then
                 sentence_list.Add(mSentence)
             Else
-                Debug_Error("Syntax Error: Unexpected '" + code_reader.GetDeepestChar() + "' on line " + CStr(code_reader.GetDeepestLine))
+                Throw New ApplicationException("Syntax Error: Unexpected '" + code_reader.GetDeepestChar() + "' on line " + CStr(code_reader.GetDeepestLine))
                 is_error = True
                 Exit While
             End If
         End While
 
-        Debug_Output("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
+        StdIO.PrintLine("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
         If is_error Then
             Return Nothing
         Else
@@ -65,7 +68,7 @@ Public Class SBSPraser
     Function MatchGrammarRule(ByVal rulename As String, ByRef code As TextReader) As CodeSequence
 
 #If OUTPUT_MATCH_PROCESS Then
-        Debug_Output("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
+        StdIO.PrintLine("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
 #End If
 
         Dim rule As Grammar = GetRuleByName(rulename)
@@ -84,7 +87,7 @@ Public Class SBSPraser
                 If match_result IsNot Nothing Then
 
 #If OUTPUT_MATCH_PROCESS Then
-                    Debug_Output("Done on matching " + rulename)
+                    StdIO.PrintLine("Done on matching " + rulename)
 #End If
 
                     Return New CodeSequence(rule.Name, match_result)
@@ -92,12 +95,12 @@ Public Class SBSPraser
             Next
 
 #If OUTPUT_MATCH_PROCESS Then
-            Debug_Output("Fault on matching " + rulename)
+            StdIO.PrintLine("Fault on matching " + rulename)
 #End If
             Return Nothing
         ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
 #If OUTPUT_MATCH_PROCESS Then
-            Debug_Output("Try to use specify function to match " + rulename)
+            StdIO.PrintLine("Try to use specify function to match " + rulename)
 #End If
             Return rule.SpecFunc(code)
         End If
@@ -193,17 +196,9 @@ Public Class SBSPraser
             End If
         Next
 
-        Debug_Error("Rules Error: Unknow rule '" + name + "'.")
+        StdIO.PrintLine("Internal Error: Unknow rule '" + name + "'.")
         Return Nothing
     End Function
-
-    Sub Debug_Output(ByVal msg As String, Optional ByVal able_not_show As Boolean = False)
-        Form1.DebugText.AppendText(msg + vbCrLf)
-    End Sub
-
-    Sub Debug_Error(ByVal msg As String)
-        Debug_Output(msg + vbCrLf)
-    End Sub
 
 End Class
 
