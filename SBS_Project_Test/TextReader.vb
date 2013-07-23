@@ -22,13 +22,14 @@
 
     Function GetNextChar() As Char
         Dim mChar As Char = GetChar(Pos.Position)
-        Pos.Position += 1
 
         If mChar = vbCr Then
             Return GetNextChar()
         ElseIf mChar = vbLf Then
             Pos.Lines += 1
         End If
+
+        Pos.Position += 1
 
         If Pos.Position > DeepestPos.Position Then
             DeepestPos.Position = Pos.Position
@@ -68,8 +69,8 @@
         End If
     End Function
 
-    Function IsEOF(ByVal position As TextReaderPosition)
-        If position.Position >= Code.Length Then
+    Function IsEOF(ByVal position As Integer)
+        If position >= Code.Length Then
             Return True
         Else
             Return False
@@ -81,7 +82,7 @@
     End Function
 
     Function GetDeepestChar()
-        If (IsEOF(DeepestPos)) Then
+        If (IsEOF(DeepestPos.Position - 1)) Then
             Return "END"
         Else
             Return GetChar(DeepestPos.Position - 1)
