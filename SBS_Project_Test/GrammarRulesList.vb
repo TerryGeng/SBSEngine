@@ -7,32 +7,45 @@
         Rules.Add(New Grammar("STRING", AddressOf PackString))
         Rules.Add(New Grammar("NAME", AddressOf PackName))
         Rules.Add(New Grammar("LINE_END", AddressOf PackLineEnd))
-        Rules.Add(New Grammar("tCONSTANT", "NUMBER|||CONST_ALP"))
         Rules.Add(New Grammar("EXP_OP", "'<='|||'>='|||'+'|||'-'|||'*'|||'/'|||'>'|||'<'"))
 
         Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||*EXP_OP_ELEMENT|||EXP_ELEMENT"))
-        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE|||'('+++EXPRESSION+++')'"))
+        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||STRING|||VARIABLE|||FUNC_CALL|||'('+++EXPRESSION+++')'"))
         Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT|||EXP_OP+++'('+++EXPRESSION+++')'"))
 
-        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'('+++EXPRESSION+++')'"))
         Rules.Add(New Grammar("VARIABLE", "'$'+++NAME"))
+        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'()'|||NAME+++'('+++ARG_LIST+++')'"))
+        Rules.Add(New Grammar("ARG_LIST", "*ARG_COMMA+++EXPRESSION|||EXPRESSION"))
+        Rules.Add(New Grammar("ARG_COMMA", "EXPRESSION+++','"))
+
         Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
+        Rules.Add(New Grammar("FUNC_DEF", "'Function '+++NAME+++(+++ARG_DEF_LIST+++)+++LINE_END+++" & _
+                              "*STATMENT+++" & _
+                              "'End Function'"))
+        Rules.Add(New Grammar("ARG_DEF_LIST", "VARIABLE|||*VARIABLE_COMMA+++VARIABLE"))
+        Rules.Add(New Grammar("ARG_COMMA", "VARIABLE+++','"))
+
+        Rules.Add(New Grammar("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Exit'"))
+
 
     End Sub
 
     Public Shared Function PackString(ByRef code As TextReader) As CodeSequence
-        Dim str As String = ""
-        While True
-            Dim mChar As Char = code.GetNextChar
-            If mChar <> Chr(34) Then
-                str += mChar
-            Else
-                code.PositionBack()
-                Return New CodeSequence("STRING", str)
-            End If
-        End While
+        If code.GetNextChar() = Chr(34) Then
+            Dim str As String = ""
+            While True
+                Dim mChar As Char = code.GetNextChar()
+                If mChar <> Chr(34) Then
+                    Str += mChar
+                Else
+                    Return New CodeSequence("STRING", Str)
+                End If
+            End While
 
-        Return Nothing
+            Return Nothing
+        Else
+            Return Nothing
+        End If
     End Function
 
     Public Shared Function PackNumber(ByRef code As TextReader) As CodeSequence
