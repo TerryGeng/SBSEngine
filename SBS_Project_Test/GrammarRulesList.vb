@@ -77,7 +77,7 @@
 
     Public Shared Function PackLineEnd(ByRef code As TextReader) As CodeSequence
         Dim origin_pos As Integer = code.GetPosition().Position
-        If code.GetNextChar() = vbLf Or code.IsEOF() Then
+        If code.IsEOF() Or code.GetNextChar() = vbLf Then
             Return New CodeSequence("LINE_END", "")
         Else
             code.SetPosition(origin_pos)
