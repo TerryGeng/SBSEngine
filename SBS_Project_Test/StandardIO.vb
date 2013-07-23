@@ -1,22 +1,14 @@
-﻿Public Interface StandardIO
-    Sub Print(ByVal str As String)
-    Sub PrintLine(ByVal str As String)
+﻿Public Class StandardIO
 
-    Sub PrintError(ByVal msg As String)
-End Interface
-
-Public Class TestStandardIO
-    Implements StandardIO
-
-    Public Sub Print(ByVal str As String) Implements StandardIO.Print
+    Public Shared Sub Print(ByVal str As String)
         Form1.DebugText.AppendText(str)
     End Sub
 
-    Public Sub PrintError(ByVal msg As String) Implements StandardIO.PrintError
+    Public Shared Sub PrintError(ByVal msg As String)
         Form1.DebugText.AppendText(msg + vbCrLf)
     End Sub
 
-    Public Sub PrintLine(ByVal str As String) Implements StandardIO.PrintLine
+    Public Shared Sub PrintLine(ByVal str As String)
         Form1.DebugText.AppendText(str + vbCrLf)
     End Sub
 End Class

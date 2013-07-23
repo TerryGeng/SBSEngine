@@ -13,25 +13,22 @@ Public Class SBSPraser
     Declare Function GetTickCount Lib "kernel32" () As Long
 
     Dim Rules As New ArrayList()
-    Dim StdIO As StandardIO
 
-    Public Sub New(ByRef _stdIO As StandardIO)
-        StdIO = _stdIO
-
+    Public Sub New()
         Dim start_time As Long = GetTickCount()
-        StdIO.PrintLine("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
-        StdIO.PrintLine("-----------------")
+        StandardIO.PrintLine("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
+        StandardIO.PrintLine("-----------------")
 
         GrammarRulesList.LoadRules(Rules)
 
-        StdIO.PrintLine(CStr(Rules.Count) + " Rules Loaded")
-        StdIO.PrintLine("Total Time: " + CStr(GetTickCount() - start_time))
-        StdIO.PrintLine("")
+        StandardIO.PrintLine(CStr(Rules.Count) + " Rules Loaded")
+        StandardIO.PrintLine("Total Time: " + CStr(GetTickCount() - start_time))
+        StandardIO.PrintLine("")
     End Sub
 
     Public Function PraseCode(ByRef code As String)
         Dim start_time As Long = GetTickCount()
-        StdIO.PrintLine("Prase start at " + CStr(start_time) + ".")
+        StandardIO.PrintLine("Prase start at " + CStr(start_time) + ".")
 
         If code.Length = 0 Then
             Return Nothing
@@ -56,7 +53,7 @@ Public Class SBSPraser
             End If
         End While
 
-        StdIO.PrintLine("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
+        StandardIO.PrintLine("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
         If is_error Then
             Return Nothing
         Else
@@ -68,7 +65,7 @@ Public Class SBSPraser
     Function MatchGrammarRule(ByVal rulename As String, ByRef code As TextReader) As CodeSequence
 
 #If OUTPUT_MATCH_PROCESS Then
-        StdIO.PrintLine("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
+        StandardIO.PrintLine("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
 #End If
 
         Dim rule As Grammar = GetRuleByName(rulename)
@@ -87,7 +84,7 @@ Public Class SBSPraser
                 If match_result IsNot Nothing Then
 
 #If OUTPUT_MATCH_PROCESS Then
-                    StdIO.PrintLine("Done on matching " + rulename)
+                    StandardIO.PrintLine("Done on matching " + rulename)
 #End If
 
                     Return New CodeSequence(rule.Name, match_result)
@@ -95,12 +92,12 @@ Public Class SBSPraser
             Next
 
 #If OUTPUT_MATCH_PROCESS Then
-            StdIO.PrintLine("Fault on matching " + rulename)
+            StandardIO.PrintLine("Fault on matching " + rulename)
 #End If
             Return Nothing
         ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
 #If OUTPUT_MATCH_PROCESS Then
-            StdIO.PrintLine("Try to use specify function to match " + rulename)
+            StandardIO.PrintLine("Try to use specify function to match " + rulename)
 #End If
             Return rule.SpecFunc(code)
         End If
@@ -196,7 +193,7 @@ Public Class SBSPraser
             End If
         Next
 
-        StdIO.PrintLine("Internal Error: Unknow rule '" + name + "'.")
+        StandardIO.PrintLine("Internal Error: Unknow rule '" + name + "'.")
         Return Nothing
     End Function
 
