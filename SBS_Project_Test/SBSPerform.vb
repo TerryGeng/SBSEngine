@@ -4,20 +4,19 @@
 
     Declare Function GetTickCount Lib "kernel32" () As Long
 
-    Public Class PerformerPtr
-        Delegate Function StatPerformer(ByRef statment As CodeSequence, ByRef runtimeData As RuntimeData)
+    Public Class StatmentPerformers
+        Public Expression As ExpressionPerformer
+        Public ControlFlow As ControlFlowPerform
+        Public Definition As DefinitionPerform
 
-        Public RuleName As String
-        Public Performer As StatPerformer
-
-        Sub New(ByVal name As String, ByRef perfFunc As StatPerformer)
-            RuleName = name
-            Performer = perfFunc
+        Sub New()
+            Expression = New ExpressionPerformer()
+            ControlFlow = New ControlFlowPerform()
+            Definition = New DefinitionPerform()
         End Sub
-
     End Class
 
-    Dim Performers As ArrayList
+    Dim Performers As StatmentPerformers
     Dim RuntimeData As RuntimeData
 
 
@@ -27,7 +26,7 @@
 
         If statList IsNot Nothing And statList(0).GetType().Equals(GetType(CodeSequence)) Then
             RuntimeData = New RuntimeData(statList)
-            LoadPerformers()
+            Performers = New StatmentPerformers()
             Debug_Output("Statments loaded.")
         Else
             Debug_Error("Load Error: Invalid argument type.")
@@ -39,9 +38,18 @@
         Debug_Output("Running start at " + CStr(start_time) + ".")
 
         For i As Integer = 0 To RuntimeData.Statments.Count - 1
-            Dim statment As CodeSequence = RuntimeData.Statments(i)
-            Dim return_val As ReturnValue = PerformStatment(statment.SeqsList(0))
-            Debug_Output("[" + CStr(i) + "]Return Val: (Type:" + return_val.Type + ")" + CStr(return_val.Value))
+            Dim statmBody As CodeSequence = RuntimeData.Statments(i).SeqsList(0)
+            Dim statmType As String = statmBody.RuleName
+            Dim result As SBSValue
+
+            If statmType = "EXPRESSION" Then
+                result = Performers.Expression.Perform(statmBody, RuntimeData)
+            Else
+                Debug_Error("Internal Error: Unknowed statment type '" + statmType + "'.")
+                Return Nothing
+            End If
+
+            Debug_Output("[" + CStr(i) + "]Return Val: (Type:" + result.Type + ")" + CStr(result.Value))
         Next
 
         Debug_Output("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
@@ -49,106 +57,6 @@
         Return 0
     End Function
 
-    Public Function PerformStatment(ByVal statment As CodeSequence)
-        Dim performer As PerformerPtr = GetPerformer(statment.RuleName)
-        Return performer.Performer(statment, RuntimeData)
-    End Function
-
-    Function GetPerformer(ByVal ruleName As String) As PerformerPtr
-        For i As Integer = 0 To Performers.Count - 1
-            If Performers(i).RuleName = ruleName Then
-                Return Performers(i)
-            End If
-        Next
-
-        Debug_Error("Performs Error: Unknow performer '" + ruleName + "'.")
-        Return Nothing
-    End Function
-
-    '-----------------
-    Sub LoadPerformers()
-        Performers = New ArrayList()
-        Performers.Add(New PerformerPtr("EXPRESSION", AddressOf ExpressionPerformer))
-    End Sub
-
-    Function ExpressionPerformer(ByRef statment As CodeSequence, ByRef runtimeData As RuntimeData)
-        Dim seqsList As ArrayList = statment.SeqsList
-        Dim exprtype As String = ""
-        Dim exprValueNum As Double = 0
-        Dim exprValueStr As String = ""
-
-        Dim firstSeq As CodeSequence = seqsList(0)
-
-
-        If firstSeq.RuleName = "EXP_ELEMENT" Then
-            Dim eleType As String = firstSeq.SeqsList(0).RuleName
-            Dim eleValue As String = firstSeq.SeqsList(0).Value
-            If eleValue = "(" Then
-                Dim result As ReturnValue = ExpressionPerformer(firstSeq.SeqsList(1), runtimeData)
-                If result.Type = "NUMBER" Then
-                    eleType = "NUMBER"
-                ElseIf result.Type = "STRING" Then
-                    eleType = "STRING"
-                End If
-                eleValue = result.Value
-            End If
-            exprtype = eleType
-            If eleType = "NUMBER" Then
-                exprValueNum = CDbl(eleValue)
-            ElseIf eleType = "STRING" Then
-                exprValueStr = eleValue
-            End If
-        End If
-        If seqsList.Count > 1 Then
-            Dim eleList As ArrayList = seqsList(1).SeqsList
-
-            For i As Integer = 0 To eleList.Count - 1
-                Dim curOp As String = eleList(i).SeqsList(0).SeqsList(0).Value
-                Dim curEle As CodeSequence = eleList(i).SeqsList(1).SeqsList(0)
-                Dim curType As String = curEle.RuleName
-                Dim curValue As String = curEle.Value
-
-                If curValue = "(" Then
-                    curEle = eleList(i).SeqsList(1).SeqsList(1)
-                    Dim result As ReturnValue = ExpressionPerformer(curEle, runtimeData)
-                    If result.Type = "NUMBER" Then
-                        curType = "NUMBER"
-                    ElseIf result.Type = "STRING" Then
-                        curType = "STRING"
-                    End If
-                    curValue = result.Value
-                End If
-
-                If curOp <> "*" Or curOp <> "/" Then
-                    If curType = "NUMBER" Then
-                        If exprtype = "NUMBER" Then
-                            If curOp = "+" Then
-                                exprValueNum += CDbl(curValue)
-                            Else
-                                Debug_Error("Runtime Error: Used undefine operator '" + curOp + "' between '" + exprtype + "' and '" + curType + "'.")
-                            End If
-                        ElseIf exprtype = "STRING" Then
-                            If curOp = "+" Then
-                                exprValueStr += curValue
-                            Else
-                                Debug_Error("Runtime Error: Used undefine operator '" + curOp + "' between '" + exprtype + "' and '" + curType + "'.")
-                            End If
-                        End If
-                    End If
-                End If
-            Next
-        End If
-
-        If exprtype = "NUMBER" Then
-            Return New ReturnValue(exprtype, exprValueNum)
-        ElseIf exprtype = "STRING" Then
-            Return New ReturnValue(exprtype, exprValueStr)
-        End If
-
-        Return Nothing
-
-    End Function
-    '-----------------
 
     Sub Debug_Output(ByVal msg As String, Optional ByVal able_not_show As Boolean = False)
         Form1.DebugText.AppendText(msg + vbCrLf)
@@ -169,7 +77,118 @@ Public Class RuntimeData
 
 End Class
 
-Public Class ReturnValue
+Public Class ExpressionPerformer
+    Class Calculator
+        Dim Value As SBSValue
+
+        Public Sub Calculate(ByVal optr As String, ByVal _value As SBSValue)
+            If optr = "+" Then
+                CalcuAdd(_value)
+            End If
+        End Sub
+
+        Public Sub CalcuAdd(ByVal _value As SBSValue)
+            If Value.Type = "STRING" Then
+                Value.sValue += _value.sValue
+            ElseIf Value.Type = "NUMBER" Then
+                Value.nValue += _value.nValue
+            Else
+                Debug_Error("Runtime Error: Used undefine operator '+' between '" + Value.Type + "' and '" + _value.Type + "'.")
+            End If
+        End Sub
+
+        Public Sub CalcuMulti(ByVal _value As SBSValue)
+            Static buffer As Double
+
+            If Value.Type = "NUMBER" Then
+
+            End If
+
+        End Sub
+
+        Public Function GetResult() As SBSValue
+
+        End Function
+    End Class
+
+    Function Perform(ByRef statment As CodeSequence, ByRef runtimeData As RuntimeData) As SBSValue
+        Dim elementList As ArrayList = statment.SeqsList
+        Dim calcu As New Calculator
+
+        Dim firstElement As CodeSequence = elementList(0)
+        Dim opEleList As ArrayList
+
+
+        If firstElement.RuleName = "EXP_ELEMENT" Then
+            Dim expElement As CodeSequence = firstElement.SeqsList(0)
+            Dim eleValue As New SBSValue(expElement.RuleName, expElement.Value)
+
+            If eleValue.Value = "(" Then
+                Dim bracExpr As CodeSequence = firstElement.SeqsList(1)
+                Dim result As SBSValue = Perform(bracExpr, runtimeData)
+                eleValue = result.Value
+            End If
+
+            If elementList.Count > 1 Then
+                opEleList = elementList(1).SeqsList
+            Else
+                Return eleValue
+            End If
+
+            calcu.Calculate("+", eleValue)
+        Else
+            opEleList = elementList(0).SeqsList
+        End If
+
+        For i As Integer = 0 To opEleList.Count - 1
+            Dim curOp As String = opEleList(i).SeqsList(0).SeqsList(0).Value ' EXP_OP_ELEMENT List -> EXP_OP_ELEMENT -> EXP_OP -> "+","-"...
+            Dim curEle As CodeSequence = opEleList(i).SeqsList(1).SeqsList(0) ' EXP_OP_ELEMENT List -> EXP_OP_ELEMENT -> EXP_ELEMENT
+            Dim curValue As New SBSValue(curEle.RuleName, curEle.Value)
+
+            If curValue.Value = "(" Then
+                curEle = opEleList(i).SeqsList(1).SeqsList(1)
+                Dim result As SBSValue = Perform(curEle, runtimeData)
+
+                curValue.Type = result.Type
+                curValue = result.Value
+            End If
+
+            calcu.Calculate(curOp, curValue)
+
+            'If curOp <> "*" Or curOp <> "/" Then
+            '    If curType = "NUMBER" Then
+            '        If exprType = "NUMBER" Then
+            '            If curOp = "+" Then
+            '                exprValueNum += CDbl(curValue)
+            '            Else
+            '                Debug_Error("Runtime Error: Used undefine operator '" + curOp + "' between '" + exprType + "' and '" + curType + "'.")
+            '            End If
+            '        ElseIf exprType = "STRING" Then
+            '            If curOp = "+" Then
+            '                exprValueStr += curValue
+            '            Else
+            '                Debug_Error("Runtime Error: Used undefine operator '" + curOp + "' between '" + exprType + "' and '" + curType + "'.")
+            '            End If
+            '        End If
+            '    End If
+            'End If
+        Next
+
+        Return calcu.GetResult()
+
+    End Function
+
+    Sub Debug_Output(ByVal msg As String, Optional ByVal able_not_show As Boolean = False)
+        Form1.DebugText.AppendText(msg + vbCrLf)
+    End Sub
+
+    Sub Debug_Error(ByVal msg As String)
+        Debug_Output(msg + vbCrLf)
+    End Sub
+
+End Class
+
+Public Class SBSValue
     Public Type As String = ""
     Public nValue As Double
     Public sValue As String = ""
@@ -191,4 +210,13 @@ Public Class ReturnValue
 
         Return Nothing
     End Function
+End Class
+
+
+Public Class ControlFlowPerform
+
+End Class
+
+Public Class DefinitionPerform
+
 End Class

@@ -10,7 +10,7 @@
         Rules.Add(New Grammar("tCONSTANT", "NUMBER|||CONST_ALP"))
         Rules.Add(New Grammar("EXP_OP", "'<='|||'>='|||'+'|||'-'|||'*'|||'/'|||'>'|||'<'"))
 
-        Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||EXP_ELEMENT"))
+        Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||*EXP_OP_ELEMENT|||EXP_ELEMENT"))
         Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||VARIABLE|||'('+++EXPRESSION+++')'"))
         Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT|||EXP_OP+++'('+++EXPRESSION+++')'"))
 
