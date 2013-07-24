@@ -6,7 +6,7 @@
 ' XVG Developing branch 2013.7
 
 Public Structure GrammarSequence
-    Dim Element() As String ' A word only have one element, but a sentence can have more.
+    Dim Element() As String
 End Structure
 
 Public Class Grammar
@@ -17,7 +17,7 @@ Public Class Grammar
     Delegate Function MatchFunc(ByRef code As TextReader) As CodeSequence
 
     Public Name As String
-    Public Sequences As New ArrayList() ' A sentence rule only have one Sequence, but a element can have more.
+    Public Sequences As New ArrayList()
     Public SpecFunc As MatchFunc
 
     Public MatchMethod As Short = MATCH_METHOD_NORMAL
