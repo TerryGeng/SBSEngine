@@ -5,7 +5,7 @@
 ' =========================
 ' XVG Developing Branch 2013.7
 
-#Const OUTPUT_MATCH_PROCESS = True
+#Const OUTPUT_MATCH_PROCESS = False
 
 Public Class SBSPraser
     Const Version As String = "0.2a"
@@ -35,10 +35,10 @@ Public Class SBSPraser
         End If
 
         Dim code_reader As New TextReader(code)
+        RemoveBlankAndComments(code_reader)
 
         Dim sentence_list As New ArrayList()
         Dim mSentence As CodeSequence
-
         Dim is_error As Boolean = False
 
         While code_reader.IsEOF() <> True
@@ -79,6 +79,7 @@ Public Class SBSPraser
             Dim seq As ArrayList = rule.Sequences
 
             For seq_offset As Integer = 0 To seq.Count - 1
+                RemoveBlankAndComments(code)
                 Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
 
                 If match_result IsNot Nothing Then
@@ -86,7 +87,6 @@ Public Class SBSPraser
 #If OUTPUT_MATCH_PROCESS Then
                     StandardIO.PrintLine("Done on matching " + rulename)
 #End If
-
                     Return New CodeSequence(rule.Name, match_result)
                 End If
             Next
@@ -96,6 +96,8 @@ Public Class SBSPraser
 #End If
             Return Nothing
         ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
+            RemoveBlankAndComments(code)
+
 #If OUTPUT_MATCH_PROCESS Then
             StandardIO.PrintLine("Try to use specify function to match " + rulename)
 #End If
@@ -107,6 +109,7 @@ Public Class SBSPraser
     Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As TextReader) As ArrayList
         Dim words As New ArrayList()
         Dim start_position As Integer = code.GetPosition().Position
+        Dim start_line As Integer = code.GetPosition().Lines
         Dim unmatch As Boolean = False
 
         For offset As Integer = 0 To sequence.Element.Count - 1
@@ -119,6 +122,7 @@ Public Class SBSPraser
 
                 While True
                     Dim origin_pos As Integer = code.GetPosition().Position
+                    Dim origin_line As Integer = code.GetPosition().Lines
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
                         word.Add(matched_element)
@@ -128,7 +132,7 @@ Public Class SBSPraser
                         unmatch = True
                         Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
                     Else
-                        code.SetPosition(origin_pos)
+                        code.SetPosition(origin_pos, origin_line)
                         Exit While
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
@@ -138,28 +142,25 @@ Public Class SBSPraser
                 words.Add(New CodeSequence(ele, word))
 
             ElseIf element_first_char = "'" Then
+                code.RemoveBlankBeforeLf()
+
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
                 Dim mChar As Char = ""
-                If expected_str.Length = 1 Then
-                    mChar = code.GetNextChar
-                    If mChar <> expected_str Then
+
+                Dim mWord As String = ""
+                For j As Integer = 1 To expected_str.Length
+                    mChar = code.GetNextChar()
+
+                    mWord += mChar
+
+                    If mWord = expected_str.Substring(0, j) Then
+                        Continue For
+                    Else
                         unmatch = True
                         Exit For
                     End If
-                Else
-                    Dim mWord As String = ""
-                    For j As Integer = 1 To expected_str.Length
-                        mChar = code.GetNextChar()
-                        mWord += mChar
+                Next
 
-                        If mWord = expected_str.Substring(0, j) Then
-                            Continue For
-                        Else
-                            unmatch = True
-                            Exit For
-                        End If
-                    Next
-                End If
                 If unmatch = False Then
                     words.Add(New CodeSequence("-KEYWORD-", expected_str))
                 Else
@@ -178,9 +179,10 @@ Public Class SBSPraser
         Next
 
         If unmatch = False Then
+            code.RemoveBlankBeforeLf()
             Return words
         Else
-            code.SetPosition(start_position)
+            code.SetPosition(start_position, start_line)
             Return Nothing
         End If
 
@@ -197,6 +199,16 @@ Public Class SBSPraser
         Return Nothing
     End Function
 
+    Sub RemoveBlankAndComments(ByRef code As TextReader)
+        code.RemoveBlankBeforeLf()
+        While code.PeekNextChar() = "'"
+            Dim mChar As Char = code.GetNextChar()
+            While mChar <> vbLf And code.IsEOF() <> True
+                mChar = code.GetNextChar()
+            End While
+            code.RemoveBlankBeforeChar()
+        End While
+    End Sub
 End Class
 
 

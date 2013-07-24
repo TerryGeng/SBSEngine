@@ -20,7 +20,7 @@
         Return Code.Substring(offset, 1)
     End Function
 
-    Function GetNextChar() As Char
+    Public Function GetNextChar() As Char
         Dim mChar As Char = GetChar(Pos.Position)
 
         Pos.Position += 1
@@ -39,37 +39,56 @@
         Return mChar
     End Function
 
-    Function GetPosition() As TextReaderPosition
+    Public Function PeekNextChar() As Char
+        Return GetChar(Pos.Position)
+    End Function
+
+    Public Sub RemoveBlankBeforeLf()
+        Dim mChar As Char = PeekNextChar()
+        While Char.IsWhiteSpace(mChar) And mChar <> vbLf And mChar <> vbCr
+            GetNextChar()
+            mChar = PeekNextChar()
+        End While
+    End Sub
+
+    Public Sub RemoveBlankBeforeChar()
+        While Char.IsWhiteSpace(PeekNextChar)
+            GetNextChar()
+        End While
+    End Sub
+
+    Public Function GetPosition() As TextReaderPosition
         Return Pos
     End Function
 
-    Function SetPos(ByVal pos As TextReaderPosition) As Boolean
+    Public Function SetPos(ByVal pos As TextReaderPosition) As Boolean
         If pos.Position < Code.Length Then
-            Pos.Position = pos.Position
-            Pos.Lines = pos.Lines
+            pos.Position = pos.Position
+            pos.Lines = pos.Lines
             Return True
         Else
             Return False
         End If
     End Function
 
-    Sub SetPosition(ByVal position As Integer)
+    Public Sub SetPosition(ByVal position As Integer, ByVal line As Integer)
         Pos.Position = position
+        Pos.Lines = line
     End Sub
 
-    Sub PositionBack(Optional ByVal len As Integer = 1)
+    Public Sub PositionBack(Optional ByVal len As Integer = 1)
         Pos.Position -= len
     End Sub
 
-    Function IsEOF()
-        If pos.Position >= Code.Length Then
+    Public Function IsEOF()
+        If Pos.Position >= Code.Length Then
             Return True
         Else
             Return False
         End If
     End Function
 
-    Function IsEOF(ByVal position As Integer)
+    Public Function IsEOF(ByVal position As Integer)
         If position >= Code.Length Then
             Return True
         Else
@@ -77,11 +96,11 @@
         End If
     End Function
 
-    Function GetLength()
+    Public Function GetLength()
         Return Code.Length
     End Function
 
-    Function GetDeepestChar()
+    Public Function GetDeepestChar()
         If (IsEOF(DeepestPos.Position - 1)) Then
             Return "END"
         Else
@@ -89,7 +108,7 @@
         End If
     End Function
 
-    Function GetDeepestLine()
+    Public Function GetDeepestLine()
         Return DeepestPos.Lines
     End Function
 End Class
