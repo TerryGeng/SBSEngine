@@ -72,9 +72,12 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SBSFunctionLib.vb" />
+    <Compile Include="SBSRuntimeData.vb" />
     <Compile Include="StandardIO.vb" />
     <Compile Include="GrammarRulesList.vb" />
     <Compile Include="SBSPerform.vb" />
+    <Compile Include="StatmentPerforms.vb" />
     <Compile Include="TextReader.vb" />
     <Compile Include="SBSPraser.vb" />
     <Compile Include="Form1.vb">
