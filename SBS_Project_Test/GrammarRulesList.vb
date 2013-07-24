@@ -1,7 +1,7 @@
 ﻿Public Class GrammarRulesList
     Public Shared Sub LoadRules(ByRef Rules As ArrayList)
 
-        Rules.Add(New Grammar("STATMENT", "EXPRESSION+++LINE_END"))
+        Rules.Add(New Grammar("STATMENT", "DEFINITION+++LINE_END|||EXPRESSION+++LINE_END"))
 
         Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
         Rules.Add(New Grammar("STRING", AddressOf PackString))
@@ -18,12 +18,16 @@
         Rules.Add(New Grammar("ARG_LIST", "*ARG_COMMA+++EXPRESSION|||EXPRESSION"))
         Rules.Add(New Grammar("ARG_COMMA", "EXPRESSION+++','"))
 
+        Rules.Add(New Grammar("DEFINITION", "VAR_DEF|||FUNC_DEF"))
         Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
-        Rules.Add(New Grammar("FUNC_DEF", "'Function '+++NAME+++(+++ARG_DEF_LIST+++)+++LINE_END+++" & _
+        Rules.Add(New Grammar("FUNC_DEF", "'Function '+++NAME+++'()'+++LINE_END+++" & _
+                              "*STATMENT+++" & _
+                              "'End Function'" & _
+                              "|||'Function '+++NAME+++'('+++ARG_DEF_LIST+++')'+++LINE_END+++" & _
                               "*STATMENT+++" & _
                               "'End Function'"))
-        Rules.Add(New Grammar("ARG_DEF_LIST", "VARIABLE|||*VARIABLE_COMMA+++VARIABLE"))
-        Rules.Add(New Grammar("ARG_COMMA", "VARIABLE+++','"))
+        Rules.Add(New Grammar("ARG_DEF_LIST", "*ARG_DEF_COMMA+++VARIABLE|||VARIABLE"))
+        Rules.Add(New Grammar("ARG_DEF_COMMA", "VARIABLE+++','"))
 
         Rules.Add(New Grammar("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Exit'"))
 
@@ -67,6 +71,7 @@
     Public Shared Function PackNumber(ByRef code As TextReader) As CodeSequence
         Dim nums As String = ""
         Dim origin_pos As Integer = code.GetPosition().Position
+        Dim origin_line As Integer = code.GetPosition().Lines
         While True
             Dim mChar As Char = code.GetNextChar
 
@@ -76,7 +81,7 @@
                 code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
-                code.SetPosition(origin_pos)
+                code.SetPosition(origin_pos, origin_line)
                 Return Nothing
             End If
         End While
@@ -87,6 +92,7 @@
     Public Shared Function PackName(ByRef code As TextReader) As CodeSequence
         Dim name As String = ""
         Dim origin_pos As Integer = code.GetPosition().Position
+        Dim origin_line As Integer = code.GetPosition().Lines
         While True
             Dim mChar As Char = code.GetNextChar
 
@@ -96,7 +102,7 @@
                 code.PositionBack()
                 Return New CodeSequence("NAME", name)
             Else
-                code.SetPosition(origin_pos)
+                code.SetPosition(origin_pos, origin_line)
                 Return Nothing
             End If
         End While
@@ -106,10 +112,13 @@
 
     Public Shared Function PackLineEnd(ByRef code As TextReader) As CodeSequence
         Dim origin_pos As Integer = code.GetPosition().Position
+        Dim origin_line As Integer = code.GetPosition().Lines
+
         If code.IsEOF() Or code.GetNextChar() = vbLf Then
+            code.RemoveBlankBeforeChar()
             Return New CodeSequence("LINE_END", "")
         Else
-            code.SetPosition(origin_pos)
+            code.SetPosition(origin_pos, origin_line)
             Return Nothing
         End If
     End Function

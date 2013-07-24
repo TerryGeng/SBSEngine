@@ -11,6 +11,7 @@
         MainPerformer = _mainPerformer
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
+        StackStatus = New ArrayList()
     End Sub
 
     Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue
@@ -18,8 +19,18 @@
         Dim return_val As JumpStatus
 
         If userFunc IsNot Nothing Then
+            Dim argsName As ArrayList = userFunc.ArgumentList
+            If argsName.Count <> args.Count Then
+                Throw New ApplicationException("Runtime Error: Arguments' amount for '" + funcName + "' doesn't match.")
+            End If
+
             RecordCurrentStackStatus()
-            return_val = MainPerformer.Run(userFunc.Statments)
+
+            For i As Integer = 0 To argsName.Count - 1
+                Variables.AddVariable(argsName(i), args(i))
+            Next
+
+            return_val = MainPerformer.Run(userFunc.Statments.SeqsList)
             StackStatusBack()
         Else
             Dim libFunc As LibFunction
@@ -75,7 +86,7 @@ Public Class SBSFunctionList
     Dim UsersFunctions As ArrayList
     Dim LibraryFunctions As ArrayList
 
-    Public LastUsrFuncOffset As Integer = 0
+    Public LastUsrFuncOffset As Integer = -1
 
     Delegate Function LibFunc(ByRef Arguments As ArrayList) As SBSValue
 
@@ -86,17 +97,21 @@ Public Class SBSFunctionList
     End Sub
 
     Sub AddUsersFunction(ByVal func As UsersFunction)
-        lastUsrFuncOffset += 1
+        func.Name = func.Name.ToLower()
 
-        If lastUsrFuncOffset = UsersFunctions.Count Then
+        LastUsrFuncOffset += 1
+
+        If LastUsrFuncOffset = UsersFunctions.Count Then
             UsersFunctions.Add(func)
         Else
-            UsersFunctions(lastUsrFuncOffset) = func
+            UsersFunctions(LastUsrFuncOffset) = func
         End If
     End Sub
 
     Public Function GetUsersFunction(ByVal funcName As String) As UsersFunction
-        For i As Integer = UsersFunctions.Count - 1 To 0 Step -1
+        funcName = funcName.ToLower()
+
+        For i As Integer = LastUsrFuncOffset To 0 Step -1
             Dim Func As UsersFunction = UsersFunctions(i)
             If Func.Name = funcName Then
                 Return Func
@@ -107,6 +122,8 @@ Public Class SBSFunctionList
     End Function
 
     Public Function GetLibFunction(ByVal funcName As String) As LibFunction
+        funcName = funcName.ToLower()
+
         For i As Integer = 0 To LibraryFunctions.Count - 1
             Dim func As LibFunction = LibraryFunctions(i)
             If func.Name = funcName Then
@@ -123,7 +140,7 @@ Public Class SBSVariableList
     Dim varPtrs As ArrayList
     Dim varTable As ArrayList
 
-    Public LastVarOffset() As Integer = {0, 0}
+    Public LastVarOffset() As Integer = {-1, -1}
 
     Sub New()
         varPtrs = New ArrayList()
@@ -132,7 +149,8 @@ Public Class SBSVariableList
 
     Public Sub AddVariable(ByVal name As String, ByRef value As SBSValue)
         lastVarOffset(0) += 1
-        lastVarOffset(1) += 1
+        LastVarOffset(1) += 1
+        name = name.ToLower()
 
         If lastVarOffset(1) = varTable.Count Then
             varTable.Add(value)
@@ -148,7 +166,9 @@ Public Class SBSVariableList
     End Sub
 
     Public Function GetVariable(ByVal name As String) As SBSValue
-        For i As Integer = varPtrs.Count - 1 To 0 Step -1
+        name = name.ToLower()
+
+        For i As Integer = LastVarOffset(0) To 0 Step -1
             Dim var As VariablePtr = varPtrs(i)
             If var.Name = name Then
                 Return varTable(var.Offset)
@@ -172,8 +192,14 @@ End Class
 
 Public Class UsersFunction
     Public Name As String
-    Public ArgumentNames As ArrayList
-    Public Statments As ArrayList
+    Public ArgumentList As ArrayList
+    Public Statments As CodeSequence
+
+    Sub New(ByVal _name As String, ByVal _argumentList As ArrayList, ByVal _statments As CodeSequence)
+        Name = _name
+        ArgumentList = _argumentList
+        Statments = _statments
+    End Sub
 End Class
 
 Public Class LibFunction

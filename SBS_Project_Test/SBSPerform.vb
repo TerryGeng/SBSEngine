@@ -12,11 +12,11 @@
         Sub New(ByRef RuntimeData As SBSRuntimeData, ByRef Performer As SBSPerform)
             Expression = New ExpressionPerformer(RuntimeData, Performer)
             ControlFlow = New ControlFlowPerform()
-            Definition = New DefinitionPerform()
+            Definition = New DefinitionPerform(RuntimeData, Performer)
         End Sub
     End Class
 
-    Dim Performers As StatmentPerformers
+    Public Performers As StatmentPerformers
     Dim RuntimeData As SBSRuntimeData
 
     Sub New(ByRef statList As ArrayList)
@@ -33,22 +33,25 @@
     End Sub
 
     Public Function Run() As JumpStatus
-        Return Run(RuntimeData.Statments)
+        Dim start_time As Long = GetTickCount()
+
+        StandardIO.PrintLine("Running start at " + CStr(start_time) + ".")
+        Dim result As JumpStatus = Run(RuntimeData.Statments)
+        StandardIO.PrintLine("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
+
+        Return result
     End Function
 
     Public Function Run(ByRef statments As ArrayList) As JumpStatus
-        Dim start_time As Long = GetTickCount()
-        StandardIO.PrintLine("Running start at " + CStr(start_time) + ".")
-
         For i As Integer = 0 To statments.Count - 1
             Dim statmBody As CodeSequence = statments(i).SeqsList(0)
             Dim statmType As String = statmBody.RuleName
             Dim result As SBSValue
 
             If statmType = "EXPRESSION" Then
-                result = Performers.Expression.Perform(statmBody)
-            ElseIf statmType = "FUNC_DEF" Then
-
+                result = Performers.Expression.ExprPerform(statmBody)
+            ElseIf statmType = "DEFINITION" Then
+                result = Performers.Definition.Perform(statmBody)
             Else
                 Throw New ApplicationException("Internal Error: Unknowed statment type '" + statmType + "'.")
                 Return Nothing
@@ -57,9 +60,7 @@
             'StandardIO.PrintLine("[" + CStr(i) + "]Return Val: (Type:" + result.Type + ")" + CStr(result.Value))
         Next
 
-        StandardIO.PrintLine("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
-
-        Return Nothing
+        Return Nothing ' TODO
     End Function
 
 End Class
