@@ -33,12 +33,28 @@
     Public Shared Function PackString(ByRef code As TextReader) As CodeSequence
         If code.GetNextChar() = Chr(34) Then
             Dim str As String = ""
+            Dim isSpecChar As Boolean = False
             While True
                 Dim mChar As Char = code.GetNextChar()
-                If mChar <> Chr(34) Then
-                    Str += mChar
+
+                If isSpecChar = False Then
+                    If mChar = "\" Then
+                        isSpecChar = True
+                    ElseIf mChar <> Chr(34) Then
+                        str += mChar
+                    Else
+                        Return New CodeSequence("STRING", str)
+                    End If
                 Else
-                    Return New CodeSequence("STRING", Str)
+                    If mChar = "n" Then
+                        str += vbCrLf
+                    ElseIf mChar = "\" Then
+                        str += "\"
+                    ElseIf mChar = Chr(34) Then
+                        str += "\"
+                    End If
+
+                    isSpecChar = False
                 End If
             End While
 
