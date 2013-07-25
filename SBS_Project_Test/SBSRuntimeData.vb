@@ -14,7 +14,7 @@
         StackStatus = New ArrayList()
     End Sub
 
-    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue
+    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue ' TODO: Move this func away.
         Dim userFunc As UsersFunction = Functions.GetUsersFunction(funcName)
         Dim return_val As JumpStatus
 
@@ -24,14 +24,11 @@
                 Throw New ApplicationException("Runtime Error: Arguments' amount for '" + funcName + "' doesn't match.")
             End If
 
-            RecordCurrentStackStatus()
+            Dim arguments(2) As ArrayList
+            arguments(0) = argsName
+            arguments(1) = args
 
-            For i As Integer = 0 To argsName.Count - 1
-                Variables.AddVariable(argsName(i), args(i))
-            Next
-
-            return_val = MainPerformer.Run(userFunc.Statments.SeqsList)
-            StackStatusBack()
+            return_val = MainPerformer.Run(userFunc.Statments.SeqsList, arguments)
         Else
             Dim libFunc As LibFunction
             libFunc = Functions.GetLibFunction(funcName)
@@ -44,7 +41,7 @@
         End If
 
         If return_val IsNot Nothing Then
-            If return_val.JumpType = "RETURN" Then
+            If return_val.JumpType = "Return " Or return_val.JumpType = "Return" Then
                 Return return_val.ExtraValue
             Else
                 Throw New ApplicationException("Runtime Error: Unexpected jump statment '" + return_val.JumpType + "' in function '" + funcName + "'.")
@@ -215,12 +212,12 @@ Public Class LibFunction
 
 End Class
 
-'Public Class Range
-'    Public RangeStart As Integer
-'    Public RangeEnd As Integer
+Public Class JumpStatus
+    Public JumpType As String
+    Public ExtraValue As SBSValue
 
-'    Sub New(ByVal _rangeStart As Integer, ByVal _rangeEnd As Integer)
-'        RangeStart = _rangeStart
-'        RangeEnd = _rangeEnd
-'    End Sub
-'End Class
+    Sub New(ByVal _jumpType As String, Optional ByRef _extraValue As SBSValue = Nothing)
+        JumpType = _jumpType
+        ExtraValue = _extraValue
+    End Sub
+End Class

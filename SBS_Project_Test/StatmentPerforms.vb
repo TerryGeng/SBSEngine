@@ -181,6 +181,135 @@
         Return Nothing
     End Function
 
+    '====================
+
+    Public Function JudgOrExprPerform(ByRef judg_or_expr As CodeSequence) As SBSValue
+        Dim firstEle As CodeSequence = judg_or_expr.SeqsList(0)
+        Dim firstValue As SBSValue = JudgAndExpPerform(firstEle)
+
+        If firstValue.nValue Then
+            Return firstValue
+        Else
+            If judg_or_expr.SeqsList.Count = 1 Then
+                Return New SBSValue("NUMBER", 0)
+            End If
+        End If
+
+        If judg_or_expr.SeqsList.Count = 3 Then
+            Dim secondEle As CodeSequence = judg_or_expr.SeqsList(2)
+            Dim secondValue As SBSValue = JudgOrExprPerform(secondEle)
+
+            If secondValue.nValue Then
+                Return New SBSValue("NUMBER", 1)
+            Else
+                Return New SBSValue("NUMBER", 0)
+            End If
+        End If
+
+        Return Nothing
+    End Function
+
+    Public Function JudgAndExpPerform(ByRef judg_and_expr As CodeSequence) As SBSValue
+        Dim firstEle As CodeSequence = judg_and_expr.SeqsList(0)
+        Dim firstValue As SBSValue = Nothing
+
+        If firstEle.RuleName = "JUDG_SINGLE" Then
+            firstValue = JudgSinglePerform(firstEle)
+        ElseIf firstEle.RuleName = "JUDG_AND_EXPR" Then
+            firstValue = JudgAndExpPerform(firstEle)
+        End If
+
+        If judg_and_expr.SeqsList.Count = 3 Then
+            Dim secondEle As CodeSequence = judg_and_expr.SeqsList(2)
+            Dim secondValue As SBSValue = JudgSinglePerform(secondEle)
+
+            If firstValue.nValue And secondValue.nValue Then
+                Return New SBSValue("NUMBER", 1)
+            Else
+                Return New SBSValue("NUMBER", 0)
+            End If
+        ElseIf judg_and_expr.SeqsList.Count = 1 Then
+            Return firstValue
+        End If
+
+        Return Nothing
+    End Function
+
+    Public Function JudgSinglePerform(ByRef judg_single As CodeSequence) As SBSValue
+        Dim firstEle As CodeSequence = judg_single.SeqsList(0)
+        Dim firstValue As SBSValue = Nothing
+
+        If firstEle.RuleName = "EXPRESSION" Then
+            firstValue = ExprPerform(firstEle)
+        ElseIf firstEle.Value = "(" Then
+            Return JudgOrExprPerform(firstEle)
+        Else
+            Return Nothing
+        End If
+
+        If judg_single.SeqsList.Count = 1 Then
+            If firstValue.nValue Then
+                Return firstValue
+            Else
+                Return New SBSValue("NUMBER", 0)
+            End If
+        End If
+
+        Dim judgOp As String = judg_single.SeqsList(1).SeqsList(0).Value ' JUDG_SINGLE -> JUDG_OP -> -KEYWORD-
+        Dim secondEle As CodeSequence = judg_single.SeqsList(2)
+        Dim secondValue As SBSValue = ExprPerform(secondEle)
+        If firstValue.Type = secondValue.Type Then
+            If firstValue.Type = "NUMBER" Then
+                If judgOp = "=" Then
+                    If firstValue.nValue = secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                ElseIf judgOp = ">" Then
+                    If firstValue.nValue > secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                ElseIf judgOp = "<" Then
+                    If firstValue.nValue < secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                ElseIf judgOp = ">=" Then
+                    If firstValue.nValue >= secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                ElseIf judgOp = "<=" Then
+                    If firstValue.nValue <= secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                Else
+                    Throw New ApplicationException("Runtime Error: Undefined operator '" + judgOp + "' while compare NUMBER.")
+                End If
+            ElseIf firstValue.Type = "STRING" Then
+                If judgOp = "=" Then
+                    If firstValue.nValue = secondValue.nValue Then
+                        Return New SBSValue("NUMBER", 1)
+                    Else
+                        Return New SBSValue("NUMBER", 0)
+                    End If
+                Else
+                    Throw New ApplicationException("Runtime Error: Undefined operator '" + judgOp + "' while compare STRING.")
+                End If
+            End If
+        Else
+            Throw New ApplicationException("Runtime Error: Cannot compare two values with different types.")
+        End If
+
+        Return Nothing
+    End Function
 End Class
 
 Public Class DefinitionPerform
@@ -243,5 +372,89 @@ Public Class DefinitionPerform
 End Class
 
 Public Class ControlFlowPerform
+    Dim RuntimeData As SBSRuntimeData
+    Dim MainPerformer As SBSPerform
+    Dim ExprPerf As ExpressionPerformer
 
+    Sub New(ByRef _runtimeData As SBSRuntimeData, ByRef _mainPerformer As SBSPerform)
+        RuntimeData = _runtimeData
+        MainPerformer = _mainPerformer
+    End Sub
+
+    Public Function Perform(ByRef statment As CodeSequence) As SBSValue
+        ExprPerf = MainPerformer.Performers.Expression
+
+        If statment.SeqsList(0).RuleName = "IF_ELSE" Then
+            IfElseBlock(statment.SeqsList(0))
+        End If
+
+        Return Nothing
+    End Function
+
+    Function IfElseBlock(ByRef if_else As CodeSequence) As SBSValue
+        Dim if_else_head As CodeSequence = if_else.SeqsList(0)
+        Dim else_and_end As CodeSequence = if_else.SeqsList(1)
+
+        ' Dealing with IF_ELSE_HEAD and judge whether enter this If.
+
+        Dim condition As CodeSequence = if_else_head.SeqsList(1)
+
+        If ExprPerf.JudgOrExprPerform(condition).nValue Then
+            Dim statments As ArrayList = if_else_head.SeqsList(4).SeqsList
+            MainPerformer.Run(statments)
+            Return Nothing
+        Else
+            Dim firstEle As CodeSequence = else_and_end.SeqsList(0)
+            Dim firstValue As String = firstEle.Value
+
+            If firstEle.RuleName = "*ELSE_IF" Then
+                For i As Integer = 0 To firstEle.SeqsList.Count - 1
+                    Dim curEle As CodeSequence = firstEle.SeqsList(i)
+                    Dim cond As CodeSequence = curEle.SeqsList(1)
+                    If ExprPerf.JudgOrExprPerform(cond).nValue Then
+                        Dim statments As ArrayList = curEle.SeqsList(4).SeqsList
+                        MainPerformer.Run(statments)
+                        Return Nothing
+                    End If
+                Next
+            End If
+
+            If firstValue <> "End If" Then
+                Dim elseStatments As ArrayList = Nothing
+
+                If firstValue IsNot Nothing And firstValue = "Else " Then
+                    elseStatments = else_and_end.SeqsList(1).SeqsList
+                Else
+                    elseStatments = else_and_end.SeqsList(3).SeqsList
+                End If
+
+                MainPerformer.Run(elseStatments)
+                Return Nothing
+            End If
+        End If
+
+        Return Nothing
+    End Function
+End Class
+
+Public Class JumpPerform
+    Dim RuntimeData As SBSRuntimeData
+    Dim MainPerformer As SBSPerform
+    Dim ExprPerf As ExpressionPerformer
+
+    Sub New(ByRef _runtimeData As SBSRuntimeData, ByRef _mainPerformer As SBSPerform)
+        RuntimeData = _runtimeData
+        MainPerformer = _mainPerformer
+    End Sub
+
+    Public Function Perform(ByRef statment As CodeSequence) As JumpStatus
+        ExprPerf = MainPerformer.Performers.Expression
+        Dim Type As String = statment.SeqsList(0).Value
+        Dim ExtraValue As SBSValue = Nothing
+        If statment.SeqsList.Count > 1 Then
+            ExtraValue = ExprPerf.ExprPerform(statment.SeqsList(1))
+        End If
+
+        Return New JumpStatus(Type, ExtraValue)
+    End Function
 End Class

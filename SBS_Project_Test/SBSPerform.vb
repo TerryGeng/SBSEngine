@@ -8,11 +8,13 @@
         Public Expression As ExpressionPerformer
         Public ControlFlow As ControlFlowPerform
         Public Definition As DefinitionPerform
+        Public Jump As JumpPerform
 
         Sub New(ByRef RuntimeData As SBSRuntimeData, ByRef Performer As SBSPerform)
             Expression = New ExpressionPerformer(RuntimeData, Performer)
-            ControlFlow = New ControlFlowPerform()
+            ControlFlow = New ControlFlowPerform(RuntimeData, Performer)
             Definition = New DefinitionPerform(RuntimeData, Performer)
+            Jump = New JumpPerform(RuntimeData, Performer)
         End Sub
     End Class
 
@@ -36,22 +38,50 @@
         Dim start_time As Long = GetTickCount()
 
         StandardIO.PrintLine("Running start at " + CStr(start_time) + ".")
-        Dim result As JumpStatus = Run(RuntimeData.Statments)
+        Dim result As JumpStatus = PerformStatments(RuntimeData.Statments)
         StandardIO.PrintLine("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
 
         Return result
     End Function
 
-    Public Function Run(ByRef statments As ArrayList) As JumpStatus
+    Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing)
+        If arguments IsNot Nothing Then
+            Dim argsName As ArrayList = arguments(0)
+            Dim argsValue As ArrayList = arguments(1)
+
+            RuntimeData.RecordCurrentStackStatus()
+
+            For i As Integer = 0 To argsName.Count - 1
+                RuntimeData.Variables.AddVariable(argsName(i), argsValue(i))
+            Next
+        Else
+            RuntimeData.RecordCurrentStackStatus()
+        End If
+
+        Dim return_val As JumpStatus
+
+        return_val = PerformStatments(statments)
+        RuntimeData.StackStatusBack()
+
+        Return return_val
+    End Function
+
+    Function PerformStatments(ByRef statments As ArrayList) As JumpStatus
         For i As Integer = 0 To statments.Count - 1
             Dim statmBody As CodeSequence = statments(i).SeqsList(0)
             Dim statmType As String = statmBody.RuleName
             Dim result As SBSValue
+            Dim jumpstat As JumpStatus
 
             If statmType = "EXPRESSION" Then
                 result = Performers.Expression.ExprPerform(statmBody)
             ElseIf statmType = "DEFINITION" Then
                 result = Performers.Definition.Perform(statmBody)
+            ElseIf statmType = "CONTROLFLOW" Then
+                result = Performers.ControlFlow.Perform(statmBody)
+            ElseIf statmType = "JUMP" Then
+                jumpstat = Performers.Jump.Perform(statmBody)
+                Return jumpstat
             Else
                 Throw New ApplicationException("Internal Error: Unknowed statment type '" + statmType + "'.")
                 Return Nothing
@@ -83,10 +113,6 @@ Public Class SBSValue
             sValue = _value
         End If
     End Sub
-    Sub New(ByVal _type As String, ByVal _value As Double)
-        Type = _type
-        nValue = _value
-    End Sub
 
     Public Function Value()
         If Type = "STRING" Then
@@ -97,14 +123,4 @@ Public Class SBSValue
 
         Return Nothing
     End Function
-End Class
-
-Public Class JumpStatus
-    Public JumpType As String
-    Public ExtraValue As SBSValue
-
-    Sub New(ByVal _jumpType As String, ByRef _extraValue As SBSValue)
-        JumpType = _jumpType
-        ExtraValue = _extraValue
-    End Sub
 End Class
