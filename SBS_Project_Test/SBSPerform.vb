@@ -52,7 +52,7 @@
             RuntimeData.RecordCurrentStackStatus()
 
             For i As Integer = 0 To argsName.Count - 1
-                RuntimeData.Variables.AddVariable(argsName(i), argsValue(i))
+                RuntimeData.Variables.SetVariable(argsName(i), argsValue(i))
             Next
         Else
             RuntimeData.RecordCurrentStackStatus()

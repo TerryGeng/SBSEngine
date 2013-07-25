@@ -337,7 +337,7 @@ Public Class DefinitionPerform
         Dim varName As String = var_def.SeqsList(0).SeqsList(1).Value ' VAR_DEF -> VARIABLE -> NAME
         Dim varValue As SBSValue = ExprPerf.ExprPerform(var_def.SeqsList(2))
 
-        RuntimeData.Variables.AddVariable(varName, varValue)
+        RuntimeData.Variables.SetVariable(varName, varValue)
 
         Return Nothing
     End Function
@@ -386,6 +386,8 @@ Public Class ControlFlowPerform
 
         If statment.SeqsList(0).RuleName = "IF_ELSE" Then
             IfElseBlock(statment.SeqsList(0))
+        ElseIf statment.SeqsList(0).RuleName = "WHILE" Then
+            WhileBlock(statment.SeqsList(0))
         End If
 
         Return Nothing
@@ -435,6 +437,18 @@ Public Class ControlFlowPerform
 
         Return Nothing
     End Function
+
+    Function WhileBlock(ByRef _while As CodeSequence) As SBSValue
+        Dim condition As CodeSequence = _while.SeqsList(1)
+        Dim statments As CodeSequence = _while.SeqsList(3)
+
+        While ExprPerf.JudgOrExprPerform(condition).nValue
+            MainPerformer.Run(statments.SeqsList)
+        End While
+
+        Return Nothing
+    End Function
+
 End Class
 
 Public Class JumpPerform

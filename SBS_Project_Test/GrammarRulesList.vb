@@ -27,7 +27,7 @@
         Rules.Add(New Grammar("DEFINITION", "VAR_DEF|||FUNC_DEF"))
         Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
 
-        Rules.Add(New Grammar("CONTROLFLOW", "IF_ELSE"))
+        Rules.Add(New Grammar("CONTROLFLOW", "IF_ELSE|||WHILE"))
         Rules.Add(New Grammar("IF_ELSE", "IF_ELSE_HEAD+++ELSE_AND_END"))
         Rules.Add(New Grammar("IF_ELSE_HEAD", "'If '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
         Rules.Add(New Grammar("ELSE_AND_END",
@@ -36,6 +36,12 @@
                               "*ELSE_IF+++'End If'|||" & _
                               "*ELSE_IF+++'Else'+++LINE_END+++*STATMENT+++'End If'"))
         Rules.Add(New Grammar("ELSE_IF", "'ElseIf '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
+
+        Rules.Add(New Grammar("WHILE", "'While'+++JUDG_OR_EXPR+++LINE_END+++*STATMENT+++'End While'"))
+        Rules.Add(New Grammar("FOR",
+                              "'For '+++VAR_DEF+++'To '+++EXPRESSION+++'Step '+++EXPRESSION+++LINE_END+++*STATMENT+++'End While'|||" & _
+                              "'For '+++VAR_DEF+++'To '+++EXPRESSION+++LINE_END+++*STATMENT+++'End While'"))
+
 
         Rules.Add(New Grammar("FUNC_DEF",
                               "'Function '+++NAME+++'()'+++LINE_END+++" & _

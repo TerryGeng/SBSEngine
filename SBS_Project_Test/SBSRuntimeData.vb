@@ -144,33 +144,49 @@ Public Class SBSVariableList
         varTable = New ArrayList()
     End Sub
 
-    Public Sub AddVariable(ByVal name As String, ByRef value As SBSValue)
-        lastVarOffset(0) += 1
-        LastVarOffset(1) += 1
-        name = name.ToLower()
-
-        If lastVarOffset(1) = varTable.Count Then
-            varTable.Add(value)
+    Public Sub SetVariable(ByVal name As String, ByRef value As SBSValue)
+        Dim varPtr As VariablePtr = GetVarPtr(name)
+        If varPtr IsNot Nothing Then
+            varTable(varPtr.Offset) = value
         Else
-            varTable(lastVarOffset(1)) = value
-        End If
+            LastVarOffset(0) += 1
+            LastVarOffset(1) += 1
+            name = name.ToLower()
 
-        If lastVarOffset(0) = varPtrs.Count Then
-            varPtrs.Add(New VariablePtr(name, lastVarOffset(1)))
-        Else
-            varPtrs(lastVarOffset(0)) = New VariablePtr(name, lastVarOffset(1))
+            If LastVarOffset(1) = varTable.Count Then
+                varTable.Add(value)
+            Else
+                varTable(LastVarOffset(1)) = value
+            End If
+
+            If LastVarOffset(0) = varPtrs.Count Then
+                varPtrs.Add(New VariablePtr(name, LastVarOffset(1)))
+            Else
+                varPtrs(LastVarOffset(0)) = New VariablePtr(name, LastVarOffset(1))
+            End If
         End If
     End Sub
 
-    Public Function GetVariable(ByVal name As String) As SBSValue
+    Function GetVarPtr(ByVal name As String) As VariablePtr
         name = name.ToLower()
 
         For i As Integer = LastVarOffset(0) To 0 Step -1
             Dim var As VariablePtr = varPtrs(i)
             If var.Name = name Then
-                Return varTable(var.Offset)
+                Return var
             End If
         Next
+
+        Return Nothing
+    End Function
+
+    Public Function GetVariable(ByVal name As String) As SBSValue
+        name = name.ToLower()
+        Dim varPtr As VariablePtr = GetVarPtr(name)
+
+        If varPtr IsNot Nothing Then
+            Return varTable(varPtr.Offset)
+        End If
 
         Return Nothing
     End Function
