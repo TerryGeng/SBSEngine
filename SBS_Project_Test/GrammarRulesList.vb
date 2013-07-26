@@ -97,12 +97,18 @@
         Dim nums As String = ""
         Dim origin_pos As Integer = code.GetPosition().Position
         Dim origin_line As Integer = code.GetPosition().Lines
+
+        Dim lastChar As Char = ""
+        Dim Float As Boolean = False
+
         While True
             Dim mChar As Char = code.GetNextChar
 
             If IsNumeric(mChar) Then
                 nums += mChar
-            ElseIf nums <> "" Then
+            ElseIf mChar = "."c And Float = False And lastChar <> "" Then
+                nums += mChar
+            ElseIf nums <> "" And lastChar <> "."c Then
                 code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
