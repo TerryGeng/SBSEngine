@@ -163,20 +163,35 @@
             Dim args As New ArrayList()
 
             If argList.Count = 1 Then
-                args.Add(ExprPerform(argList(0)))
-                Return RuntimeData.CallFunction(funcName, args)
+                Dim arg As SBSValue = ExprPerform(argList(0))
+                If arg IsNot Nothing Then
+                    args.Add(arg)
+                    Return RuntimeData.CallFunction(funcName, args)
+                Else
+                    Throw New ApplicationException("Runtime Error: Cannot use nothing as argument.")
+                End If
 
             Else
                 Dim arg_commas As ArrayList = argList(0).SeqsList ' ARG_LIST -> *ARG_COMMA -> ARG_COMMA List
                 For i As Integer = 0 To arg_commas.Count - 1
                     Dim arg_comma As CodeSequence = arg_commas(i)
-                    args.Add(ExprPerform(arg_comma.SeqsList(0))) ' ARG_COMMA -> EXPRESSION
-                Next
+                    Dim mArg As SBSValue = ExprPerform(arg_comma.SeqsList(0))
+                    If mArg IsNot Nothing Then
+                        args.Add(mArg) ' ARG_COMMA -> EXPRESSION
+                    Else
+                        Throw New ApplicationException("Runtime Error: Cannot use nothing as argument.")
+                    End If
 
-                args.Add(ExprPerform(argList(1)))
+                Next
+                Dim _arg As SBSValue = ExprPerform(argList(1))
+                If _arg IsNot Nothing Then
+                    args.Add(_arg)
+                Else
+                    Throw New ApplicationException("Runtime Error: Cannot use nothing as argument.")
+                End If
                 Return RuntimeData.CallFunction(funcName, args)
             End If
-        End If
+            End If
 
         Return Nothing
     End Function
@@ -427,7 +442,7 @@ Public Class ControlFlowPerform
                 If firstValue IsNot Nothing And firstValue = "Else " Then
                     elseStatments = else_and_end.SeqsList(1).SeqsList
                 Else
-                    elseStatments = else_and_end.SeqsList(3).SeqsList
+                    elseStatments = else_and_end.SeqsList(2).SeqsList
                 End If
 
                 MainPerformer.Run(elseStatments)

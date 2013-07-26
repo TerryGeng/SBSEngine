@@ -44,12 +44,12 @@
         Return result
     End Function
 
-    Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing)
+    Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing, Optional ByVal VarBlackBox As Boolean = False)
         If arguments IsNot Nothing Then
             Dim argsName As ArrayList = arguments(0)
             Dim argsValue As ArrayList = arguments(1)
 
-            RuntimeData.RecordCurrentStackStatus()
+            RuntimeData.RecordCurrentStackStatus(VarBlackBox)
 
             For i As Integer = 0 To argsName.Count - 1
                 RuntimeData.Variables.SetVariable(argsName(i), argsValue(i))

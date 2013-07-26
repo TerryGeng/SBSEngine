@@ -28,7 +28,7 @@
             arguments(0) = argsName
             arguments(1) = args
 
-            return_val = MainPerformer.Run(userFunc.Statments.SeqsList, arguments)
+            return_val = MainPerformer.Run(userFunc.Statments.SeqsList, arguments, True)
         Else
             Dim libFunc As LibFunction
             libFunc = Functions.GetLibFunction(funcName)
@@ -52,29 +52,22 @@
 
     End Function
 
-    Public Sub RecordCurrentStackStatus()
-        Dim funcOffset As Integer = Functions.LastUsrFuncOffset
-        Dim varOffset() As Integer = Variables.LastVarOffset
-        Dim stat(3) As Integer
-        stat(0) = funcOffset
-        stat(1) = varOffset(0)
-        stat(2) = varOffset(1)
-
-        StackStatus.Add(stat)
+    Public Sub RecordCurrentStackStatus(Optional ByVal ShieldOriginalVars As Boolean = False)
+        StackStatus.Add(New StackStatus(Variables.AvailableRange, Functions.AvailableRange))
+        If ShieldOriginalVars Then
+            Variables.AvailableRange.rangeStart = Variables.AvailableRange.rangeStart + Variables.AvailableRange.rangeLength
+            Variables.AvailableRange.rangeLength = 0
+        End If
     End Sub
 
     Public Sub StackStatusBack()
-        Dim stat() As Integer = StackStatus(StackStatus.Count - 1)
+        Dim stat As StackStatus = StackStatus(StackStatus.Count - 1)
+        Variables.AvailableRange.rangeStart = stat.varAvailableRange.rangeStart
+        Variables.AvailableRange.rangeLength = stat.varAvailableRange.rangeLength
+        Functions.AvailableRange.rangeStart = stat.funcAvailableRange.rangeStart
+        Functions.AvailableRange.rangeLength = stat.funcAvailableRange.rangeLength
+
         StackStatus.RemoveAt(StackStatus.Count - 1)
-
-        Dim funcOffset As Integer
-        Dim varOffset(2) As Integer
-        funcOffset = stat(0)
-        varOffset(0) = stat(1)
-        varOffset(1) = stat(2)
-
-        Variables.LastVarOffset = varOffset
-        Functions.LastUsrFuncOffset = funcOffset
     End Sub
 
 End Class
@@ -83,32 +76,36 @@ Public Class SBSFunctionList
     Dim UsersFunctions As ArrayList
     Dim LibraryFunctions As ArrayList
 
-    Public LastUsrFuncOffset As Integer = -1
+    Public AvailableRange As Range
 
     Delegate Function LibFunc(ByRef Arguments As ArrayList) As SBSValue
 
     Sub New()
         LibraryFunctions = New ArrayList()
         UsersFunctions = New ArrayList()
+        AvailableRange = New Range(0, 0)
         SBSFunctionLib.LoadFunctions(LibraryFunctions)
     End Sub
 
     Sub AddUsersFunction(ByVal func As UsersFunction)
         func.Name = func.Name.ToLower()
 
-        LastUsrFuncOffset += 1
+        Dim nextOffset As Integer = AvailableRange.rangeStart + AvailableRange.rangeLength
 
-        If LastUsrFuncOffset = UsersFunctions.Count Then
+        If nextOffset = UsersFunctions.Count Then
             UsersFunctions.Add(func)
         Else
-            UsersFunctions(LastUsrFuncOffset) = func
+            UsersFunctions(nextOffset) = func
         End If
+
+        AvailableRange.rangeLength += 1
     End Sub
 
     Public Function GetUsersFunction(ByVal funcName As String) As UsersFunction
         funcName = funcName.ToLower()
+        Dim lastOffset = AvailableRange.rangeStart + AvailableRange.rangeLength - 1
 
-        For i As Integer = LastUsrFuncOffset To 0 Step -1
+        For i As Integer = lastOffset To AvailableRange.rangeStart Step -1
             Dim Func As UsersFunction = UsersFunctions(i)
             If Func.Name = funcName Then
                 Return Func
@@ -137,11 +134,12 @@ Public Class SBSVariableList
     Dim varPtrs As ArrayList
     Dim varTable As ArrayList
 
-    Public LastVarOffset() As Integer = {-1, -1}
+    Public AvailableRange As Range
 
     Sub New()
         varPtrs = New ArrayList()
         varTable = New ArrayList()
+        AvailableRange = New Range(0, 0)
     End Sub
 
     Public Sub SetVariable(ByVal name As String, ByRef value As SBSValue)
@@ -149,28 +147,37 @@ Public Class SBSVariableList
         If varPtr IsNot Nothing Then
             varTable(varPtr.Offset) = value
         Else
-            LastVarOffset(0) += 1
-            LastVarOffset(1) += 1
             name = name.ToLower()
+            Dim length As Integer = AvailableRange.rangeStart + AvailableRange.rangeLength
+            Dim nextOffset As Integer
+            If length > 0 Then
+                nextOffset = varPtrs(length - 1).Offset + 1
+            Else
+                nextOffset = 0
+            End If
 
-            If LastVarOffset(1) = varTable.Count Then
+            If length = varPtrs.Count Then
+                varPtrs.Add(New VariablePtr(name, nextOffset))
+            Else
+                varPtrs(length) = New VariablePtr(name, nextOffset)
+            End If
+
+            If nextOffset = varTable.Count Then
                 varTable.Add(value)
             Else
-                varTable(LastVarOffset(1)) = value
+                varTable(nextOffset) = value
             End If
 
-            If LastVarOffset(0) = varPtrs.Count Then
-                varPtrs.Add(New VariablePtr(name, LastVarOffset(1)))
-            Else
-                varPtrs(LastVarOffset(0)) = New VariablePtr(name, LastVarOffset(1))
+            AvailableRange.rangeLength += 1
             End If
-        End If
     End Sub
 
     Function GetVarPtr(ByVal name As String) As VariablePtr
         name = name.ToLower()
 
-        For i As Integer = LastVarOffset(0) To 0 Step -1
+        Dim lastOffset As Integer = AvailableRange.rangeStart + AvailableRange.rangeLength - 1
+
+        For i As Integer = lastOffset To AvailableRange.rangeStart Step -1
             Dim var As VariablePtr = varPtrs(i)
             If var.Name = name Then
                 Return var
@@ -191,6 +198,20 @@ Public Class SBSVariableList
         Return Nothing
     End Function
 
+End Class
+
+Public Class StackStatus
+    Public varAvailableRange As Range
+    Public funcAvailableRange As Range
+
+    Sub New(ByVal varsLength As Integer, ByRef funcsLength As Integer)
+        varAvailableRange = New Range(0, varsLength)
+    End Sub
+
+    Sub New(ByVal varsRange As Range, ByVal funcsRange As Range)
+        varAvailableRange = New Range(varsRange.rangeStart, varsRange.rangeLength)
+        funcAvailableRange = New Range(funcsRange.rangeStart, funcsRange.rangeLength)
+    End Sub
 End Class
 
 Public Class VariablePtr
@@ -235,5 +256,15 @@ Public Class JumpStatus
     Sub New(ByVal _jumpType As String, Optional ByRef _extraValue As SBSValue = Nothing)
         JumpType = _jumpType
         ExtraValue = _extraValue
+    End Sub
+End Class
+
+Public Class Range
+    Public rangeStart As Integer
+    Public rangeLength As Integer
+
+    Sub New(ByVal _rangeStart As Integer, ByVal _rangeLength As Integer)
+        rangeStart = _rangeStart
+        rangeLength = _rangeLength
     End Sub
 End Class
