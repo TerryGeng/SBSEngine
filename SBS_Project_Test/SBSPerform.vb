@@ -90,8 +90,47 @@
             'StandardIO.PrintLine("[" + CStr(i) + "]Return Val: (Type:" + result.Type + ")" + CStr(result.Value))
         Next
 
-        Return Nothing ' TODO
+        Return Nothing
     End Function
+
+    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue ' TODO: Move this func away.
+        Dim userFunc As UsersFunction = RuntimeData.Functions.GetUsersFunction(funcName)
+        Dim return_val As JumpStatus
+
+        If userFunc IsNot Nothing Then
+            Dim argsName As ArrayList = userFunc.ArgumentList
+            If argsName.Count <> args.Count Then
+                Throw New ApplicationException("Runtime Error: Arguments' amount for '" + funcName + "' doesn't match.")
+            End If
+
+            Dim arguments(2) As ArrayList
+            arguments(0) = argsName
+            arguments(1) = args
+
+            return_val = Run(userFunc.Statments.SeqsList, arguments, True)
+        Else
+            Dim libFunc As LibFunction
+            libFunc = RuntimeData.Functions.GetLibFunction(funcName)
+            If libFunc IsNot Nothing Then
+                return_val = libFunc.Func(args)
+            Else
+                Throw New ApplicationException("Runtime Error: Undefined function '" + funcName + "'.")
+                Return Nothing
+            End If
+        End If
+
+        If return_val IsNot Nothing Then
+            If return_val.JumpType = "Return " Or return_val.JumpType = "Return" Then
+                Return return_val.ExtraValue
+            Else
+                Throw New ApplicationException("Runtime Error: Unexpected jump statment '" + return_val.JumpType + "' in function '" + funcName + "'.")
+            End If
+        End If
+
+        Return Nothing
+
+    End Function
+
 
 End Class
 

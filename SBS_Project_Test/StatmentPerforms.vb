@@ -157,7 +157,7 @@
         Dim funcName As String = Func_call.SeqsList(0).Value ' FUNC_CALL -> NAME
 
         If Func_call.SeqsList.Count = 2 Then ' "func()"
-            Return RuntimeData.CallFunction(funcName, New ArrayList())
+            Return MainPerformer.CallFunction(funcName, New ArrayList())
         ElseIf Func_call.SeqsList.Count = 4 Then ' "func(xx)" "func(xx,xx)"
             Dim argList As ArrayList = Func_call.SeqsList(2).SeqsList ' FUNC_CALL -> ARG_LIST
             Dim args As New ArrayList()
@@ -166,7 +166,7 @@
                 Dim arg As SBSValue = ExprPerform(argList(0))
                 If arg IsNot Nothing Then
                     args.Add(arg)
-                    Return RuntimeData.CallFunction(funcName, args)
+                    Return MainPerformer.CallFunction(funcName, args)
                 Else
                     Throw New ApplicationException("Runtime Error: Cannot use nothing as argument.")
                 End If
@@ -189,7 +189,7 @@
                 Else
                     Throw New ApplicationException("Runtime Error: Cannot use nothing as argument.")
                 End If
-                Return RuntimeData.CallFunction(funcName, args)
+                Return MainPerformer.CallFunction(funcName, args)
             End If
             End If
 
