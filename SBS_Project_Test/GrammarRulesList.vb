@@ -27,7 +27,7 @@
         Rules.Add(New Grammar("DEFINITION", "VAR_DEF|||FUNC_DEF"))
         Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
 
-        Rules.Add(New Grammar("CONTROLFLOW", "IF_ELSE|||WHILE"))
+        Rules.Add(New Grammar("CONTROLFLOW", "IF_ELSE|||WHILE|||FOR"))
         Rules.Add(New Grammar("IF_ELSE", "IF_ELSE_HEAD+++ELSE_AND_END"))
         Rules.Add(New Grammar("IF_ELSE_HEAD", "'If '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
         Rules.Add(New Grammar("ELSE_AND_END",
@@ -39,15 +39,16 @@
 
         Rules.Add(New Grammar("WHILE", "'While'+++JUDG_OR_EXPR+++LINE_END+++*STATMENT+++'End While'"))
         Rules.Add(New Grammar("FOR",
-                              "'For '+++VAR_DEF+++'To '+++EXPRESSION+++'Step '+++EXPRESSION+++LINE_END+++*STATMENT+++'End While'|||" & _
-                              "'For '+++VAR_DEF+++'To '+++EXPRESSION+++LINE_END+++*STATMENT+++'End While'"))
+                              "'For '+++FOR_VAR+++'To '+++EXPRESSION+++'Step '+++EXPRESSION+++LINE_END+++*STATMENT+++'End For'|||" & _
+                              "'For '+++FOR_VAR+++'To '+++EXPRESSION+++LINE_END+++*STATMENT+++'End For'"))
+        Rules.Add(New Grammar("FOR_VAR", "VAR_DEF|||VARIABLE"))
 
 
         Rules.Add(New Grammar("FUNC_DEF",
                               "'Function '+++NAME+++'()'+++LINE_END+++" & _
                               "*STATMENT+++" & _
-                              "'End Function'" & _
-                              "|||'Function '+++NAME+++'('+++ARG_DEF_LIST+++')'+++LINE_END+++" & _
+                              "'End Function'|||" & _
+                              "'Function '+++NAME+++'('+++ARG_DEF_LIST+++')'+++LINE_END+++" & _
                               "*STATMENT+++" & _
                               "'End Function'"))
         Rules.Add(New Grammar("ARG_DEF_LIST", "*ARG_DEF_COMMA+++VARIABLE|||VARIABLE"))

@@ -348,7 +348,11 @@ Public Class DefinitionPerform
         Return Nothing
     End Function
 
-    Function VarDefine(ByVal var_def As CodeSequence) As SBSValue
+    Public Function VarDefine(ByVal var_def As CodeSequence) As SBSValue
+        If ExprPerf Is Nothing Then
+            ExprPerf = MainPerformer.Performers.Expression
+        End If
+
         Dim varName As String = var_def.SeqsList(0).SeqsList(1).Value ' VAR_DEF -> VARIABLE -> NAME
         Dim varValue As SBSValue = ExprPerf.ExprPerform(var_def.SeqsList(2))
 
@@ -403,6 +407,8 @@ Public Class ControlFlowPerform
             IfElseBlock(statment.SeqsList(0))
         ElseIf statment.SeqsList(0).RuleName = "WHILE" Then
             WhileBlock(statment.SeqsList(0))
+        ElseIf statment.SeqsList(0).RuleName = "FOR" Then
+            ForBlock(statment.SeqsList(0))
         End If
 
         Return Nothing
@@ -461,6 +467,52 @@ Public Class ControlFlowPerform
             MainPerformer.Run(statments.SeqsList)
         End While
 
+        Return Nothing
+    End Function
+
+    Function ForBlock(ByRef _for As CodeSequence) As SBSValue
+        Dim for_var As CodeSequence = _for.SeqsList(1)
+        Dim varName As String = ""
+        If for_var.SeqsList(0).RuleName = "VAR_DEF" Then
+            varName = for_var.SeqsList(0).SeqsList(0).SeqsList(1).Value
+            MainPerformer.Performers.Definition.VarDefine(for_var.SeqsList(0))
+        Else
+            varName = for_var.SeqsList(0).SeqsList(1).Value
+        End If
+
+        Dim endValue As SBSValue = ExprPerf.ExprPerform(_for.SeqsList(3))
+        If endValue.Type <> "NUMBER" Then
+            Throw New ApplicationException("Runtime Error: Cannot use '" + endValue.Type + "' as counter for 'FOR'.")
+        End If
+
+        Dim for_step As SBSValue = Nothing
+        Dim for_body As CodeSequence = Nothing
+
+        If _for.SeqsList.Count = 9 Then
+            for_step = ExprPerf.ExprPerform(_for.SeqsList(5))
+            If for_step.Type <> "NUMBER" Then
+                Throw New ApplicationException("Runtime Error: Cannot use '" + for_step.Type + "' as step length for 'FOR'.")
+            End If
+            for_body = _for.SeqsList(7)
+        Else
+            for_step = New SBSValue("NUMBER", 1)
+            for_body = _for.SeqsList(5)
+        End If
+
+        While True
+            Dim varValue As SBSValue = RuntimeData.Variables.GetVariable(varName)
+            If varValue.Type <> "NUMBER" Then
+                Throw New ApplicationException("Runtime Error: Cannot use '" + varValue.Type + "' as the counter for 'FOR'.")
+            End If
+
+            If varValue.nValue <> endValue.nValue Then
+                MainPerformer.Run(for_body.SeqsList)
+                RuntimeData.Variables.SetVariable(varName, New SBSValue("NUMBER", varValue.nValue + for_step.nValue))
+            Else
+                MainPerformer.Run(for_body.SeqsList)
+                Return Nothing
+            End If
+        End While
         Return Nothing
     End Function
 
