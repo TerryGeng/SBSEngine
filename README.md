@@ -12,14 +12,14 @@ The author is still trying his best to make this engine faster and have less bug
 SBS - **Simple Basic Script** , is a script language based on Basic language.
 
 ### Supported feature
-[x] Expression
-[x] Variable
-[x] Function
-[x] If...ElseIf...Else
-[x] For...End For
-[x] While...End While
-[ ] Array
-[ ] Structure
+- [x] Expression
+- [x] Variable
+- [x] Function
+- [x] If...ElseIf...Else
+- [x] For...End For
+- [x] While...End While
+- [ ] Array
+- [ ] Structure
 
 ### How to write a hello world in SBS
     Print("Hello world\n")
