@@ -26,7 +26,7 @@ Partial Class Form1
         Me.CodeArea = New System.Windows.Forms.TextBox()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.DebugText = New System.Windows.Forms.TextBox()
-        Me.Button1 = New System.Windows.Forms.Button()
+        Me.Input = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
         '
         'Label1
@@ -40,16 +40,18 @@ Partial Class Form1
         '
         'CodeArea
         '
+        Me.CodeArea.Font = New System.Drawing.Font("Consolas", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.CodeArea.Location = New System.Drawing.Point(12, 24)
         Me.CodeArea.Multiline = True
         Me.CodeArea.Name = "CodeArea"
-        Me.CodeArea.Size = New System.Drawing.Size(433, 175)
+        Me.CodeArea.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.CodeArea.Size = New System.Drawing.Size(433, 392)
         Me.CodeArea.TabIndex = 1
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(10, 244)
+        Me.Label2.Location = New System.Drawing.Point(460, 9)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(71, 12)
         Me.Label2.TabIndex = 2
@@ -58,33 +60,38 @@ Partial Class Form1
         'DebugText
         '
         Me.DebugText.BackColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer))
+        Me.DebugText.Font = New System.Drawing.Font("Consolas", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.DebugText.ForeColor = System.Drawing.Color.Lime
-        Me.DebugText.Location = New System.Drawing.Point(12, 259)
+        Me.DebugText.Location = New System.Drawing.Point(462, 24)
         Me.DebugText.Multiline = True
         Me.DebugText.Name = "DebugText"
         Me.DebugText.ReadOnly = True
-        Me.DebugText.Size = New System.Drawing.Size(433, 124)
+        Me.DebugText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.DebugText.Size = New System.Drawing.Size(433, 362)
         Me.DebugText.TabIndex = 3
         '
-        'Button1
+        'Input
         '
-        Me.Button1.Location = New System.Drawing.Point(345, 209)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(99, 24)
-        Me.Button1.TabIndex = 4
-        Me.Button1.Text = "Praser"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.Input.BackColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer))
+        Me.Input.Font = New System.Drawing.Font("Consolas", 10.5!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Input.ForeColor = System.Drawing.Color.Cyan
+        Me.Input.Location = New System.Drawing.Point(462, 392)
+        Me.Input.Name = "Input"
+        Me.Input.Size = New System.Drawing.Size(433, 24)
+        Me.Input.TabIndex = 6
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(457, 395)
-        Me.Controls.Add(Me.Button1)
+        Me.ClientSize = New System.Drawing.Size(907, 431)
+        Me.Controls.Add(Me.Input)
         Me.Controls.Add(Me.DebugText)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.CodeArea)
         Me.Controls.Add(Me.Label1)
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.MaximizeBox = False
         Me.Name = "Form1"
         Me.Text = "Form1"
         Me.ResumeLayout(False)
@@ -95,6 +102,6 @@ Partial Class Form1
     Friend WithEvents CodeArea As System.Windows.Forms.TextBox
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents DebugText As System.Windows.Forms.TextBox
-    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents Input As System.Windows.Forms.TextBox
 
 End Class

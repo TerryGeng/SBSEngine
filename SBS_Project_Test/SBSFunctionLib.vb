@@ -1,10 +1,25 @@
 ﻿Public Class SBSFunctionLib
     Public Shared Sub LoadFunctions(ByRef funcList As ArrayList)
         funcList.Add(New LibFunction("print", AddressOf Func_Print))
+        funcList.Add(New LibFunction("readline", AddressOf Func_ReadLine))
         funcList.Add(New LibFunction("strlen", AddressOf Func_StrLen))
         funcList.Add(New LibFunction("asc", AddressOf Func_Asc))
         funcList.Add(New LibFunction("substr", AddressOf Func_SubStr))
+        funcList.Add(New LibFunction("fix", AddressOf Func_Fix))
     End Sub
+
+    Public Shared Function Func_ReadLine(ByRef argsList As ArrayList) As JumpStatus
+        If argsList.Count = 0 Then
+            StandardIO.Print(vbCrLf + "> ")
+            Dim value As String = StandardIO.GetLine()
+            StandardIO.Print(value + vbCrLf)
+            Return New JumpStatus("Return ", New SBSValue("STRING", value))
+        Else
+            Error_InvalidArgs("ReadLine")
+        End If
+
+        Return Nothing
+    End Function
 
     Public Shared Function Func_Print(ByRef argsList As ArrayList) As JumpStatus
         If argsList.Count = 1 Then
@@ -54,6 +69,14 @@
             End If
         End If
         Error_InvalidArgs("SubStr")
+        Return New JumpStatus("Return ", New SBSValue("NUMBER", 0))
+    End Function
+
+    Public Shared Function Func_Fix(ByRef argsList As ArrayList) As JumpStatus
+        If argsList.Count = 1 And argsList(0).Type = "NUMBER" Then
+            Return New JumpStatus("Return ", New SBSValue("NUMBER", Fix(argsList(0).nValue)))
+        End If
+        Error_InvalidArgs("Fix")
         Return New JumpStatus("Return ", New SBSValue("NUMBER", 0))
     End Function
 
