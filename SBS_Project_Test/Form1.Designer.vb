@@ -22,6 +22,7 @@ Partial Class Form1
     '不要使用代码编辑器修改它。
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
         Me.Label1 = New System.Windows.Forms.Label()
         Me.CodeArea = New System.Windows.Forms.TextBox()
         Me.Label2 = New System.Windows.Forms.Label()
@@ -91,9 +92,10 @@ Partial Class Form1
         Me.Controls.Add(Me.CodeArea)
         Me.Controls.Add(Me.Label1)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
         Me.Name = "Form1"
-        Me.Text = "Form1"
+        Me.Text = "SBS Tester"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
