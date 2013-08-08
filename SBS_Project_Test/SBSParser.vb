@@ -7,8 +7,8 @@
 
 #Const OUTPUT_MATCH_PROCESS = False
 
-Public Class SBSPraser
-    Const Version As String = "0.2a"
+Public Class SBSParser
+    Public Const Version As String = "0.2a"
 
     Declare Function GetTickCount Lib "kernel32" () As Long
 
@@ -16,25 +16,15 @@ Public Class SBSPraser
 
     Public Sub New()
         Dim start_time As Long = GetTickCount()
-        StandardIO.PrintLine("SBS Grammar Praser - Version " + Version + " - Time " + CStr(start_time))
-        StandardIO.PrintLine("-----------------")
-
         GrammarRulesList.LoadRules(Rules)
-
-        StandardIO.PrintLine(CStr(Rules.Count) + " Rules Loaded")
-        StandardIO.PrintLine("Total Time: " + CStr(GetTickCount() - start_time))
-        StandardIO.PrintLine("")
     End Sub
 
-    Public Function PraseCode(ByRef code As String)
-        Dim start_time As Long = GetTickCount()
-        StandardIO.PrintLine("Prase start at " + CStr(start_time) + ".")
-
-        If code.Length = 0 Then
+    Public Function ParseCode(ByRef code_reader As TextReader)
+        If code_reader.GetLength() = 0 Then
             Return Nothing
         End If
 
-        Dim code_reader As New TextReader(code)
+        code_reader.RemoveBlankBeforeChar()
         RemoveBlankAndComments(code_reader)
 
         Dim sentence_list As New ArrayList()
@@ -53,7 +43,6 @@ Public Class SBSPraser
             End If
         End While
 
-        StandardIO.PrintLine("Prase end at " + CStr(start_time) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
         If is_error Then
             Return Nothing
         Else
@@ -79,7 +68,7 @@ Public Class SBSPraser
             Dim seq As ArrayList = rule.Sequences
 
             For seq_offset As Integer = 0 To seq.Count - 1
-                RemoveBlankAndComments(code)
+                'RemoveBlankAndComments(code)
                 Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
 
                 If match_result IsNot Nothing Then
@@ -96,7 +85,7 @@ Public Class SBSPraser
 #End If
             Return Nothing
         ElseIf rule.MatchMethod = Grammar.MATCH_METHOD_SPECIFY_FUNC Then
-            RemoveBlankAndComments(code)
+            'RemoveBlankAndComments(code)
 
 #If OUTPUT_MATCH_PROCESS Then
             StandardIO.PrintLine("Try to use specify function to match " + rulename)
@@ -123,6 +112,7 @@ Public Class SBSPraser
                 While True
                     Dim origin_pos As Integer = code.GetPosition().Position
                     Dim origin_line As Integer = code.GetPosition().Lines
+                    RemoveBlankAndComments(code)
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
                         word.Add(matched_element)
@@ -167,6 +157,7 @@ Public Class SBSPraser
                     Exit For
                 End If
             Else
+                RemoveBlankAndComments(code)
                 Dim matched_element As CodeSequence = MatchGrammarRule(ele, code)
                 If matched_element IsNot Nothing Then
                     words.Add(matched_element)
