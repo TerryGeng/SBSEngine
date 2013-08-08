@@ -1,22 +1,31 @@
 ﻿Public Class SBSEngine
-    Dim Parser As SBSPraser
+    Public Const Version As String = "0.1a"
+    Dim Parser As SBSParser
     Dim Performer As SBSPerform
     Dim RuntimeData As SBSRuntimeData
 
     Public Sub New()
-        Parser = New SBSPraser()
-        RuntimeData = New SBSRuntimeData()
-        Performer = New SBSPerform(RuntimeData)
+        StandardIO.PrintLine("SBS Engine v" + Version)
+        Reset()
+        StandardIO.PrintLine("# Components Loaded(Parser v" + SBSParser.Version + " Performer v" + SBSPerform.Version + ")")
+
     End Sub
 
-    Public Sub LoadCode(ByRef code As String)
+    Public Function LoadCode(ByRef code As String) As Range
         Dim reader As New TextReader(code)
-        RuntimeData.AddStatments(Parser.PraseCode(reader))
-    End Sub
+        Return RuntimeData.AddStatments(Parser.ParseCode(reader))
+    End Function
 
-    Public Sub Perform()
+    Public Sub Perform(Optional ByRef range As Range = Nothing)
+        If range Is Nothing Then
+            range = New Range(0, RuntimeData.Statments.Count)
+        End If
+
+        Dim statments As ArrayList
+        statments = RuntimeData.Statments.GetRange(range.rangeStart, range.rangeLength)
+
         If RuntimeData.Statments.Count <> 0 Then
-            Performer.Run()
+            Performer.Run(statments)
         End If
     End Sub
 
@@ -28,8 +37,10 @@
         RuntimeData.Functions.AddLibFunction(libFunc)
     End Sub
 
-    Public Sub ResetData()
+    Public Sub Reset()
+        Parser = New SBSParser()
         RuntimeData = New SBSRuntimeData()
+        Performer = New SBSPerform(RuntimeData)
     End Sub
 
 End Class
