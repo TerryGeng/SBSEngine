@@ -2,17 +2,32 @@
     Public Statments As ArrayList
     Public Functions As SBSFunctionList
     Public Variables As SBSVariableList
-    Dim MainPerformer As SBSPerform
 
     Dim StackStatus As ArrayList
 
-    Sub New(ByRef _statments As ArrayList, ByRef _mainPerformer As SBSPerform)
+    Sub New()
+        Functions = New SBSFunctionList()
+        Variables = New SBSVariableList()
+        StackStatus = New ArrayList()
+        Statments = New ArrayList()
+    End Sub
+
+    Sub New(ByRef _statments As ArrayList)
         Statments = _statments
-        MainPerformer = _mainPerformer
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
         StackStatus = New ArrayList()
     End Sub
+
+    Public Function AddStatments(ByRef _statments As ArrayList) As Range
+        Dim start As Integer = Statments.Count
+        If _statments IsNot Nothing Then
+            Statments.AddRange(_statments)
+            Return New Range(start, _statments.Count)
+        Else
+            Return New Range(start, 0)
+        End If
+    End Function
 
     Public Sub RecordCurrentStackStatus(Optional ByVal ShieldOriginalVars As Boolean = False)
         StackStatus.Add(New StackStatus(Variables.AvailableRange, Functions.AvailableRange))
@@ -40,13 +55,15 @@ Public Class SBSFunctionList
 
     Public AvailableRange As Range
 
-    Delegate Function LibFunc(ByRef Arguments As ArrayList) As SBSValue
-
     Sub New()
         LibraryFunctions = New ArrayList()
         UsersFunctions = New ArrayList()
         AvailableRange = New Range(0, 0)
         SBSFunctionLib.LoadFunctions(LibraryFunctions)
+    End Sub
+
+    Sub AddLibFunction(ByRef libFunc As LibFunction)
+        LibraryFunctions.Add(libFunc)
     End Sub
 
     Sub AddUsersFunction(ByVal func As UsersFunction)
@@ -199,14 +216,16 @@ Public Class UsersFunction
 End Class
 
 Public Class LibFunction
-    Delegate Function LibraryFunction(ByRef args As ArrayList) As JumpStatus
+    Delegate Function LibraryFunction(ByRef args As ArrayList) As SBSValue
 
     Public Name As String
+    Public ArgumentsCount? As Integer
     Public Func As LibraryFunction
 
-    Sub New(ByVal _name As String, ByVal _func As LibraryFunction)
+    Sub New(ByVal _name As String, ByVal _func As LibraryFunction, Optional ByVal _argumentsCount? As Integer = Nothing)
         Name = _name
         Func = _func
+        ArgumentsCount = _argumentsCount
     End Sub
 
 End Class
