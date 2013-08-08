@@ -1,6 +1,6 @@
 ﻿Public Class SBSPerform
 
-    Const Version As String = "0.1"
+    Public Const Version As String = "0.1a"
 
     Declare Function GetTickCount Lib "kernel32" () As Long
 
@@ -21,28 +21,25 @@
     Public Performers As StatmentPerformers
     Dim RuntimeData As SBSRuntimeData
 
-    Sub New(ByRef statList As ArrayList)
-        StandardIO.PrintLine("SBS Perform - Version " + Version + " - Time " + CStr(GetTickCount()))
-        StandardIO.PrintLine("-----------------")
-
-        If statList IsNot Nothing And statList(0).GetType().Equals(GetType(CodeSequence)) Then
-            RuntimeData = New SBSRuntimeData(statList, Me)
-            Performers = New StatmentPerformers(RuntimeData, Me)
-            StandardIO.PrintLine("Statments loaded.")
-        Else
-            Throw New ApplicationException("Internal Error: Invalid argument.")
-        End If
+    Sub New(ByRef _RuntimeData As SBSRuntimeData)
+        RuntimeData = _RuntimeData
+        Performers = New StatmentPerformers(RuntimeData, Me)
     End Sub
 
-    Public Function Run() As JumpStatus
-        Dim start_time As Long = GetTickCount()
+    'Public Function Run() As JumpStatus
+    '    Dim start_time As Long = GetTickCount()
 
-        StandardIO.PrintLine("Running start at " + CStr(start_time) + ".")
-        Dim result As JumpStatus = PerformStatments(RuntimeData.Statments)
-        StandardIO.PrintLine("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
+    '    StandardIO.PrintLine("Running start at " + CStr(start_time) + ".")
+    '    Dim return_val As JumpStatus = PerformStatments(RuntimeData.Statments)
 
-        Return result
-    End Function
+    '    If return_val IsNot Nothing Then
+    '        Throw New ApplicationException("Runtime Error: Unexpected jump statment '" + return_val.JumpType + "'.")
+    '    End If
+
+    '    StandardIO.PrintLine("Running end at " + CStr(GetTickCount()) + ". Total cost " + CStr(GetTickCount() - start_time) + "ms.")
+
+    '    Return return_val
+    'End Function
 
     Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing, Optional ByVal VarBlackBox As Boolean = False)
         If arguments IsNot Nothing Then
@@ -67,21 +64,21 @@
     End Function
 
     Function PerformStatments(ByRef statments As ArrayList) As JumpStatus
+        Dim jumpstat As JumpStatus = Nothing
+
         For i As Integer = 0 To statments.Count - 1
             Dim statmBody As CodeSequence = statments(i).SeqsList(0)
             Dim statmType As String = statmBody.RuleName
             Dim result As SBSValue
-            Dim jumpstat As JumpStatus
 
             If statmType = "EXPRESSION" Then
                 result = Performers.Expression.ExprPerform(statmBody)
             ElseIf statmType = "DEFINITION" Then
                 result = Performers.Definition.Perform(statmBody)
             ElseIf statmType = "CONTROLFLOW" Then
-                result = Performers.ControlFlow.Perform(statmBody)
+                jumpstat = Performers.ControlFlow.Perform(statmBody)
             ElseIf statmType = "JUMP" Then
                 jumpstat = Performers.Jump.Perform(statmBody)
-                Return jumpstat
             Else
                 Throw New ApplicationException("Internal Error: Unknowed statment type '" + statmType + "'.")
                 Return Nothing
@@ -90,10 +87,10 @@
             'StandardIO.PrintLine("[" + CStr(i) + "]Return Val: (Type:" + result.Type + ")" + CStr(result.Value))
         Next
 
-        Return Nothing
+        Return jumpstat
     End Function
 
-    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue ' TODO: Move this func away.
+    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue
         Dim userFunc As UsersFunction = RuntimeData.Functions.GetUsersFunction(funcName)
         Dim return_val As JumpStatus
 
@@ -112,7 +109,16 @@
             Dim libFunc As LibFunction
             libFunc = RuntimeData.Functions.GetLibFunction(funcName)
             If libFunc IsNot Nothing Then
-                return_val = libFunc.Func(args)
+                If Not libFunc.ArgumentsCount.HasValue OrElse libFunc.ArgumentsCount = args.Count Then
+                    Dim value As SBSValue = libFunc.Func(args)
+                    If value IsNot Nothing Then
+                        return_val = New JumpStatus("Return ", value)
+                    Else
+                        return_val = New JumpStatus("Return")
+                    End If
+                Else
+                    Throw New ApplicationException("Runtime Error: Arguments' amount for '" + funcName + "' doesn't match.")
+                End If
             Else
                 Throw New ApplicationException("Runtime Error: Undefined function '" + funcName + "'.")
                 Return Nothing

@@ -191,7 +191,7 @@
                 End If
                 Return MainPerformer.CallFunction(funcName, args)
             End If
-            End If
+        End If
 
         Return Nothing
     End Function
@@ -400,21 +400,21 @@ Public Class ControlFlowPerform
         MainPerformer = _mainPerformer
     End Sub
 
-    Public Function Perform(ByRef statment As CodeSequence) As SBSValue
+    Public Function Perform(ByRef statment As CodeSequence) As JumpStatus
         ExprPerf = MainPerformer.Performers.Expression
 
         If statment.SeqsList(0).RuleName = "IF_ELSE" Then
-            IfElseBlock(statment.SeqsList(0))
+            Return IfElseBlock(statment.SeqsList(0))
         ElseIf statment.SeqsList(0).RuleName = "WHILE" Then
-            WhileBlock(statment.SeqsList(0))
+            Return WhileBlock(statment.SeqsList(0))
         ElseIf statment.SeqsList(0).RuleName = "FOR" Then
-            ForBlock(statment.SeqsList(0))
+            Return ForBlock(statment.SeqsList(0))
         End If
 
         Return Nothing
     End Function
 
-    Function IfElseBlock(ByRef if_else As CodeSequence) As SBSValue
+    Function IfElseBlock(ByRef if_else As CodeSequence) As JumpStatus
         Dim if_else_head As CodeSequence = if_else.SeqsList(0)
         Dim else_and_end As CodeSequence = if_else.SeqsList(1)
 
@@ -424,8 +424,7 @@ Public Class ControlFlowPerform
 
         If ExprPerf.JudgOrExprPerform(condition).nValue Then
             Dim statments As ArrayList = if_else_head.SeqsList(4).SeqsList
-            MainPerformer.Run(statments)
-            Return Nothing
+            Return MainPerformer.Run(statments)
         Else
             Dim firstEle As CodeSequence = else_and_end.SeqsList(0)
             Dim firstValue As String = firstEle.Value
@@ -436,8 +435,7 @@ Public Class ControlFlowPerform
                     Dim cond As CodeSequence = curEle.SeqsList(1)
                     If ExprPerf.JudgOrExprPerform(cond).nValue Then
                         Dim statments As ArrayList = curEle.SeqsList(4).SeqsList
-                        MainPerformer.Run(statments)
-                        Return Nothing
+                        Return MainPerformer.Run(statments)
                     End If
                 Next
             End If
@@ -459,18 +457,28 @@ Public Class ControlFlowPerform
         Return Nothing
     End Function
 
-    Function WhileBlock(ByRef _while As CodeSequence) As SBSValue
+    Function WhileBlock(ByRef _while As CodeSequence) As JumpStatus
         Dim condition As CodeSequence = _while.SeqsList(1)
         Dim statments As CodeSequence = _while.SeqsList(3)
+        Dim jumpstat As JumpStatus
 
         While ExprPerf.JudgOrExprPerform(condition).nValue
-            MainPerformer.Run(statments.SeqsList)
+            jumpstat = MainPerformer.Run(statments.SeqsList)
+            If jumpstat IsNot Nothing Then
+                If jumpstat.JumpType = "Continue While" Then
+                    Continue While
+                ElseIf jumpstat.JumpType = "Exit While" Then
+                    Exit While
+                Else
+                    Return jumpstat
+                End If
+            End If
         End While
 
         Return Nothing
     End Function
 
-    Function ForBlock(ByRef _for As CodeSequence) As SBSValue
+    Function ForBlock(ByRef _for As CodeSequence) As JumpStatus
         Dim for_var As CodeSequence = _for.SeqsList(1)
         Dim varName As String = ""
         If for_var.SeqsList(0).RuleName = "VAR_DEF" Then
@@ -505,11 +513,23 @@ Public Class ControlFlowPerform
                 Throw New ApplicationException("Runtime Error: Cannot use '" + varValue.Type + "' as the counter for 'FOR'.")
             End If
 
+            Dim jumpstat As JumpStatus = Nothing
+
+            MainPerformer.Run(for_body.SeqsList)
+
+            If jumpstat IsNot Nothing Then
+                If jumpstat.JumpType = "Continue For" Then
+                    'Do nothing
+                ElseIf jumpstat.JumpType = "Exit For" Then
+                    Exit While
+                Else
+                    Return jumpstat
+                End If
+            End If
+
             If varValue.nValue <> endValue.nValue Then
-                MainPerformer.Run(for_body.SeqsList)
                 RuntimeData.Variables.SetVariable(varName, New SBSValue("NUMBER", varValue.nValue + for_step.nValue))
             Else
-                MainPerformer.Run(for_body.SeqsList)
                 Return Nothing
             End If
         End While
