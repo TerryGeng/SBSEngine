@@ -1,17 +1,26 @@
 ﻿Public Class Form1
 
+    Declare Function GetTickCount Lib "kernel32" () As Long
+
     Dim origin_window_height As Integer
     Dim origin_textbox_height As Integer
 
-    Dim mPraser As SBSPraser
-    Dim sentenceList As New ArrayList()
-
+    Dim engine As SBSEngine
     Dim run As Boolean = False
 
+    Dim LineEnd As Boolean = False
+    Dim Buffer As String = ""
+
+    Dim parseTime As Long
+    Dim performTime As Long
+
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        StandardIO.SetIOFunc(New StandardIO.OutputFunction(AddressOf DebugText.AppendText), New StandardIO.InputFunction(AddressOf GetInput))
+
         StandardIO.PrintLine("SBS Test Console")
         StandardIO.PrintLine("")
         ListCommand()
+        engine = New SBSEngine()
         WaitForInput()
     End Sub
 
@@ -39,7 +48,7 @@
     End Sub
 
     Sub WaitForInput()
-        StandardIO.Print(">> ")
+        StandardIO.Print(vbCrLf + ">> ")
     End Sub
 
     Sub ProcessInput()
@@ -48,7 +57,7 @@
             Dim seq() As String = Input.Text.Split(" < ")
             Dim command As String = ""
             Dim inputValue As String = ""
-            If UBound(seq) Then
+            If UBound(seq) = 2 Then
                 command = seq(0).ToLower()
                 inputValue = seq(2)
             Else
@@ -58,19 +67,26 @@
             Input.Text = ""
 
             If command = "parse" Or command = "pa" Then
+                parseTime = 0
                 Parse()
+                StandardIO.Output("Cost time: " + CStr(parseTime) + "ms.")
             ElseIf command = "perform" Or command = "pe" Then
                 If inputValue <> "" Then
-                    StandardIO.Buffer = inputValue
-                    StandardIO.LineEnd = True
+                    Buffer = inputValue
+                    LineEnd = True
                 End If
+                performTime = 0
                 Perform()
+                StandardIO.Output("Cost time: " + CStr(performTime) + "ms.")
             ElseIf command = "run" Or command = "r" Then
+                parseTime = 0
+                performTime = 0
                 If inputValue <> "" Then
-                    StandardIO.Buffer = inputValue
-                    StandardIO.LineEnd = True
+                    Buffer = inputValue
+                    LineEnd = True
                 End If
                 RunCode()
+                StandardIO.Output("Parsing cost: " + CStr(parseTime) + "ms, Performing cost: " + CStr(performTime) + "ms.")
             ElseIf command = "quit" Or command = "q" Then
                 Application.Exit()
             ElseIf command = "clear" Or command = "c" Then
@@ -80,8 +96,8 @@
             End If
             WaitForInput()
         Else
-            StandardIO.Buffer = Input.Text
-            StandardIO.LineEnd = True
+            Buffer = Input.Text
+            LineEnd = True
             Input.Text = ""
         End If
     End Sub
@@ -92,29 +108,54 @@
     End Sub
 
     Sub Parse()
-        StandardIO.PrintLine("")
-        mPraser = New SBSPraser()
+        Dim startTime As Long = GetTickCount()
+        engine.Reset()
         Try
-            sentenceList = mPraser.PraseCode(CodeArea.Text)
+            engine.LoadCode(CodeArea.Text)
         Catch excep As ApplicationException
             StandardIO.PrintError(excep.Message)
+            parseTime = GetTickCount() - startTime
             Return
         End Try
-
-        StandardIO.PrintLine("")
+        parseTime = GetTickCount() - startTime
     End Sub
 
     Sub Perform()
         run = True
-        If sentenceList IsNot Nothing Then
-            StandardIO.PrintLine("")
-            Dim performer As New SBSPerform(sentenceList)
-            performer.Run()
-        Else
-            StandardIO.PrintLine("Error: No code loaded.")
-        End If
+        engine.AddFunction(New LibFunction("msgbox", AddressOf Func_msgbox))
+        Dim startTime As Long = GetTickCount()
+        Try
+            engine.Perform()
+        Catch excep As ApplicationException
+            run = False
+            engine.Reset()
+            StandardIO.PrintError(excep.Message)
+            performTime = GetTickCount() - startTime
+            Return
+        End Try
+        performTime = GetTickCount() - startTime
         run = False
     End Sub
+
+    Public Function GetInput() As String
+        Input.Focus()
+        While True
+            Application.DoEvents()
+            If LineEnd Then
+                LineEnd = False
+                Return Buffer
+            End If
+            System.Threading.Thread.Sleep(10)
+        End While
+        Return Nothing
+    End Function
+
+    Public Function Func_msgbox(ByRef Arguments As ArrayList) As SBSValue
+        If Arguments IsNot Nothing Then
+            MsgBox(CStr(Arguments(0).Value), MsgBoxStyle.OkOnly, "MessageBox")
+        End If
+        Return Nothing
+    End Function
 End Class
 
 

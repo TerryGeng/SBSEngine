@@ -1,30 +1,38 @@
 ﻿Public Class StandardIO
+    Public Shared Output As OutputFunction = Nothing
+    Public Shared GetInput As InputFunction = Nothing
 
-    Public Shared Buffer As String = ""
-    Public Shared LineEnd As Boolean = False
+    Public Delegate Sub OutputFunction(ByVal ouput As String)
+    Public Delegate Function InputFunction() As String
+
+    Public Shared Sub SetIOFunc(ByRef _output As OutputFunction, ByRef _input As InputFunction)
+        Output = _output
+        GetInput = _input
+    End Sub
 
     Public Shared Sub Print(ByVal str As String)
-        Form1.DebugText.AppendText(str)
+        If Output IsNot Nothing Then
+            Output(str)
+        End If
     End Sub
 
     Public Shared Sub PrintError(ByVal msg As String)
-        Form1.DebugText.AppendText(msg + vbCrLf)
+        If Output IsNot Nothing Then
+            Output(msg + vbCrLf)
+        End If
     End Sub
 
     Public Shared Sub PrintLine(ByVal str As String)
-        Form1.DebugText.AppendText(str + vbCrLf)
+        If Output IsNot Nothing Then
+            Output(str + vbCrLf)
+        End If
     End Sub
 
     Public Shared Function GetLine() As String
-        Form1.Input.Focus()
-        While True
-            Application.DoEvents()
-            If LineEnd Then
-                LineEnd = False
-                Return Buffer
-            End If
-            System.Threading.Thread.Sleep(10)
-        End While
-        Return Nothing
+        If GetInput IsNot Nothing Then
+            Return GetInput()
+        Else
+            Return Nothing
+        End If
     End Function
 End Class
