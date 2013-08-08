@@ -54,7 +54,7 @@
         Rules.Add(New Grammar("ARG_DEF_LIST", "*ARG_DEF_COMMA+++VARIABLE|||VARIABLE"))
         Rules.Add(New Grammar("ARG_DEF_COMMA", "VARIABLE+++','"))
 
-        Rules.Add(New Grammar("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Exit'"))
+        Rules.Add(New Grammar("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Continue For'|||'Continue While'|||'Exit For'|||'Exit While'"))
 
 
     End Sub
