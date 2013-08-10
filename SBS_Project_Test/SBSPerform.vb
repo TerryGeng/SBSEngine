@@ -41,29 +41,28 @@
     '    Return return_val
     'End Function
 
-    Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing, Optional ByVal VarBlackBox As Boolean = False)
+    Public Function Run(ByRef statments As ArrayList, Optional ByRef arguments() As ArrayList = Nothing, Optional ByVal AutoStackManage As Boolean = True, Optional ByVal VarBlackBox As Boolean = False)
+        If AutoStackManage Then RuntimeData.RecordCurrentStackStatus(VarBlackBox)
+
         If arguments IsNot Nothing Then
             Dim argsName As ArrayList = arguments(0)
             Dim argsValue As ArrayList = arguments(1)
 
-            RuntimeData.RecordCurrentStackStatus(VarBlackBox)
-
             For i As Integer = 0 To argsName.Count - 1
                 RuntimeData.Variables.SetVariable(argsName(i), argsValue(i))
             Next
-        Else
-            RuntimeData.RecordCurrentStackStatus()
         End If
 
         Dim return_val As JumpStatus
 
         return_val = PerformStatments(statments)
-        RuntimeData.StackStatusBack()
+        If AutoStackManage Then RuntimeData.StackStatusBack()
 
         Return return_val
     End Function
 
-    Function PerformStatments(ByRef statments As ArrayList) As JumpStatus
+    Function PerformStatments(ByRef _statments As ArrayList) As JumpStatus
+        Dim statments As New ArrayList(_statments)
         Dim jumpstat As JumpStatus = Nothing
 
         For i As Integer = 0 To statments.Count - 1
@@ -104,7 +103,7 @@
             arguments(0) = argsName
             arguments(1) = args
 
-            return_val = Run(userFunc.Statments.SeqsList, arguments, True)
+            return_val = Run(userFunc.Statments.SeqsList, arguments, True, True)
         Else
             Dim libFunc As LibFunction
             libFunc = RuntimeData.Functions.GetLibFunction(funcName)

@@ -16,7 +16,7 @@
         Return RuntimeData.AddStatments(Parser.ParseCode(reader))
     End Function
 
-    Public Sub Perform(Optional ByRef range As Range = Nothing)
+    Public Sub Perform(Optional ByRef range As Range = Nothing, Optional ByVal autoStackManage As Boolean = True)
         If range Is Nothing Then
             range = New Range(0, RuntimeData.Statments.Count)
         End If
@@ -25,7 +25,7 @@
         statments = RuntimeData.Statments.GetRange(range.rangeStart, range.rangeLength)
 
         If RuntimeData.Statments.Count <> 0 Then
-            Performer.Run(statments)
+            Performer.Run(statments, Nothing, autoStackManage)
         End If
     End Sub
 
@@ -41,6 +41,14 @@
         Parser = New SBSParser()
         RuntimeData = New SBSRuntimeData()
         Performer = New SBSPerform(RuntimeData)
+    End Sub
+
+    Public Sub RecordStackTop()
+        RuntimeData.RecordCurrentStackStatus()
+    End Sub
+
+    Public Sub StackTopResetToPrevious()
+        RuntimeData.StackStatusBack()
     End Sub
 
 End Class
