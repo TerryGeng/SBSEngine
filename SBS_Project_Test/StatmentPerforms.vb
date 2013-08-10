@@ -446,7 +446,7 @@ Public Class ControlFlowPerform
                 If firstValue IsNot Nothing And firstValue = "Else " Then
                     elseStatments = else_and_end.SeqsList(1).SeqsList
                 Else
-                    elseStatments = else_and_end.SeqsList(2).SeqsList
+                    elseStatments = else_and_end.SeqsList(3).SeqsList
                 End If
 
                 MainPerformer.Run(elseStatments)
