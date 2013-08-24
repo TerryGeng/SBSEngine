@@ -22,18 +22,18 @@
         End Sub
 
         Public Sub CalcuAdd(ByVal _value As SBSValue)
-            If Value.Type = "STRING" Then
-                If _value.Type = "NUMBER" Then
+            If Value.Type = vbString Then
+                If _value.Type = VariantType.Double Then
                     Value.sValue += CStr(_value.nValue)
-                ElseIf _value.Type = "STRING" Then
+                ElseIf _value.Type = vbString Then
                     Value.sValue += _value.sValue
                 End If
-            ElseIf Value.Type = "NUMBER" Then
-                If _value.Type = "STRING" Then
-                    Value.Type = "STRING"
+            ElseIf Value.Type = vbDouble Then
+                If _value.Type = vbString Then
+                    Value.Type = vbString
                     Value.sValue = CStr(GetResult().nValue)
                     Value.sValue += _value.sValue
-                ElseIf _value.Type = "NUMBER" Then
+                ElseIf _value.Type = vbDouble Then
                     Value.nValue += buffer
                     buffer = _value.nValue
                 End If
@@ -43,7 +43,7 @@
         End Sub
 
         Public Sub CalcuSub(ByVal _value As SBSValue)
-            If Value.Type = "NUMBER" Then
+            If Value.Type = vbDouble Then
                 Value.nValue += buffer
                 buffer = -(_value.nValue)
             Else
@@ -52,7 +52,7 @@
         End Sub
 
         Public Sub CalcuMulti(ByVal _value As SBSValue)
-            If Value.Type = "NUMBER" Then
+            If Value.Type = vbDouble Then
                 buffer *= _value.nValue
             Else
                 Throw New ApplicationException("Runtime Error: Used undefine operation '*' between '" + Value.Type + "' and '" + _value.Type + "'.")
@@ -60,7 +60,7 @@
         End Sub
 
         Public Sub CalcuDiv(ByVal _value As SBSValue)
-            If Value.Type = "NUMBER" Then
+            If Value.Type = vbDouble Then
                 buffer /= _value.nValue
             Else
                 Throw New ApplicationException("Runtime Error: Used undefine operation '*' between '" + Value.Type + "' and '" + _value.Type + "'.")
@@ -157,10 +157,10 @@
         Dim funcName As String = Func_call.SeqsList(0).Value ' FUNC_CALL -> NAME
 
         If Func_call.SeqsList.Count = 2 Then ' "func()"
-            Return MainPerformer.CallFunction(funcName, New ArrayList())
+            Return MainPerformer.CallFunction(funcName, New List(Of SBSValue)())
         ElseIf Func_call.SeqsList.Count = 4 Then ' "func(xx)" "func(xx,xx)"
             Dim argList As ArrayList = Func_call.SeqsList(2).SeqsList ' FUNC_CALL -> ARG_LIST
-            Dim args As New ArrayList()
+            Dim args As New List(Of SBSValue)()
 
             If argList.Count = 1 Then
                 Dim arg As SBSValue = ExprPerform(argList(0))
@@ -206,7 +206,7 @@
             Return firstValue
         Else
             If judg_or_expr.SeqsList.Count = 1 Then
-                Return New SBSValue("NUMBER", 0)
+                Return New SBSValue(vbDouble, 0)
             End If
         End If
 
@@ -215,9 +215,9 @@
             Dim secondValue As SBSValue = JudgOrExprPerform(secondEle)
 
             If secondValue.nValue Then
-                Return New SBSValue("NUMBER", 1)
+                Return New SBSValue(vbDouble, 1)
             Else
-                Return New SBSValue("NUMBER", 0)
+                Return New SBSValue(vbDouble, 0)
             End If
         End If
 
@@ -239,9 +239,9 @@
             Dim secondValue As SBSValue = JudgSinglePerform(secondEle)
 
             If firstValue.nValue And secondValue.nValue Then
-                Return New SBSValue("NUMBER", 1)
+                Return New SBSValue(vbDouble, 1)
             Else
-                Return New SBSValue("NUMBER", 0)
+                Return New SBSValue(vbDouble, 0)
             End If
         ElseIf judg_and_expr.SeqsList.Count = 1 Then
             Return firstValue
@@ -266,7 +266,7 @@
             If firstValue.nValue Then
                 Return firstValue
             Else
-                Return New SBSValue("NUMBER", 0)
+                Return New SBSValue(vbDouble, 0)
             End If
         End If
 
@@ -274,46 +274,46 @@
         Dim secondEle As CodeSequence = judg_single.SeqsList(2)
         Dim secondValue As SBSValue = ExprPerform(secondEle)
         If firstValue.Type = secondValue.Type Then
-            If firstValue.Type = "NUMBER" Then
+            If firstValue.Type = vbDouble Then
                 If judgOp = "=" Then
                     If firstValue.nValue = secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 ElseIf judgOp = ">" Then
                     If firstValue.nValue > secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 ElseIf judgOp = "<" Then
                     If firstValue.nValue < secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 ElseIf judgOp = ">=" Then
                     If firstValue.nValue >= secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 ElseIf judgOp = "<=" Then
                     If firstValue.nValue <= secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 Else
                     Throw New ApplicationException("Runtime Error: Undefined operator '" + judgOp + "' while compare NUMBER.")
                 End If
-            ElseIf firstValue.Type = "STRING" Then
+            ElseIf firstValue.Type = vbString Then
                 If judgOp = "=" Then
                     If firstValue.nValue = secondValue.nValue Then
-                        Return New SBSValue("NUMBER", 1)
+                        Return New SBSValue(vbDouble, 1)
                     Else
-                        Return New SBSValue("NUMBER", 0)
+                        Return New SBSValue(vbDouble, 0)
                     End If
                 Else
                     Throw New ApplicationException("Runtime Error: Undefined operator '" + judgOp + "' while compare STRING.")
@@ -480,7 +480,7 @@ Public Class ControlFlowPerform
 
     Function ForBlock(ByRef _for As CodeSequence) As JumpStatus
         Dim for_var As CodeSequence = _for.SeqsList(1)
-        Dim varName As String = ""
+        Dim varName As String = String.Empty
         If for_var.SeqsList(0).RuleName = "VAR_DEF" Then
             varName = for_var.SeqsList(0).SeqsList(0).SeqsList(1).Value
             MainPerformer.Performers.Definition.VarDefine(for_var.SeqsList(0))
@@ -489,7 +489,7 @@ Public Class ControlFlowPerform
         End If
 
         Dim endValue As SBSValue = ExprPerf.ExprPerform(_for.SeqsList(3))
-        If endValue.Type <> "NUMBER" Then
+        If endValue.Type <> vbDouble Then
             Throw New ApplicationException("Runtime Error: Cannot use '" + endValue.Type + "' as counter for 'FOR'.")
         End If
 
@@ -498,18 +498,18 @@ Public Class ControlFlowPerform
 
         If _for.SeqsList.Count = 9 Then
             for_step = ExprPerf.ExprPerform(_for.SeqsList(5))
-            If for_step.Type <> "NUMBER" Then
+            If for_step.Type <> vbDouble Then
                 Throw New ApplicationException("Runtime Error: Cannot use '" + for_step.Type + "' as step length for 'FOR'.")
             End If
             for_body = _for.SeqsList(7)
         Else
-            for_step = New SBSValue("NUMBER", 1)
+            for_step = New SBSValue(vbDouble, 1)
             for_body = _for.SeqsList(5)
         End If
 
         While True
             Dim varValue As SBSValue = RuntimeData.Variables.GetVariable(varName)
-            If varValue.Type <> "NUMBER" Then
+            If varValue.Type <> vbDouble Then
                 Throw New ApplicationException("Runtime Error: Cannot use '" + varValue.Type + "' as the counter for 'FOR'.")
             End If
 
@@ -528,7 +528,7 @@ Public Class ControlFlowPerform
             End If
 
             If varValue.nValue <> endValue.nValue Then
-                RuntimeData.Variables.SetVariable(varName, New SBSValue("NUMBER", varValue.nValue + for_step.nValue))
+                RuntimeData.Variables.SetVariable(varName, New SBSValue(vbDouble, varValue.nValue + for_step.nValue))
             Else
                 Return Nothing
             End If

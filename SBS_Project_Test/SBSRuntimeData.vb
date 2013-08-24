@@ -216,7 +216,7 @@ Public Class UsersFunction
 End Class
 
 Public Class LibFunction
-    Delegate Function LibraryFunction(ByRef args As ArrayList) As SBSValue
+    Delegate Function LibraryFunction(args As IList(Of SBSValue)) As SBSValue
 
     Public Name As String
     Public ArgumentsCount? As Integer

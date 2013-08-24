@@ -135,9 +135,9 @@ Public Class SBSParser
                 code.RemoveBlankBeforeLf()
 
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
-                Dim mChar As Char = ""
+                Dim mChar As Char = String.Empty
 
-                Dim mWord As String = ""
+                Dim mWord As String = String.Empty
                 For j As Integer = 1 To expected_str.Length
                     mChar = code.GetNextChar()
 

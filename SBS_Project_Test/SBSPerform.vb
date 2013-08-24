@@ -89,7 +89,7 @@
         Return jumpstat
     End Function
 
-    Public Function CallFunction(ByVal funcName As String, ByRef args As ArrayList) As SBSValue
+    Public Function CallFunction(ByVal funcName As String, ByRef args As IList(Of SBSValue)) As SBSValue
         Dim userFunc As UsersFunction = RuntimeData.Functions.GetUsersFunction(funcName)
         Dim return_val As JumpStatus
 
@@ -140,16 +140,16 @@
 End Class
 
 Public Class SBSValue
-    Public Type As String = ""
+    Public Type As VariantType = VariantType.Null
     Public nValue As Double = 0
-    Public sValue As String = ""
+    Public sValue As String = String.Empty
 
     Sub New(ByVal _type As String)
-        Type = _type
+        Me.New(_type, String.Empty)
     End Sub
 
-    Sub New(ByVal _type As String, ByVal _value As String)
-        If _type = "NUMBER" Then
+    Sub New(ByVal _type As VariantType, ByVal _value As Object)
+        If _type = vbDouble Then
             Type = _type
             nValue = CDbl(_value)
         Else
@@ -158,10 +158,14 @@ Public Class SBSValue
         End If
     End Sub
 
+    Sub New(ByVal _type As String, ByVal _value As Object)
+        Me.New(CType(IIf(_type = "NUMBER", vbDouble, vbString), VariantType), _value)
+    End Sub
+
     Public Function Value()
-        If Type = "STRING" Then
+        If Type = vbString Then
             Return sValue
-        ElseIf Type = "NUMBER" Then
+        ElseIf Type = vbDouble Then
             Return nValue
         End If
 

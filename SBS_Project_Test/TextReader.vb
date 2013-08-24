@@ -1,5 +1,5 @@
 ﻿Public Class TextReader
-    Dim Code As String = ""
+    Dim Code As String = String.Empty
     Dim Pos As New TextReaderPosition
     Dim DeepestPos As New TextReaderPosition
 
@@ -14,7 +14,7 @@
 
     Function GetChar(ByVal offset As Integer) As Char
         If offset >= Code.Length Then
-            Return ""
+            Return String.Empty
         End If
 
         Return Code.Substring(offset, 1)

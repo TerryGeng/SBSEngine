@@ -29,7 +29,7 @@
         End If
     End Sub
 
-    Public Function CallFunction(ByVal funcname As String, Optional ByRef argsList As ArrayList = Nothing) As SBSValue
+    Public Function CallFunction(ByVal funcname As String, Optional ByRef argsList As IList(Of SBSValue) = Nothing) As SBSValue
         Return Performer.CallFunction(funcname, argsList)
     End Function
 

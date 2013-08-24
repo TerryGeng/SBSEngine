@@ -45,7 +45,7 @@ End Class
 
 Public Class CodeSequence
     Public Type As String = "Index"
-    Public RuleName As String = ""
+    Public RuleName As String = String.Empty
     Public SeqsList As ArrayList
     Public Value As String
 

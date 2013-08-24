@@ -61,7 +61,7 @@
 
     Public Shared Function PackString(ByRef code As TextReader) As CodeSequence
         If code.GetNextChar() = Chr(34) Then
-            Dim str As String = ""
+            Dim str As String = String.Empty
             Dim isSpecChar As Boolean = False
             While True
                 Dim mChar As Char = code.GetNextChar()
@@ -94,11 +94,11 @@
     End Function
 
     Public Shared Function PackNumber(ByRef code As TextReader) As CodeSequence
-        Dim nums As String = ""
+        Dim nums As String = String.Empty
         Dim origin_pos As Integer = code.GetPosition().Position
         Dim origin_line As Integer = code.GetPosition().Lines
 
-        Dim lastChar As Char = ""
+        Dim lastChar As Char = String.Empty
         Dim Float As Boolean = False
 
         While True
@@ -106,9 +106,9 @@
 
             If IsNumeric(mChar) Then
                 nums += mChar
-            ElseIf mChar = "."c And Float = False And lastChar <> "" Then
+            ElseIf mChar = "."c And Float = False And lastChar <> String.Empty Then
                 nums += mChar
-            ElseIf nums <> "" And lastChar <> "."c Then
+            ElseIf nums <> String.Empty And lastChar <> "."c Then
                 code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
@@ -121,7 +121,7 @@
     End Function
 
     Public Shared Function PackName(ByRef code As TextReader) As CodeSequence
-        Dim name As String = ""
+        Dim name As String = String.Empty
         Dim origin_pos As Integer = code.GetPosition().Position
         Dim origin_line As Integer = code.GetPosition().Lines
         While True
@@ -129,7 +129,7 @@
 
             If IsNameChar(mChar) And (name.Length <> 0 Or (IsNumeric(mChar) <> True)) Then
                 name += mChar
-            ElseIf name <> "" Then
+            ElseIf name <> String.Empty Then
                 code.PositionBack()
                 Return New CodeSequence("NAME", name)
             Else
@@ -147,7 +147,7 @@
 
         If code.IsEOF() Or code.GetNextChar() = vbLf Then
             code.RemoveBlankBeforeChar()
-            Return New CodeSequence("LINE_END", "")
+            Return New CodeSequence("LINE_END", String.Empty)
         Else
             code.SetPosition(origin_pos, origin_line)
             Return Nothing
