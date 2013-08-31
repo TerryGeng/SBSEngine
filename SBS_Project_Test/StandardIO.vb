@@ -1,11 +1,11 @@
 ﻿Public Class StandardIO
-    Public Shared Output As OutputFunction = Nothing
-    Public Shared GetInput As InputFunction = Nothing
+    Public Shared Output As OutputFunction
+    Public Shared GetInput As InputFunction
 
     Public Delegate Sub OutputFunction(ByVal ouput As String)
     Public Delegate Function InputFunction() As String
 
-    Public Shared Sub SetIOFunc(ByRef _output As OutputFunction, ByRef _input As InputFunction)
+    Public Shared Sub SetIOFunc(ByVal _output As OutputFunction, ByVal _input As InputFunction)
         Output = _output
         GetInput = _input
     End Sub

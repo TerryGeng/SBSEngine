@@ -6,9 +6,9 @@
     Dim origin_textbox_height As Integer
 
     Dim engine As SBSEngine
-    Dim run As Boolean = False
+    Dim run As Boolean
 
-    Dim LineEnd As Boolean = False
+    Dim LineEnd As Boolean
     Dim Buffer As String = String.Empty
 
     Dim parseTime As Long
@@ -54,10 +54,10 @@
     Sub ProcessInput()
         If run = False Then
             StandardIO.PrintLine(Input.Text)
-            Dim seq() As String = Input.Text.Split(" < ")
+            Dim seq() As String = Input.Text.Split({" < "}, StringSplitOptions.RemoveEmptyEntries)
             Dim command As String = String.Empty
             Dim inputValue As String = String.Empty
-            If UBound(seq) = 2 Then
+            If seq.Length = 3 Then
                 command = seq(0).ToLower()
                 inputValue = seq(2)
             Else
@@ -66,39 +66,53 @@
 
             Input.Text = String.Empty
 
-            If command = "parse" Or command = "pa" Then
-                parseTime = 0
-                Parse()
-                StandardIO.Output("Cost time: " + CStr(parseTime) + "ms.")
-            ElseIf command = "perform" Or command = "pe" Then
-                If inputValue <> String.Empty Then
-                    Buffer = inputValue
-                    LineEnd = True
-                End If
-                performTime = 0
-                Perform()
-                StandardIO.Output("Cost time: " + CStr(performTime) + "ms.")
-            ElseIf command = "run" Or command = "r" Then
-                parseTime = 0
-                performTime = 0
-                If inputValue <> String.Empty Then
-                    Buffer = inputValue
-                    LineEnd = True
-                End If
-                RunCode()
-                StandardIO.Output("Parsing cost: " + CStr(parseTime) + "ms, Performing cost: " + CStr(performTime) + "ms.")
-            ElseIf command = "quit" Or command = "q" Then
-                Application.Exit()
-            ElseIf command = "clear" Or command = "c" Then
-                DebugText.Text = String.Empty
-            ElseIf command = "help" Or command = "h" Then
-                ListCommand()
-            End If
+            Select Case command
+                Case "pa"
+                Case "parse"
+                    parseTime = 0
+                    Parse()
+                    StandardIO.Output(String.Format("Cost time: {0}ms.", parseTime))
+
+                Case "pe"
+                Case "perform"
+                    If inputValue <> String.Empty Then
+                        Buffer = inputValue
+                        LineEnd = True
+                    End If
+                    performTime = 0
+                    Perform()
+                    StandardIO.Output(String.Format("Cost time: {0}ms.", performTime))
+
+                Case "r"
+                Case "run"
+                    parseTime = 0
+                    performTime = 0
+
+                    If inputValue <> String.Empty Then
+                        Buffer = inputValue
+                        LineEnd = True
+                    End If
+                    RunCode()
+                    StandardIO.Output(String.Format("Parsing cost: {0}ms, Performing cost: {1}ms.", parseTime, performTime))
+
+                Case "q"
+                Case "quit"
+                    Application.Exit()
+
+                Case "c"
+                Case "clear"
+                    DebugText.Clear()
+
+                Case "h"
+                Case "help"
+                    ListCommand()
+
+            End Select
             WaitForInput()
         Else
             Buffer = Input.Text
             LineEnd = True
-            Input.Text = String.Empty
+            Input.Clear()
         End If
     End Sub
 
@@ -152,7 +166,7 @@
 
     Public Function Func_msgbox(Arguments As IList(Of SBSValue)) As SBSValue
         If Arguments IsNot Nothing Then
-            MsgBox(CStr(Arguments(0).Value), MsgBoxStyle.OkOnly, "MessageBox")
+            MsgBox(CStr(Arguments(0)), MsgBoxStyle.OkOnly, "MessageBox")
         End If
 
         Return Nothing

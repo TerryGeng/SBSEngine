@@ -1,25 +1,25 @@
 ﻿Public Class SBSRuntimeData
-    Public Statments As ArrayList
+    Public Statments As List(Of CodeSequence)
     Public Functions As SBSFunctionList
     Public Variables As SBSVariableList
 
-    Dim StackStatus As ArrayList
+    Dim StackStatus As List(Of StackStatus)
 
     Sub New()
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
-        StackStatus = New ArrayList()
-        Statments = New ArrayList()
+        StackStatus = New List(Of StackStatus)
+        Statments = New List(Of CodeSequence)
     End Sub
 
-    Sub New(ByRef _statments As ArrayList)
+    Sub New(ByVal _statments As List(Of CodeSequence))
         Statments = _statments
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
-        StackStatus = New ArrayList()
+        StackStatus = New List(Of StackStatus)
     End Sub
 
-    Public Function AddStatments(ByRef _statments As ArrayList) As Range
+    Public Function AddStatments(ByVal _statments As List(Of CodeSequence)) As Range
         Dim start As Integer = Statments.Count
         If _statments IsNot Nothing Then
             Statments.AddRange(_statments)
@@ -50,19 +50,19 @@
 End Class
 
 Public Class SBSFunctionList
-    Dim UsersFunctions As ArrayList
-    Dim LibraryFunctions As ArrayList
+    Dim UsersFunctions As List(Of UsersFunction)
+    Dim LibraryFunctions As List(Of LibFunction)
 
     Public AvailableRange As Range
 
     Sub New()
-        LibraryFunctions = New ArrayList()
-        UsersFunctions = New ArrayList()
+        LibraryFunctions = New List(Of LibFunction)
+        UsersFunctions = New List(Of UsersFunction)
         AvailableRange = New Range(0, 0)
         SBSFunctionLib.LoadFunctions(LibraryFunctions)
     End Sub
 
-    Sub AddLibFunction(ByRef libFunc As LibFunction)
+    Sub AddLibFunction(ByVal libFunc As LibFunction)
         LibraryFunctions.Add(libFunc)
     End Sub
 
@@ -110,18 +110,18 @@ Public Class SBSFunctionList
 End Class
 
 Public Class SBSVariableList
-    Dim varPtrs As ArrayList
-    Dim varTable As ArrayList
+    Dim varPtrs As List(Of VariablePtr)
+    Dim varTable As List(Of SBSValue)
 
     Public AvailableRange As Range
 
     Sub New()
-        varPtrs = New ArrayList()
-        varTable = New ArrayList()
+        varPtrs = New List(Of VariablePtr)
+        varTable = New List(Of SBSValue)
         AvailableRange = New Range(0, 0)
     End Sub
 
-    Public Sub SetVariable(ByVal name As String, ByRef value As SBSValue)
+    Public Sub SetVariable(ByVal name As String, ByVal value As SBSValue)
         Dim varPtr As VariablePtr = GetVarPtr(name)
         If varPtr IsNot Nothing Then
             varTable(varPtr.Offset) = value
@@ -148,7 +148,7 @@ Public Class SBSVariableList
             End If
 
             AvailableRange.rangeLength += 1
-            End If
+        End If
     End Sub
 
     Function GetVarPtr(ByVal name As String) As VariablePtr
@@ -183,7 +183,7 @@ Public Class StackStatus
     Public varAvailableRange As Range
     Public funcAvailableRange As Range
 
-    Sub New(ByVal varsLength As Integer, ByRef funcsLength As Integer)
+    Sub New(ByVal varsLength As Integer, ByVal funcsLength As Integer)
         varAvailableRange = New Range(0, varsLength)
     End Sub
 
@@ -205,10 +205,10 @@ End Class
 
 Public Class UsersFunction
     Public Name As String
-    Public ArgumentList As ArrayList
+    Public ArgumentList() As String
     Public Statments As CodeSequence
 
-    Sub New(ByVal _name As String, ByVal _argumentList As ArrayList, ByVal _statments As CodeSequence)
+    Sub New(ByVal _name As String, ByVal _argumentList() As String, ByVal _statments As CodeSequence)
         Name = _name
         ArgumentList = _argumentList
         Statments = _statments
@@ -234,7 +234,7 @@ Public Class JumpStatus
     Public JumpType As String
     Public ExtraValue As SBSValue
 
-    Sub New(ByVal _jumpType As String, Optional ByRef _extraValue As SBSValue = Nothing)
+    Sub New(ByVal _jumpType As String, Optional ByVal _extraValue As SBSValue = Nothing)
         JumpType = _jumpType
         ExtraValue = _extraValue
     End Sub
