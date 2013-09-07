@@ -62,7 +62,7 @@
     Public Function PackString(ByVal code As TextReader) As CodeSequence
         If code.GetNextChar() = Chr(34) Then
             Dim str As String = String.Empty
-            Dim isSpecChar As Boolean = False
+            Dim isSpecChar As Boolean
             While True
                 Dim mChar As Char = code.GetNextChar()
 
@@ -95,11 +95,10 @@
 
     Public Function PackNumber(ByVal code As TextReader) As CodeSequence
         Dim nums As String = String.Empty
-        Dim origin_pos As Integer = code.GetPosition().Position
-        Dim origin_line As Integer = code.GetPosition().Lines
+        Dim origin_pos As TextReaderPosition = code.Position
 
-        Dim lastChar As Char = CChar(String.Empty)
-        Dim Float As Boolean = False
+        Dim lastChar As Char
+        Dim Float As Boolean
 
         While True
             Dim mChar As Char = code.GetNextChar
@@ -112,7 +111,7 @@
                 code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
-                code.SetPosition(origin_pos, origin_line)
+                code.Position = origin_pos
                 Return Nothing
             End If
         End While
@@ -122,8 +121,7 @@
 
     Public Function PackName(ByVal code As TextReader) As CodeSequence
         Dim name As String = String.Empty
-        Dim origin_pos As Integer = code.GetPosition().Position
-        Dim origin_line As Integer = code.GetPosition().Lines
+        Dim origin_pos As TextReaderPosition = code.Position
         While True
             Dim mChar As Char = code.GetNextChar
 
@@ -133,7 +131,7 @@
                 code.PositionBack()
                 Return New CodeSequence("NAME", name)
             Else
-                code.SetPosition(origin_pos, origin_line)
+                code.Position = origin_pos
                 Return Nothing
             End If
         End While
@@ -142,14 +140,13 @@
     End Function
 
     Public Function PackLineEnd(ByVal code As TextReader) As CodeSequence
-        Dim origin_pos As Integer = code.GetPosition().Position
-        Dim origin_line As Integer = code.GetPosition().Lines
+        Dim origin_pos As TextReaderPosition = code.Position
 
         If code.IsEOF() Or code.GetNextChar() = vbLf Then
             code.RemoveBlankBeforeChar()
             Return New CodeSequence("LINE_END", String.Empty)
         Else
-            code.SetPosition(origin_pos, origin_line)
+            code.Position = origin_pos
             Return Nothing
         End If
     End Function

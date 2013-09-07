@@ -7,17 +7,17 @@
         LoadText(code)
     End Sub
 
-    Sub LoadText(ByVal mCode As String)
-        Code = mCode
-        Pos.Position = 0
+    Sub LoadText(ByVal code As String)
+        Me.Code = code
+        ' Pos.Position = 0
     End Sub
 
     Function GetChar(ByVal offset As Integer) As Char
         If offset >= Code.Length Then
-            Return CChar(String.Empty)
+            Return New Char()
         End If
 
-        Return CChar(Code.Substring(offset, 1))
+        Return Code.Substring(offset, 1)(0)
     End Function
 
     Public Function GetNextChar() As Char
@@ -57,20 +57,32 @@
         End While
     End Sub
 
+    Public Property Position As TextReaderPosition
+        Get
+            Return Pos
+        End Get
+        Set(value As TextReaderPosition)
+            If Pos.Position < Code.Length Then Pos = value
+        End Set
+    End Property
+
+    <Obsolete("Please use Position property")>
     Public Function GetPosition() As TextReaderPosition
         Return Pos
     End Function
 
+    <Obsolete("Please use Position property")>
     Public Function SetPos(ByVal pos As TextReaderPosition) As Boolean
         If pos.Position < Code.Length Then
-            pos.Position = pos.Position
-            pos.Lines = pos.Lines
+            Me.Pos.Position = pos.Position
+            Me.Pos.Lines = pos.Lines
             Return True
         Else
             Return False
         End If
     End Function
 
+    <Obsolete("Please use Position property")>
     Public Sub SetPosition(ByVal position As Integer, ByVal line As Integer)
         Pos.Position = position
         Pos.Lines = line
@@ -81,20 +93,10 @@
     End Sub
 
     Public Function IsEOF() As Boolean
-        'If Pos.Position >= Code.Length Then
-        '    Return True
-        'Else
-        '    Return False
-        'End If
         Return Pos.Position >= Code.Length
     End Function
 
     Public Function IsEOF(ByVal position As Integer) As Boolean
-        'If position >= Code.Length Then
-        '    Return True
-        'Else
-        '    Return False
-        'End If
         Return position >= Code.Length
     End Function
 

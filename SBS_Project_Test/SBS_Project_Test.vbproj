@@ -100,7 +100,7 @@
     <Compile Include="SBSParser.vb" />
     <Compile Include="SBSRuntimeData.vb" />
     <Compile Include="StandardIO.vb" />
-    <Compile Include="GrammarRulesList.vb" />
+    <Compile Include="GrammarRules.vb" />
     <Compile Include="SBSPerform.vb" />
     <Compile Include="StatmentPerforms.vb" />
     <Compile Include="TextReader.vb" />

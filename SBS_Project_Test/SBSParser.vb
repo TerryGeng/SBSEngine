@@ -5,6 +5,9 @@
 ' =========================
 ' XVG Developing Branch 2013.7
 
+' Unlike C#, VB.NET doesn't require a local variable to be initialized with an expression. 
+' It gets initialized to its default value by the runtime.
+
 #Const OUTPUT_MATCH_PROCESS = False
 
 Public Class SBSParser
@@ -29,7 +32,7 @@ Public Class SBSParser
 
         Dim sentence_list As New List(Of CodeSequence)
         Dim mSentence As CodeSequence
-        Dim is_error As Boolean = False
+        Dim is_error As Boolean
 
         While code_reader.IsEOF() <> True
             mSentence = MatchGrammarRule("STATMENT", code_reader)
@@ -97,21 +100,19 @@ Public Class SBSParser
 
     Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByVal code As TextReader) As List(Of CodeSequence)
         Dim words As New List(Of CodeSequence)
-        Dim start_position As Integer = code.GetPosition().Position
-        Dim start_line As Integer = code.GetPosition().Lines
-        Dim unmatch As Boolean = False
+        Dim start_position As TextReaderPosition = code.Position
+        Dim unmatch As Boolean
 
         For offset As Integer = 0 To sequence.Element.Count - 1
             Dim ele As String = sequence.Element(offset)
-            Dim element_first_char As Char = CChar(ele.Substring(0, 1))
+            Dim element_first_char As Char = ele.Substring(0, 1)(0)
 
             If element_first_char = "*"c Then
                 Dim word As New List(Of CodeSequence)
                 Dim element_name As String = ele.Substring(1, ele.Length - 1)
 
                 While True
-                    Dim origin_pos As Integer = code.GetPosition().Position
-                    Dim origin_line As Integer = code.GetPosition().Lines
+                    Dim origin_pos As TextReaderPosition = code.Position
                     RemoveNonCode(code)
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
@@ -122,7 +123,7 @@ Public Class SBSParser
                         unmatch = True
                         Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
                     Else
-                        code.SetPosition(origin_pos, origin_line)
+                        code.Position = origin_pos
                         Exit While
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
@@ -135,7 +136,8 @@ Public Class SBSParser
                 code.RemoveBlankBeforeLf()
 
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
-                Dim mChar As Char = CChar(String.Empty)
+                Dim mChar As Char
+
 
                 Dim mWord As String = String.Empty
                 For j As Integer = 1 To expected_str.Length
@@ -173,7 +175,7 @@ Public Class SBSParser
             code.RemoveBlankBeforeLf()
             Return words
         Else
-            code.SetPosition(start_position, start_line)
+            code.Position = start_position
             Return Nothing
         End If
 

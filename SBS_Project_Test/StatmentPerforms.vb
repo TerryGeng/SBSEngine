@@ -24,14 +24,14 @@
         Public Sub CalcuAdd(ByVal _value As SBSValue)
             If Value.Type = vbString Then
                 If _value.Type = vbDouble Then
-                    Value.sValue += CStr(_value.nValue)
+                    Value.sValue += _value.nValue.ToString()
                 ElseIf _value.Type = vbString Then
                     Value.sValue += CType(_value, String)
                 End If
             ElseIf Value.Type = vbDouble Then
                 If _value.Type = vbString Then
                     Value.Type = vbString
-                    Value.sValue = CStr(GetResult().nValue)
+                    Value.sValue = GetResult().nValue.ToString()
                     Value.sValue += CType(_value, String)
 
                 ElseIf _value.Type = vbDouble Then
@@ -253,7 +253,7 @@
 
     Public Function JudgSinglePerform(ByVal judg_single As CodeSequence) As SBSValue
         Dim firstEle As CodeSequence = judg_single.SeqsList(0)
-        Dim firstValue As SBSValue = Nothing
+        Dim firstValue As SBSValue
 
         If firstEle.RuleName = "EXPRESSION" Then
             firstValue = ExprPerform(firstEle)
@@ -494,8 +494,8 @@ Public Class ControlFlowPerform
             Throw New ApplicationException("Runtime Error: Cannot use '" & endValue.Type & "' as counter for 'FOR'.")
         End If
 
-        Dim for_step As SBSValue = Nothing
-        Dim for_body As CodeSequence = Nothing
+        Dim for_step As SBSValue
+        Dim for_body As CodeSequence
 
         If _for.SeqsList.Count = 9 Then
             for_step = ExprPerf.ExprPerform(_for.SeqsList(5))

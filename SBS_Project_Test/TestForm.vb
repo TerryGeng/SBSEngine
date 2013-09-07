@@ -14,7 +14,7 @@
     Dim parseTime As Long
     Dim performTime As Long
 
-    Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+    Private Sub OnLoaded(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         StandardIO.SetIOFunc(New StandardIO.OutputFunction(AddressOf DebugText.AppendText), New StandardIO.InputFunction(AddressOf GetInput))
 
         StandardIO.PrintLine("SBS Test Console")
@@ -24,10 +24,11 @@
         WaitForInput()
     End Sub
 
-    Private Sub Form1_Resize(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Resize
+    Protected Overrides Sub OnResize(e As EventArgs)
         If origin_window_height <> 0 Then
             DebugText.Height = Me.Height - origin_window_height + origin_textbox_height
         End If
+        MyBase.OnResize(e)
     End Sub
 
     Private Sub Input_KeyPress(ByVal sender As System.Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles Input.KeyPress

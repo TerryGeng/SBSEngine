@@ -22,22 +22,24 @@ Partial Class TestForm
     '不要使用代码编辑器修改它。
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim CodeAreaLabel As System.Windows.Forms.Label
+        Dim RuntimeLogLabel As System.Windows.Forms.Label
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(TestForm))
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.CodeArea = New System.Windows.Forms.TextBox()
-        Me.Label2 = New System.Windows.Forms.Label()
         Me.DebugText = New System.Windows.Forms.TextBox()
         Me.Input = New System.Windows.Forms.TextBox()
+        CodeAreaLabel = New System.Windows.Forms.Label()
+        RuntimeLogLabel = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
-        'Label1
+        'CodeAreaLabel
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(12, 9)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(59, 12)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "Code Area"
+        CodeAreaLabel.AutoSize = True
+        CodeAreaLabel.Location = New System.Drawing.Point(12, 9)
+        CodeAreaLabel.Name = "CodeAreaLabel"
+        CodeAreaLabel.Size = New System.Drawing.Size(59, 12)
+        CodeAreaLabel.TabIndex = 0
+        CodeAreaLabel.Text = "Code Area"
         '
         'CodeArea
         '
@@ -49,14 +51,14 @@ Partial Class TestForm
         Me.CodeArea.Size = New System.Drawing.Size(433, 392)
         Me.CodeArea.TabIndex = 1
         '
-        'Label2
+        'RuntimeLogLabel
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(460, 9)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(71, 12)
-        Me.Label2.TabIndex = 2
-        Me.Label2.Text = "Runtime Log"
+        RuntimeLogLabel.AutoSize = True
+        RuntimeLogLabel.Location = New System.Drawing.Point(460, 9)
+        RuntimeLogLabel.Name = "RuntimeLogLabel"
+        RuntimeLogLabel.Size = New System.Drawing.Size(71, 12)
+        RuntimeLogLabel.TabIndex = 2
+        RuntimeLogLabel.Text = "Runtime Log"
         '
         'DebugText
         '
@@ -88,21 +90,19 @@ Partial Class TestForm
         Me.ClientSize = New System.Drawing.Size(907, 431)
         Me.Controls.Add(Me.Input)
         Me.Controls.Add(Me.DebugText)
-        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(RuntimeLogLabel)
         Me.Controls.Add(Me.CodeArea)
-        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(CodeAreaLabel)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MaximizeBox = False
-        Me.Name = "Form1"
+        Me.Name = "TestForm"
         Me.Text = "SBS Tester"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents CodeArea As System.Windows.Forms.TextBox
-    Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents DebugText As System.Windows.Forms.TextBox
     Friend WithEvents Input As System.Windows.Forms.TextBox
 

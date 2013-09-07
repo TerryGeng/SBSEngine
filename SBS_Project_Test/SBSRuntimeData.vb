@@ -230,7 +230,7 @@ Public Class LibFunction
 
 End Class
 
-Public Class JumpStatus
+Public Structure JumpStatus
     Public JumpType As String
     Public ExtraValue As SBSValue
 
@@ -238,7 +238,7 @@ Public Class JumpStatus
         JumpType = _jumpType
         ExtraValue = _extraValue
     End Sub
-End Class
+End Structure
 
 Public Class Range
     Public rangeStart As Integer
