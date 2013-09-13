@@ -13,12 +13,9 @@
 Public Class SBSParser
     Public Const Version As String = "0.2a"
 
-    Declare Function GetTickCount Lib "kernel32" () As Long
-
     Dim Rules As List(Of Grammar) = New List(Of Grammar)
 
     Public Sub New()
-        Dim start_time As Long = GetTickCount()
         GrammarRules.LoadRules(Rules)
     End Sub
 

@@ -366,14 +366,14 @@ Public Class DefinitionPerform
         Dim funcName As String = func_def.SeqsList(1).Value
 
         If func_def.SeqsList.Count = 6 Then ' "Function func() ..."
-            RuntimeData.Functions.AddUsersFunction(New UsersFunction(funcName, New String() {}, func_def.SeqsList(4)))
+            RuntimeData.Functions.DeclareUsersFunction(New UsersFunction(funcName, New String() {}, func_def.SeqsList(4)))
         ElseIf func_def.SeqsList.Count = 8 Then ' "func(xx)" "func(xx,xx)"
             Dim argList As IList(Of CodeSequence) = func_def.SeqsList(3).SeqsList ' FUNC_DEF -> ARG_DEF_LIST
             Dim args As New List(Of String)
 
             If argList.Count = 1 Then
                 args.Add(argList(0).SeqsList(1).Value) ' FUNC_DEF -> ARG_DEF_LIST -> VARIABLE -> NAME
-                RuntimeData.Functions.AddUsersFunction(New UsersFunction(funcName, args.ToArray(), func_def.SeqsList(6)))
+                RuntimeData.Functions.DeclareUsersFunction(New UsersFunction(funcName, args.ToArray(), func_def.SeqsList(6)))
             Else
                 Dim arg_commas As IList(Of CodeSequence) = argList(0).SeqsList ' ARG_DEF_LIST -> *ARG_EDF_COMMA -> ARG_DEF_COMMA List
                 For i As Integer = 0 To arg_commas.Count - 1
@@ -382,7 +382,7 @@ Public Class DefinitionPerform
                 Next
 
                 args.Add(argList(1).SeqsList(1).Value)
-                RuntimeData.Functions.AddUsersFunction(New UsersFunction(funcName, args.ToArray(), func_def.SeqsList(6)))
+                RuntimeData.Functions.DeclareUsersFunction(New UsersFunction(funcName, args.ToArray(), func_def.SeqsList(6)))
             End If
         End If
 

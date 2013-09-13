@@ -1,7 +1,5 @@
 ﻿Public Class TestForm
 
-    Declare Function GetTickCount Lib "kernel32" () As Long
-
     Dim origin_window_height As Integer
     Dim origin_textbox_height As Integer
 
@@ -123,32 +121,33 @@
     End Sub
 
     Sub Parse()
-        Dim startTime As Long = GetTickCount()
+        Dim watch As Stopwatch = Stopwatch.StartNew()
         engine.Reset()
         Try
             engine.LoadCode(CodeArea.Text)
         Catch excep As ApplicationException
             StandardIO.PrintError(excep.Message)
-            parseTime = GetTickCount() - startTime
-            Return
         End Try
-        parseTime = GetTickCount() - startTime
+        watch.Stop()
+        parseTime = watch.ElapsedMilliseconds
     End Sub
 
     Sub Perform()
         run = True
-        engine.AddFunction(New LibFunction("msgbox", AddressOf Func_msgbox))
-        Dim startTime As Long = GetTickCount()
+        engine.DeclareFunction(New LibFunction("msgbox", AddressOf Func_msgbox))
+        Dim watch = Stopwatch.StartNew()
         Try
             engine.Perform()
         Catch excep As ApplicationException
             run = False
             engine.Reset()
             StandardIO.PrintError(excep.Message)
-            performTime = GetTickCount() - startTime
+            watch.Stop()
+            performTime = watch.ElapsedMilliseconds
             Return
         End Try
-        performTime = GetTickCount() - startTime
+        watch.Stop()
+        performTime = watch.ElapsedMilliseconds
         run = False
     End Sub
 
@@ -167,7 +166,7 @@
 
     Public Function Func_msgbox(Arguments As IList(Of SBSValue)) As SBSValue
         If Arguments IsNot Nothing Then
-            MsgBox(CStr(Arguments(0)), MsgBoxStyle.OkOnly, "MessageBox")
+            MsgBox(CType(Arguments(0), String), MsgBoxStyle.OkOnly, "MessageBox")
         End If
 
         Return Nothing

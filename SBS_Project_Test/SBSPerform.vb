@@ -2,8 +2,6 @@
 
     Public Const Version As String = "0.1a"
 
-    Declare Function GetTickCount Lib "kernel32" () As Long
-
     Public Class StatmentPerformers
         Public Expression As ExpressionPerformer
         Public ControlFlow As ControlFlowPerform
@@ -105,7 +103,7 @@
             Dim libFunc As LibFunction
             libFunc = RuntimeData.Functions.GetLibFunction(funcName)
             If libFunc IsNot Nothing Then
-                If Not libFunc.ArgumentsCount.HasValue OrElse libFunc.ArgumentsCount = args.Count Then
+                If (Not libFunc.ArgumentsCount = 0) OrElse libFunc.ArgumentsCount = args.Count Then
                     Dim value As SBSValue = libFunc.Func(args)
                     If value IsNot Nothing Then
                         return_val = New JumpStatus("Return ", value)

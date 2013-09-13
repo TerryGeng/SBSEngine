@@ -33,8 +33,8 @@
         Return Performer.CallFunction(funcname, argsList)
     End Function
 
-    Public Sub AddFunction(ByVal libFunc As LibFunction)
-        RuntimeData.Functions.AddLibFunction(libFunc)
+    Public Sub DeclareFunction(ByVal libFunc As LibFunction)
+        RuntimeData.Functions.DeclareLibFunction(libFunc)
     End Sub
 
     Public Sub Reset()

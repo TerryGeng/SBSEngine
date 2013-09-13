@@ -1,5 +1,5 @@
 ﻿Public Module SBSFunctionLib
-    Public Sub LoadFunctions(ByVal funcList As List(Of LibFunction))
+    Public Sub LoadFunctions(ByVal funcList As IList(Of LibFunction))
         funcList.Add(New LibFunction("print", AddressOf Func_Print, 1))
         funcList.Add(New LibFunction("readline", AddressOf Func_ReadLine, 0))
         funcList.Add(New LibFunction("strlen", AddressOf Func_StrLen, 1))
