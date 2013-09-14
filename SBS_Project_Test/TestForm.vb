@@ -63,50 +63,36 @@
                 command = Input.Text.ToLower()
             End If
 
-            Input.Text = String.Empty
+            Input.Clear()
 
-            Select Case command
-                Case "pa"
-                Case "parse"
-                    parseTime = 0
-                    Parse()
-                    StandardIO.Output(String.Format("Cost time: {0}ms.", parseTime))
-
-                Case "pe"
-                Case "perform"
-                    If inputValue <> String.Empty Then
-                        Buffer = inputValue
-                        LineEnd = True
-                    End If
-                    performTime = 0
-                    Perform()
-                    StandardIO.Output(String.Format("Cost time: {0}ms.", performTime))
-
-                Case "r"
-                Case "run"
-                    parseTime = 0
-                    performTime = 0
-
-                    If inputValue <> String.Empty Then
-                        Buffer = inputValue
-                        LineEnd = True
-                    End If
-                    RunCode()
-                    StandardIO.Output(String.Format("Parsing cost: {0}ms, Performing cost: {1}ms.", parseTime, performTime))
-
-                Case "q"
-                Case "quit"
-                    Application.Exit()
-
-                Case "c"
-                Case "clear"
-                    DebugText.Clear()
-
-                Case "h"
-                Case "help"
-                    ListCommand()
-
-            End Select
+            If command = "pa" OrElse command = "parse" Then
+                parseTime = 0
+                Parse()
+                StandardIO.Output("Cost time: " + CStr(parseTime) + "ms.")
+            ElseIf command = "pe" OrElse command = "perform" Then
+                If Not String.IsNullOrEmpty(inputValue) Then
+                    Buffer = inputValue
+                    LineEnd = True
+                End If
+                performTime = 0
+                Perform()
+                StandardIO.Output("Cost time: " + CStr(performTime) + "ms.")
+            ElseIf command = "r" OrElse command = "run" Then
+                parseTime = 0
+                performTime = 0
+                If Not String.IsNullOrEmpty(inputValue) Then
+                    Buffer = inputValue
+                    LineEnd = True
+                End If
+                RunCode()
+                StandardIO.Output("Parsing cost: " + CStr(parseTime) + "ms, Performing cost: " + CStr(performTime) + "ms.")
+            ElseIf command = "q" OrElse command = "quit" Then
+                Application.Exit()
+            ElseIf command = "c" OrElse command = "clear" Then
+                DebugText.Clear()
+            ElseIf command = "h" OrElse command = "help" Then
+                ListCommand()
+            End If
             WaitForInput()
         Else
             Buffer = Input.Text

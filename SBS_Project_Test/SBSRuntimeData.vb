@@ -91,7 +91,6 @@ Public Class SBSFunctionList
                 Return Func
             End If
         Next
-
         Return Nothing
     End Function
 

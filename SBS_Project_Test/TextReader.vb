@@ -9,7 +9,7 @@
 
     Sub LoadText(ByVal code As String)
         Me.Code = code
-        ' Pos.Position = 0
+        Pos.Lines = 1
     End Sub
 
     Function GetChar(ByVal offset As Integer) As Char
@@ -45,7 +45,7 @@
 
     Public Sub RemoveBlankBeforeLf()
         Dim mChar As Char = PeekNextChar()
-        While Char.IsWhiteSpace(mChar) And mChar <> vbLf And mChar <> vbCr
+        While Char.IsWhiteSpace(mChar) AndAlso mChar <> vbLf AndAlso mChar <> vbCr
             GetNextChar()
             mChar = PeekNextChar()
         End While
@@ -117,7 +117,7 @@
     End Function
 End Class
 
-Public Class TextReaderPosition
+Public Structure TextReaderPosition
     Public Position As Integer
-    Public Lines As Integer = 1
-End Class
+    Public Lines As Integer
+End Structure

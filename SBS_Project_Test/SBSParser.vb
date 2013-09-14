@@ -193,7 +193,7 @@ Public Class SBSParser
         code.RemoveBlankBeforeLf()
         While code.PeekNextChar() = "'"c
             Dim mChar As Char = code.GetNextChar()
-            While mChar <> vbLf And code.IsEOF() <> True
+            While mChar <> vbLf AndAlso code.IsEOF() <> True
                 mChar = code.GetNextChar()
             End While
             code.RemoveBlankBeforeChar()

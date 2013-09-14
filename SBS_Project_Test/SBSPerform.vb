@@ -120,7 +120,7 @@
         End If
 
         If return_val IsNot Nothing Then
-            If return_val.JumpType = "Return " Or return_val.JumpType = "Return" Then
+            If return_val.JumpType = "Return " OrElse return_val.JumpType = "Return" Then
                 Return return_val.ExtraValue
             Else
                 Throw New ApplicationException("Runtime Error: Unexpected jump statment '" + return_val.JumpType + "' in function '" + funcName + "'.")

@@ -31,7 +31,7 @@
 
     Public Function Func_Asc(args As IList(Of SBSValue)) As SBSValue
         Dim value As SBSValue = args(0)
-        If value.Type = vbString And CType(value, String).Length = 1 Then
+        If value.Type = vbString AndAlso CType(value, String).Length = 1 Then
             Return New SBSValue(vbDouble, AscW(CType(value, String)))
         End If
         Error_InvalidArgs("Asc")
@@ -42,14 +42,14 @@
         If args.Count = 2 Then
             Dim value As SBSValue = args(0)
             Dim start As SBSValue = args(1)
-            If start.Type = vbDouble And start.nValue >= 0 And value.Type = vbString Then
+            If start.Type = vbDouble AndAlso start.nValue >= 0 AndAlso value.Type = vbString Then
                 Return New SBSValue(vbString, CType(value, String).Substring(start.nValue))
             End If
         ElseIf args.Count = 3 Then
             Dim value As SBSValue = args(0)
             Dim start As SBSValue = args(1)
             Dim length As SBSValue = args(2)
-            If start.Type = vbDouble And start.nValue >= 0 And length.Type = vbDouble And length.nValue >= 0 And value.Type = vbString Then
+            If start.Type = vbDouble AndAlso start.nValue >= 0 AndAlso length.Type = vbDouble AndAlso length.nValue >= 0 AndAlso value.Type = vbString Then
                 Return New SBSValue(vbString, CType(value, String).Substring(start.nValue, length.nValue))
             End If
         End If

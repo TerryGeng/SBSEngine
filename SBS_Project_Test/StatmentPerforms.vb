@@ -129,7 +129,7 @@
         Dim curValue As SBSValue
         Dim curEle As CodeSequence = Exp_Element.SeqsList(0)
 
-        If curEle.Value IsNot Nothing And curEle.Value = "(" Then
+        If curEle.Value IsNot Nothing AndAlso curEle.Value = "(" Then
             curEle = Exp_Element.SeqsList(1)
             Dim result As SBSValue = ExprPerform(curEle)
 
@@ -239,7 +239,7 @@
             Dim secondEle As CodeSequence = judg_and_expr.SeqsList(2)
             Dim secondValue As SBSValue = JudgSinglePerform(secondEle)
 
-            If firstValue.nValue And secondValue.nValue Then
+            If firstValue.nValue AndAlso secondValue.nValue Then
                 Return New SBSValue(vbDouble, 1)
             Else
                 Return New SBSValue(vbDouble, 0)
@@ -444,7 +444,7 @@ Public Class ControlFlowPerform
             If firstValue <> "End If" Then
                 Dim elseStatments As IList(Of CodeSequence) = Nothing
 
-                If firstValue IsNot Nothing And firstValue = "Else " Then
+                If firstValue IsNot Nothing AndAlso firstValue = "Else " Then
                     elseStatments = else_and_end.SeqsList(1).SeqsList
                 Else
                     elseStatments = else_and_end.SeqsList(3).SeqsList

@@ -105,9 +105,9 @@
 
             If IsNumeric(mChar) Then
                 nums += mChar
-            ElseIf mChar = "."c And Float = False And lastChar <> String.Empty Then
+            ElseIf mChar = "."c AndAlso Float = False AndAlso lastChar <> Char.MinValue Then
                 nums += mChar
-            ElseIf nums <> String.Empty And lastChar <> "."c Then
+            ElseIf nums <> String.Empty AndAlso lastChar <> "."c Then
                 code.PositionBack()
                 Return New CodeSequence("NUMBER", nums)
             Else
@@ -125,7 +125,7 @@
         While True
             Dim mChar As Char = code.GetNextChar
 
-            If IsNameChar(mChar) And (name.Length <> 0 Or (IsNumeric(mChar) <> True)) Then
+            If IsNameChar(mChar) AndAlso (name.Length <> 0 OrElse (IsNumeric(mChar) <> True)) Then
                 name += mChar
             ElseIf name <> String.Empty Then
                 code.PositionBack()
@@ -142,7 +142,7 @@
     Public Function PackLineEnd(ByVal code As TextReader) As CodeSequence
         Dim origin_pos As TextReaderPosition = code.Position
 
-        If code.IsEOF() Or code.GetNextChar() = vbLf Then
+        If code.IsEOF() OrElse code.GetNextChar() = vbLf Then
             code.RemoveBlankBeforeChar()
             Return New CodeSequence("LINE_END", String.Empty)
         Else
