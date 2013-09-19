@@ -444,8 +444,8 @@ Public Class ControlFlowPerform
             If firstValue <> "End If" Then
                 Dim elseStatments As IList(Of CodeSequence) = Nothing
 
-                If firstValue IsNot Nothing AndAlso firstValue = "Else " Then
-                    elseStatments = else_and_end.SeqsList(1).SeqsList
+                If firstValue IsNot Nothing AndAlso firstValue = "Else" Then
+                    elseStatments = else_and_end.SeqsList(2).SeqsList
                 Else
                     elseStatments = else_and_end.SeqsList(3).SeqsList
                 End If

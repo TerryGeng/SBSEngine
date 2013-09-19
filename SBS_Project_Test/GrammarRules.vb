@@ -2,7 +2,7 @@
     Public Sub LoadRules(ByVal Rules As List(Of Grammar))
 
         Rules.Add(New Grammar("STATMENT", "DEFINITION+++LINE_END|||EXPRESSION+++LINE_END|||CONTROLFLOW+++LINE_END|||JUMP+++LINE_END"))
-        'Rules.Add(New Grammar("STATMENT", "JUDG_OR_EXPR+++LINE_END"))
+        'Rules.Add(New Grammar("STATMENT", "EXPRESSION+++LINE_END"))
 
         Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
         Rules.Add(New Grammar("STRING", AddressOf PackString))

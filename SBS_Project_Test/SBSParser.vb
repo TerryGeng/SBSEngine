@@ -3,10 +3,8 @@
 ' This file is a part of SBS
 ' project.
 ' =========================
-' XVG Developing Branch 2013.7
+' XVG Developing Branch 2013.9
 
-' Unlike C#, VB.NET doesn't require a local variable to be initialized with an expression. 
-' It gets initialized to its default value by the runtime.
 
 #Const OUTPUT_MATCH_PROCESS = False
 

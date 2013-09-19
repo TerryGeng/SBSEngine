@@ -103,7 +103,7 @@
             Dim libFunc As LibFunction
             libFunc = RuntimeData.Functions.GetLibFunction(funcName)
             If libFunc IsNot Nothing Then
-                If (Not libFunc.ArgumentsCount = 0) OrElse libFunc.ArgumentsCount = args.Count Then
+                If libFunc.ArgumentsCount = 0 OrElse libFunc.ArgumentsCount = args.Count Then
                     Dim value As SBSValue = libFunc.Func(args)
                     If value IsNot Nothing Then
                         return_val = New JumpStatus("Return ", value)
