@@ -5,31 +5,31 @@
 ' =========================
 ' XVG Developing Branch 2013.7
 
+' Unlike C#, VB.NET doesn't require a local variable to be initialized with an expression. 
+' It gets initialized to its default value by the runtime.
+
 #Const OUTPUT_MATCH_PROCESS = False
 
 Public Class SBSParser
     Public Const Version As String = "0.2a"
 
-    Declare Function GetTickCount Lib "kernel32" () As Long
-
-    Dim Rules As New ArrayList()
+    Dim Rules As List(Of Grammar) = New List(Of Grammar)
 
     Public Sub New()
-        Dim start_time As Long = GetTickCount()
-        GrammarRulesList.LoadRules(Rules)
+        GrammarRules.LoadRules(Rules)
     End Sub
 
-    Public Function ParseCode(ByRef code_reader As TextReader)
+    Public Function ParseCode(ByVal code_reader As TextReader) As List(Of CodeSequence)
         If code_reader.GetLength() = 0 Then
             Return Nothing
         End If
 
         code_reader.RemoveBlankBeforeChar()
-        RemoveBlankAndComments(code_reader)
+        RemoveNonCode(code_reader)
 
-        Dim sentence_list As New ArrayList()
+        Dim sentence_list As New List(Of CodeSequence)
         Dim mSentence As CodeSequence
-        Dim is_error As Boolean = False
+        Dim is_error As Boolean
 
         While code_reader.IsEOF() <> True
             mSentence = MatchGrammarRule("STATMENT", code_reader)
@@ -51,7 +51,7 @@ Public Class SBSParser
 
     End Function
 
-    Function MatchGrammarRule(ByVal rulename As String, ByRef code As TextReader) As CodeSequence
+    Function MatchGrammarRule(ByVal rulename As String, ByVal code As TextReader) As CodeSequence
 
 #If OUTPUT_MATCH_PROCESS Then
         StandardIO.PrintLine("Try to match " + rulename + " on " + CStr(code.GetPosition().Position))
@@ -65,11 +65,11 @@ Public Class SBSParser
 
         If rule.MatchMethod = Grammar.MATCH_METHOD_NORMAL Then
 
-            Dim seq As ArrayList = rule.Sequences
+            Dim seq As List(Of GrammarSequence) = rule.Sequences
 
             For seq_offset As Integer = 0 To seq.Count - 1
                 'RemoveBlankAndComments(code)
-                Dim match_result As ArrayList = MatchGrammarSequence(seq(seq_offset), code)
+                Dim match_result As List(Of CodeSequence) = MatchGrammarSequence(seq(seq_offset), code)
 
                 If match_result IsNot Nothing Then
 
@@ -95,24 +95,22 @@ Public Class SBSParser
         Return Nothing
     End Function
 
-    Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByRef code As TextReader) As ArrayList
-        Dim words As New ArrayList()
-        Dim start_position As Integer = code.GetPosition().Position
-        Dim start_line As Integer = code.GetPosition().Lines
-        Dim unmatch As Boolean = False
+    Function MatchGrammarSequence(ByVal sequence As GrammarSequence, ByVal code As TextReader) As List(Of CodeSequence)
+        Dim words As New List(Of CodeSequence)
+        Dim start_position As TextReaderPosition = code.Position
+        Dim unmatch As Boolean
 
         For offset As Integer = 0 To sequence.Element.Count - 1
             Dim ele As String = sequence.Element(offset)
-            Dim element_first_char As Char = ele.Substring(0, 1)
+            Dim element_first_char As Char = ele.Substring(0, 1)(0)
 
-            If element_first_char = "*" Then
-                Dim word As New ArrayList()
+            If element_first_char = "*"c Then
+                Dim word As New List(Of CodeSequence)
                 Dim element_name As String = ele.Substring(1, ele.Length - 1)
 
                 While True
-                    Dim origin_pos As Integer = code.GetPosition().Position
-                    Dim origin_line As Integer = code.GetPosition().Lines
-                    RemoveBlankAndComments(code)
+                    Dim origin_pos As TextReaderPosition = code.Position
+                    RemoveNonCode(code)
                     Dim matched_element As CodeSequence = MatchGrammarRule(element_name, code)
                     If matched_element IsNot Nothing Then
                         word.Add(matched_element)
@@ -122,7 +120,7 @@ Public Class SBSParser
                         unmatch = True
                         Exit For ' If the first char of the sentence don't match the element, the sentence cannot match the rule naturally.
                     Else
-                        code.SetPosition(origin_pos, origin_line)
+                        code.Position = origin_pos
                         Exit While
                         ' The reason of this line: If the last char doesn't match this element, it may be the member of the next element.So we should roll back.
                         ' If this sentence doesn't match the rule at all, this char won't match the next element either.
@@ -131,13 +129,14 @@ Public Class SBSParser
 
                 words.Add(New CodeSequence(ele, word))
 
-            ElseIf element_first_char = "'" Then
+            ElseIf element_first_char = "'"c Then
                 code.RemoveBlankBeforeLf()
 
                 Dim expected_str As String = ele.Substring(1, ele.Length - 2)
-                Dim mChar As Char = ""
+                Dim mChar As Char
 
-                Dim mWord As String = ""
+
+                Dim mWord As String = String.Empty
                 For j As Integer = 1 To expected_str.Length
                     mChar = code.GetNextChar()
 
@@ -157,7 +156,7 @@ Public Class SBSParser
                     Exit For
                 End If
             Else
-                RemoveBlankAndComments(code)
+                RemoveNonCode(code)
                 Dim matched_element As CodeSequence = MatchGrammarRule(ele, code)
                 If matched_element IsNot Nothing Then
                     words.Add(matched_element)
@@ -173,7 +172,7 @@ Public Class SBSParser
             code.RemoveBlankBeforeLf()
             Return words
         Else
-            code.SetPosition(start_position, start_line)
+            code.Position = start_position
             Return Nothing
         End If
 
@@ -190,11 +189,11 @@ Public Class SBSParser
         Return Nothing
     End Function
 
-    Sub RemoveBlankAndComments(ByRef code As TextReader)
+    Sub RemoveNonCode(ByVal code As TextReader)
         code.RemoveBlankBeforeLf()
-        While code.PeekNextChar() = "'"
+        While code.PeekNextChar() = "'"c
             Dim mChar As Char = code.GetNextChar()
-            While mChar <> vbLf And code.IsEOF() <> True
+            While mChar <> vbLf AndAlso code.IsEOF() <> True
                 mChar = code.GetNextChar()
             End While
             code.RemoveBlankBeforeChar()

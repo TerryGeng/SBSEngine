@@ -1,25 +1,25 @@
 ﻿Public Class SBSRuntimeData
-    Public Statments As ArrayList
+    Public Statments As List(Of CodeSequence)
     Public Functions As SBSFunctionList
     Public Variables As SBSVariableList
 
-    Dim StackStatus As ArrayList
+    Dim StackStatus As Stack(Of StackStatus)
 
     Sub New()
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
-        StackStatus = New ArrayList()
-        Statments = New ArrayList()
+        StackStatus = New Stack(Of StackStatus)
+        Statments = New List(Of CodeSequence)
     End Sub
 
-    Sub New(ByRef _statments As ArrayList)
+    Sub New(ByVal _statments As List(Of CodeSequence))
         Statments = _statments
         Functions = New SBSFunctionList()
         Variables = New SBSVariableList()
-        StackStatus = New ArrayList()
+        StackStatus = New Stack(Of StackStatus)
     End Sub
 
-    Public Function AddStatments(ByRef _statments As ArrayList) As Range
+    Public Function AddStatments(ByVal _statments As List(Of CodeSequence)) As Range
         Dim start As Integer = Statments.Count
         If _statments IsNot Nothing Then
             Statments.AddRange(_statments)
@@ -30,7 +30,7 @@
     End Function
 
     Public Sub RecordCurrentStackStatus(Optional ByVal ShieldOriginalVars As Boolean = False)
-        StackStatus.Add(New StackStatus(Variables.AvailableRange, Functions.AvailableRange))
+        StackStatus.Push(New StackStatus(Variables.AvailableRange, Functions.AvailableRange))
         If ShieldOriginalVars Then
             Variables.AvailableRange.rangeStart = Variables.AvailableRange.rangeStart + Variables.AvailableRange.rangeLength
             Variables.AvailableRange.rangeLength = 0
@@ -38,35 +38,37 @@
     End Sub
 
     Public Sub StackStatusBack()
-        Dim stat As StackStatus = StackStatus(StackStatus.Count - 1)
+        Dim stat As StackStatus = StackStatus.Pop()
         Variables.AvailableRange.rangeStart = stat.varAvailableRange.rangeStart
         Variables.AvailableRange.rangeLength = stat.varAvailableRange.rangeLength
         Functions.AvailableRange.rangeStart = stat.funcAvailableRange.rangeStart
         Functions.AvailableRange.rangeLength = stat.funcAvailableRange.rangeLength
-
-        StackStatus.RemoveAt(StackStatus.Count - 1)
     End Sub
 
 End Class
 
 Public Class SBSFunctionList
-    Dim UsersFunctions As ArrayList
-    Dim LibraryFunctions As ArrayList
+    Dim LibraryFunctions As FunctionCollection(Of LibFunction)
+    Dim UsersFunctions As List(Of UsersFunction)
+    ' 注：考虑到此处的 UsersFunction 有范围 (Range) 概念
+    ' 根据语言规则
+    ' 不同范围内的 UsersFunction 可以使用相同名称
+    ' 所以此处不使用 FunctionCollection 键值对
 
     Public AvailableRange As Range
 
     Sub New()
-        LibraryFunctions = New ArrayList()
-        UsersFunctions = New ArrayList()
+        LibraryFunctions = New FunctionCollection(Of LibFunction)
+        UsersFunctions = New List(Of UsersFunction)
         AvailableRange = New Range(0, 0)
         SBSFunctionLib.LoadFunctions(LibraryFunctions)
     End Sub
 
-    Sub AddLibFunction(ByRef libFunc As LibFunction)
-        LibraryFunctions.Add(libFunc)
+    Sub DeclareLibFunction(ByVal libFunc As LibFunction)
+        If Not LibraryFunctions.Contains(libFunc.Name) Then LibraryFunctions.Add(libFunc)
     End Sub
 
-    Sub AddUsersFunction(ByVal func As UsersFunction)
+    Sub DeclareUsersFunction(ByVal func As UsersFunction)
         func.Name = func.Name.ToLower()
 
         Dim nextOffset As Integer = AvailableRange.rangeStart + AvailableRange.rangeLength
@@ -81,47 +83,41 @@ Public Class SBSFunctionList
     End Sub
 
     Public Function GetUsersFunction(ByVal funcName As String) As UsersFunction
-        funcName = funcName.ToLower()
         Dim lastOffset = AvailableRange.rangeStart + AvailableRange.rangeLength - 1
 
         For i As Integer = lastOffset To AvailableRange.rangeStart Step -1
             Dim Func As UsersFunction = UsersFunctions(i)
-            If Func.Name = funcName Then
+            If String.Compare(Func.Name, funcName, True) = 0 Then
                 Return Func
             End If
         Next
-
         Return Nothing
     End Function
 
     Public Function GetLibFunction(ByVal funcName As String) As LibFunction
         funcName = funcName.ToLower()
 
-        For i As Integer = 0 To LibraryFunctions.Count - 1
-            Dim func As LibFunction = LibraryFunctions(i)
-            If func.Name = funcName Then
-                Return func
-            End If
-        Next
-
-        Return Nothing
+        If LibraryFunctions.Contains(funcName) Then
+            Return LibraryFunctions(funcName)
+        Else : Return Nothing
+        End If
     End Function
 
 End Class
 
 Public Class SBSVariableList
-    Dim varPtrs As ArrayList
-    Dim varTable As ArrayList
+    Dim varPtrs As List(Of VariablePtr)
+    Dim varTable As List(Of SBSValue)
 
     Public AvailableRange As Range
 
     Sub New()
-        varPtrs = New ArrayList()
-        varTable = New ArrayList()
+        varPtrs = New List(Of VariablePtr)
+        varTable = New List(Of SBSValue)
         AvailableRange = New Range(0, 0)
     End Sub
 
-    Public Sub SetVariable(ByVal name As String, ByRef value As SBSValue)
+    Public Sub SetVariable(ByVal name As String, ByVal value As SBSValue)
         Dim varPtr As VariablePtr = GetVarPtr(name)
         If varPtr IsNot Nothing Then
             varTable(varPtr.Offset) = value
@@ -148,7 +144,7 @@ Public Class SBSVariableList
             End If
 
             AvailableRange.rangeLength += 1
-            End If
+        End If
     End Sub
 
     Function GetVarPtr(ByVal name As String) As VariablePtr
@@ -183,7 +179,7 @@ Public Class StackStatus
     Public varAvailableRange As Range
     Public funcAvailableRange As Range
 
-    Sub New(ByVal varsLength As Integer, ByRef funcsLength As Integer)
+    Sub New(ByVal varsLength As Integer, ByVal funcsLength As Integer)
         varAvailableRange = New Range(0, varsLength)
     End Sub
 
@@ -203,12 +199,26 @@ Public Class VariablePtr
     End Sub
 End Class
 
+Friend Interface IRuntimeFunction
+    Property Name As String
+End Interface
+
+Friend NotInheritable Class FunctionCollection(Of T As IRuntimeFunction)
+    Inherits ObjectModel.KeyedCollection(Of String, T)
+
+    Protected Overrides Function GetKeyForItem(item As T) As String
+        Return item.Name.ToLower()
+    End Function
+End Class
+
 Public Class UsersFunction
+    ' Implements IRuntimeFunction
+
     Public Name As String
-    Public ArgumentList As ArrayList
+    Public ArgumentList() As String
     Public Statments As CodeSequence
 
-    Sub New(ByVal _name As String, ByVal _argumentList As ArrayList, ByVal _statments As CodeSequence)
+    Sub New(ByVal _name As String, ByVal _argumentList() As String, ByVal _statments As CodeSequence)
         Name = _name
         ArgumentList = _argumentList
         Statments = _statments
@@ -216,25 +226,26 @@ Public Class UsersFunction
 End Class
 
 Public Class LibFunction
-    Delegate Function LibraryFunction(ByRef args As ArrayList) As SBSValue
+    Implements IRuntimeFunction
 
-    Public Name As String
-    Public ArgumentsCount? As Integer
+    Delegate Function LibraryFunction(args As IList(Of SBSValue)) As SBSValue
+
+    Public Property Name As String Implements IRuntimeFunction.Name
+    Public ArgumentsCount As Integer
     Public Func As LibraryFunction
 
-    Sub New(ByVal _name As String, ByVal _func As LibraryFunction, Optional ByVal _argumentsCount? As Integer = Nothing)
+    Sub New(ByVal _name As String, ByVal _func As LibraryFunction, Optional ByVal _argumentsCount As Integer = 0)
         Name = _name
         Func = _func
         ArgumentsCount = _argumentsCount
     End Sub
-
 End Class
 
 Public Class JumpStatus
     Public JumpType As String
     Public ExtraValue As SBSValue
 
-    Sub New(ByVal _jumpType As String, Optional ByRef _extraValue As SBSValue = Nothing)
+    Sub New(ByVal _jumpType As String, Optional ByVal _extraValue As SBSValue = Nothing)
         JumpType = _jumpType
         ExtraValue = _extraValue
     End Sub

@@ -11,7 +11,7 @@
 
     End Sub
 
-    Public Function LoadCode(ByRef code As String) As Range
+    Public Function LoadCode(ByVal code As String) As Range
         Dim reader As New TextReader(code)
         Return RuntimeData.AddStatments(Parser.ParseCode(reader))
     End Function
@@ -21,7 +21,7 @@
             range = New Range(0, RuntimeData.Statments.Count)
         End If
 
-        Dim statments As ArrayList
+        Dim statments As List(Of CodeSequence)
         statments = RuntimeData.Statments.GetRange(range.rangeStart, range.rangeLength)
 
         If RuntimeData.Statments.Count <> 0 Then
@@ -29,12 +29,12 @@
         End If
     End Sub
 
-    Public Function CallFunction(ByVal funcname As String, Optional ByRef argsList As ArrayList = Nothing) As SBSValue
+    Public Function CallFunction(ByVal funcname As String, Optional ByVal argsList As IList(Of SBSValue) = Nothing) As SBSValue
         Return Performer.CallFunction(funcname, argsList)
     End Function
 
-    Public Sub AddFunction(ByRef libFunc As LibFunction)
-        RuntimeData.Functions.AddLibFunction(libFunc)
+    Public Sub DeclareFunction(ByVal libFunc As LibFunction)
+        RuntimeData.Functions.DeclareLibFunction(libFunc)
     End Sub
 
     Public Sub Reset()
