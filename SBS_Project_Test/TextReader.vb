@@ -1,6 +1,6 @@
 ﻿Public Class TextReader
     Dim Code As String = String.Empty
-    Dim Pos As New TextReaderPosition
+    Dim Pos As TextReaderPosition
     Dim DeepestPos As New TextReaderPosition
 
     Sub New(ByVal code As String)
@@ -9,6 +9,7 @@
 
     Sub LoadText(ByVal code As String)
         Me.Code = code
+        Pos = New TextReaderPosition
         Pos.Lines = 1
     End Sub
 
@@ -62,7 +63,7 @@
             Return Pos
         End Get
         Set(value As TextReaderPosition)
-            If Pos.Position < Code.Length Then Pos = value
+            If value.Position < Code.Length Then Pos = value
         End Set
     End Property
 
