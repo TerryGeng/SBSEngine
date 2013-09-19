@@ -33,8 +33,7 @@
         End If
 
         If Pos.Position > DeepestPos.Position Then
-            DeepestPos.Position = Pos.Position
-            DeepestPos.Lines = Pos.Lines
+            DeepestPos = Pos
         End If
 
         Return mChar
