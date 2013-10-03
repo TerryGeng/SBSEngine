@@ -1,60 +1,69 @@
 ﻿Public Module GrammarRules
-    Public Sub LoadRules(ByVal Rules As List(Of Grammar))
+    Public Enum GrammarRuleType
+        GStatment
+        GNumber
+        GString
+        GName
+        GLineEnd
+        GExpressionOperation
+    End Enum
 
-        Rules.Add(New Grammar("STATMENT", "DEFINITION+++LINE_END|||EXPRESSION+++LINE_END|||CONTROLFLOW+++LINE_END|||JUMP+++LINE_END"))
-        'Rules.Add(New Grammar("STATMENT", "EXPRESSION+++LINE_END"))
+    Public Sub LoadRules(ByVal Rules As List(Of GrammarRule))
 
-        Rules.Add(New Grammar("NUMBER", AddressOf PackNumber))
-        Rules.Add(New Grammar("STRING", AddressOf PackString))
-        Rules.Add(New Grammar("NAME", AddressOf PackName))
-        Rules.Add(New Grammar("LINE_END", AddressOf PackLineEnd))
-        Rules.Add(New Grammar("EXP_OP", "'+'|||'-'|||'*'|||'/'"))
+        Rules.Add(New GrammarRule("STATMENT", "DEFINITION+++LINE_END|||EXPRESSION+++LINE_END|||CONTROLFLOW+++LINE_END|||JUMP+++LINE_END"))
+        'Rules.Add(New GrammarRule("STATMENT", "EXPRESSION+++LINE_END"))
 
-        Rules.Add(New Grammar("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||*EXP_OP_ELEMENT|||EXP_ELEMENT"))
-        Rules.Add(New Grammar("EXP_ELEMENT", "NUMBER|||STRING|||VARIABLE|||FUNC_CALL|||'('+++EXPRESSION+++')'"))
-        Rules.Add(New Grammar("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT|||EXP_OP+++'('+++EXPRESSION+++')'"))
+        Rules.Add(New GrammarRule("NUMBER", AddressOf PackNumber))
+        Rules.Add(New GrammarRule("STRING", AddressOf PackString))
+        Rules.Add(New GrammarRule("NAME", AddressOf PackName))
+        Rules.Add(New GrammarRule("LINE_END", AddressOf PackLineEnd))
+        Rules.Add(New GrammarRule("EXP_OP", "'+'|||'-'|||'*'|||'/'"))
 
-        Rules.Add(New Grammar("JUDG_OP", "'<='|||'>='|||'='|||'>'|||'<'"))
-        Rules.Add(New Grammar("JUDG_OR_EXPR", "JUDG_AND_EXPR+++'Or'+++JUDG_OR_EXPR|||JUDG_AND_EXPR"))
-        Rules.Add(New Grammar("JUDG_AND_EXPR", "JUDG_SINGLE+++'And'+++JUDG_SINGLE|||JUDG_SINGLE|||JUDG_AND_EXPR+++'And'+++JUDE_SINGLE"))
-        Rules.Add(New Grammar("JUDG_SINGLE", "EXPRESSION+++JUDG_OP+++EXPRESSION|||EXPRESSION|||'('+++JUDG_OR_EXPR+++')'"))
+        Rules.Add(New GrammarRule("EXPRESSION", "EXP_ELEMENT+++*EXP_OP_ELEMENT|||*EXP_OP_ELEMENT|||EXP_ELEMENT"))
+        Rules.Add(New GrammarRule("EXP_ELEMENT", "NUMBER|||STRING|||VARIABLE|||FUNC_CALL|||'('+++EXPRESSION+++')'"))
+        Rules.Add(New GrammarRule("EXP_OP_ELEMENT", "EXP_OP+++EXP_ELEMENT|||EXP_OP+++'('+++EXPRESSION+++')'"))
 
-        Rules.Add(New Grammar("VARIABLE", "'$'+++NAME"))
-        Rules.Add(New Grammar("FUNC_CALL", "NAME+++'()'|||NAME+++'('+++ARG_LIST+++')'"))
-        Rules.Add(New Grammar("ARG_LIST", "*ARG_COMMA+++EXPRESSION|||EXPRESSION"))
-        Rules.Add(New Grammar("ARG_COMMA", "EXPRESSION+++','"))
+        Rules.Add(New GrammarRule("JUDG_OP", "'<='|||'>='|||'='|||'>'|||'<'"))
+        Rules.Add(New GrammarRule("JUDG_OR_EXPR", "JUDG_AND_EXPR+++'Or'+++JUDG_OR_EXPR|||JUDG_AND_EXPR"))
+        Rules.Add(New GrammarRule("JUDG_AND_EXPR", "JUDG_SINGLE+++'And'+++JUDG_SINGLE|||JUDG_SINGLE|||JUDG_AND_EXPR+++'And'+++JUDE_SINGLE"))
+        Rules.Add(New GrammarRule("JUDG_SINGLE", "EXPRESSION+++JUDG_OP+++EXPRESSION|||EXPRESSION|||'('+++JUDG_OR_EXPR+++')'"))
 
-        Rules.Add(New Grammar("DEFINITION", "VAR_DEF|||FUNC_DEF"))
-        Rules.Add(New Grammar("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
+        Rules.Add(New GrammarRule("VARIABLE", "'$'+++NAME"))
+        Rules.Add(New GrammarRule("FUNC_CALL", "NAME+++'()'|||NAME+++'('+++ARG_LIST+++')'"))
+        Rules.Add(New GrammarRule("ARG_LIST", "*ARG_COMMA+++EXPRESSION|||EXPRESSION"))
+        Rules.Add(New GrammarRule("ARG_COMMA", "EXPRESSION+++','"))
 
-        Rules.Add(New Grammar("CONTROLFLOW", "IF_ELSE|||WHILE|||FOR"))
-        Rules.Add(New Grammar("IF_ELSE", "IF_ELSE_HEAD+++ELSE_AND_END"))
-        Rules.Add(New Grammar("IF_ELSE_HEAD", "'If '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
-        Rules.Add(New Grammar("ELSE_AND_END",
+        Rules.Add(New GrammarRule("DEFINITION", "VAR_DEF|||FUNC_DEF"))
+        Rules.Add(New GrammarRule("VAR_DEF", "VARIABLE+++'='+++EXPRESSION"))
+
+        Rules.Add(New GrammarRule("CONTROLFLOW", "IF_ELSE|||WHILE|||FOR"))
+        Rules.Add(New GrammarRule("IF_ELSE", "IF_ELSE_HEAD+++ELSE_AND_END"))
+        Rules.Add(New GrammarRule("IF_ELSE_HEAD", "'If '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
+        Rules.Add(New GrammarRule("ELSE_AND_END",
                               "'End If'|||" & _
                               "'Else'+++LINE_END+++*STATMENT+++'End If'|||" & _
                               "*ELSE_IF+++'End If'|||" & _
                               "*ELSE_IF+++'Else'+++LINE_END+++*STATMENT+++'End If'"))
-        Rules.Add(New Grammar("ELSE_IF", "'ElseIf '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
+        Rules.Add(New GrammarRule("ELSE_IF", "'ElseIf '+++JUDG_OR_EXPR+++'Then'+++LINE_END+++*STATMENT"))
 
-        Rules.Add(New Grammar("WHILE", "'While'+++JUDG_OR_EXPR+++LINE_END+++*STATMENT+++'End While'"))
-        Rules.Add(New Grammar("FOR",
+        Rules.Add(New GrammarRule("WHILE", "'While'+++JUDG_OR_EXPR+++LINE_END+++*STATMENT+++'End While'"))
+        Rules.Add(New GrammarRule("FOR",
                               "'For '+++FOR_VAR+++'To '+++EXPRESSION+++'Step '+++EXPRESSION+++LINE_END+++*STATMENT+++'End For'|||" & _
                               "'For '+++FOR_VAR+++'To '+++EXPRESSION+++LINE_END+++*STATMENT+++'End For'"))
-        Rules.Add(New Grammar("FOR_VAR", "VAR_DEF|||VARIABLE"))
+        Rules.Add(New GrammarRule("FOR_VAR", "VAR_DEF|||VARIABLE"))
 
 
-        Rules.Add(New Grammar("FUNC_DEF",
+        Rules.Add(New GrammarRule("FUNC_DEF",
                               "'Function '+++NAME+++'()'+++LINE_END+++" & _
                               "*STATMENT+++" & _
                               "'End Function'|||" & _
                               "'Function '+++NAME+++'('+++ARG_DEF_LIST+++')'+++LINE_END+++" & _
                               "*STATMENT+++" & _
                               "'End Function'"))
-        Rules.Add(New Grammar("ARG_DEF_LIST", "*ARG_DEF_COMMA+++VARIABLE|||VARIABLE"))
-        Rules.Add(New Grammar("ARG_DEF_COMMA", "VARIABLE+++','"))
+        Rules.Add(New GrammarRule("ARG_DEF_LIST", "*ARG_DEF_COMMA+++VARIABLE|||VARIABLE"))
+        Rules.Add(New GrammarRule("ARG_DEF_COMMA", "VARIABLE+++','"))
 
-        Rules.Add(New Grammar("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Continue For'|||'Continue While'|||'Exit For'|||'Exit While'"))
+        Rules.Add(New GrammarRule("JUMP", "'Return '+++EXPRESSION|||'Return'|||'Continue For'|||'Continue While'|||'Exit For'|||'Exit While'"))
 
 
     End Sub
