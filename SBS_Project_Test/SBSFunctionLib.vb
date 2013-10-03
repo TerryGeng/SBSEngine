@@ -43,14 +43,14 @@
             Dim value As SBSValue = args(0)
             Dim start As SBSValue = args(1)
             If start.Type = vbDouble AndAlso start.nValue >= 0 AndAlso value.Type = vbString Then
-                Return New SBSValue(vbString, CType(value, String).Substring(start.nValue))
+                Return New SBSValue(vbString, CType(value, String).Substring(CInt(start.nValue)))
             End If
         ElseIf args.Count = 3 Then
             Dim value As SBSValue = args(0)
             Dim start As SBSValue = args(1)
             Dim length As SBSValue = args(2)
             If start.Type = vbDouble AndAlso start.nValue >= 0 AndAlso length.Type = vbDouble AndAlso length.nValue >= 0 AndAlso value.Type = vbString Then
-                Return New SBSValue(vbString, CType(value, String).Substring(start.nValue, length.nValue))
+                Return New SBSValue(vbString, CType(value, String).Substring(CInt(start.nValue), CInt(length.nValue)))
             End If
         End If
         Error_InvalidArgs("SubStr")

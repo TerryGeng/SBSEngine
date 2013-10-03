@@ -203,7 +203,7 @@
         Dim firstEle As CodeSequence = judg_or_expr.SeqsList(0)
         Dim firstValue As SBSValue = JudgAndExpPerform(firstEle)
 
-        If firstValue.nValue Then
+        If CBool(firstValue.nValue) Then
             Return firstValue
         Else
             If judg_or_expr.SeqsList.Count = 1 Then
@@ -215,7 +215,7 @@
             Dim secondEle As CodeSequence = judg_or_expr.SeqsList(2)
             Dim secondValue As SBSValue = JudgOrExprPerform(secondEle)
 
-            If secondValue.nValue Then
+            If CBool(secondValue.nValue) Then
                 Return New SBSValue(vbDouble, 1)
             Else
                 Return New SBSValue(vbDouble, 0)
@@ -239,7 +239,7 @@
             Dim secondEle As CodeSequence = judg_and_expr.SeqsList(2)
             Dim secondValue As SBSValue = JudgSinglePerform(secondEle)
 
-            If firstValue.nValue AndAlso secondValue.nValue Then
+            If CBool(firstValue.nValue) AndAlso CBool(secondValue.nValue) Then
                 Return New SBSValue(vbDouble, 1)
             Else
                 Return New SBSValue(vbDouble, 0)
@@ -264,7 +264,7 @@
         End If
 
         If judg_single.SeqsList.Count = 1 Then
-            If firstValue.nValue Then
+            If CBool(firstValue.nValue) Then
                 Return firstValue
             Else
                 Return New SBSValue(vbDouble, 0)
@@ -423,7 +423,7 @@ Public Class ControlFlowPerform
 
         Dim condition As CodeSequence = if_else_head.SeqsList(1)
 
-        If ExprPerf.JudgOrExprPerform(condition).nValue Then
+        If CBool(ExprPerf.JudgOrExprPerform(condition).nValue) Then
             Dim statments As IList(Of CodeSequence) = if_else_head.SeqsList(4).SeqsList
             Return MainPerformer.Run(statments)
         Else
@@ -434,7 +434,7 @@ Public Class ControlFlowPerform
                 For i As Integer = 0 To firstEle.SeqsList.Count - 1
                     Dim curEle As CodeSequence = firstEle.SeqsList(i)
                     Dim cond As CodeSequence = curEle.SeqsList(1)
-                    If ExprPerf.JudgOrExprPerform(cond).nValue Then
+                    If CBool(ExprPerf.JudgOrExprPerform(cond).nValue) Then
                         Dim statments As IList(Of CodeSequence) = curEle.SeqsList(4).SeqsList
                         Return MainPerformer.Run(statments)
                     End If
@@ -463,7 +463,7 @@ Public Class ControlFlowPerform
         Dim statments As CodeSequence = _while.SeqsList(3)
         Dim jumpstat As JumpStatus
 
-        While ExprPerf.JudgOrExprPerform(condition).nValue
+        While CBool(ExprPerf.JudgOrExprPerform(condition).nValue)
             jumpstat = MainPerformer.Run(statments.SeqsList)
             If jumpstat IsNot Nothing Then
                 If jumpstat.JumpType = "Continue While" Then
