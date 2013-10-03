@@ -1,15 +1,10 @@
-﻿' SBS - Simple Basic Script
-' -------------------------
-' This file is a part of SBS
-' project.
-' =========================
-' XVG Developing Branch 2013.9
-
+﻿' My first work for rewriting is modifying here.
+' Terry 2013.10.03
 
 #Const OUTPUT_MATCH_PROCESS = False
 
 Public Class SBSParser
-    Public Const Version As String = "0.2a"
+    Public Const Version As String = "0.3devel"
 
     Dim Rules As List(Of Grammar) = New List(Of Grammar)
 
