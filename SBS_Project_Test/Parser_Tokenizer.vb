@@ -1,4 +1,4 @@
-﻿Public Class TextReader
+﻿Public Class Tokenizer
     Dim Code As String = String.Empty
     Dim Pos As TextReaderPosition
     Dim DeepestPos As New TextReaderPosition
@@ -61,7 +61,7 @@
         Get
             Return Pos
         End Get
-        Set(value As TextReaderPosition)
+        Set(ByVal value As TextReaderPosition)
             If value.Position < Code.Length Then Pos = value
         End Set
     End Property
