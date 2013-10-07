@@ -1,7 +1,7 @@
 ﻿Imports System.IO
 Imports LexiconRules = System.Collections.Generic.Dictionary(Of SBSEngine.TokenizerType.LexiconType, SBSEngine.TokenizerType.LexiconRule)
 
-Module TokenizerType
+Public Module TokenizerType
     Public Enum LexiconType
         LInteger
         LFloat
@@ -30,7 +30,8 @@ Module TokenizerType
 
     Enum PackerStatus
         Continued 'Means the combination of current and previous characters still matchs the rule.
-        Finished 'Means the combination of current and previous characters cannot match the rule but previous characters can match the rule.
+        Finished 'Means the combination of current and previous characters matchs the rule.
+        PreviousFinished 'Means the combination of current and previous characters cannot match the rule but previous characters can match the rule.
     End Enum
 
 End Module
@@ -44,16 +45,59 @@ Module TokenizerRules
         If IsNumeric(Character) Then
             Return PackerStatus.Continued
         End If
-        Return PackerStatus.Finished
+        Return PackerStatus.PreviousFinished
     End Function
 End Module
 
 Public Class Tokenizer
     Dim Reader As StringReader
+    Dim RulesContainer As LexiconRules
+
+    Dim ReaderBuffer? As Char 'If this is not empty, GetChar() will return this and clean this.
 
     Sub New(ByVal Code As String)
         Reader = New StringReader(Code)
+        RulesContainer = New LexiconRules
+        TokenizerRules.LoadLexicalRules(RulesContainer)
     End Sub
+
+    Function GetChar() As Char
+        If ReaderBuffer IsNot Nothing Then 'TODO: Maybe can mix this into NextToken
+            Dim Character As Char? = ReaderBuffer
+            ReaderBuffer = Nothing
+            Return Character.Value
+        End If
+        Return ChrW(Reader.Read())
+    End Function
+
+    Function NextToken() As Token
+        Dim Candidates As List(Of LexiconType) = RulesContainer.Keys.ToList()
+        Dim RemainedCandidate As List(Of LexiconType) = New List(Of LexiconType)
+
+        Dim TokenBuffer As String = String.Empty
+        Dim BufferLength As Integer
+
+        For Each Candidate As LexiconType In Candidates
+            Dim Character As Char = GetChar()
+            Select Case RulesContainer(Candidate).Packer(Character, BufferLength)
+                Case PackerStatus.Finished
+                    TokenBuffer &= Character
+                    If Not BufferLength = 0 Then
+                        Dim Token As New Token
+                        Token.Type = Candidate
+                        Token.Value = TokenBuffer
+
+                        Return Token
+                    Else
+                        Continue For
+                    End If
+                Case PackerStatus.PreviousFinished
+                    '=== TODO ===
+                Case PackerStatus.Continued
+            End Select
+        Next
+
+    End Function
 
     'Function GetChar(ByVal offset As Integer) As Char
     '    If offset >= Code.Length Then
