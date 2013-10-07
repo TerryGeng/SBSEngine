@@ -8,8 +8,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>SBS_Project_Test.TestForm</StartupObject>
-    <RootNamespace>SBS_Project_Test</RootNamespace>
+    <StartupObject>SBSEngine.TestForm</StartupObject>
+    <RootNamespace>SBSEngine</RootNamespace>
     <AssemblyName>SBS_Project_Test</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>WindowsFormsWithCustomSubMain</MyType>
@@ -100,10 +100,10 @@
     <Compile Include="SBSParser.vb" />
     <Compile Include="SBSRuntimeData.vb" />
     <Compile Include="StandardIO.vb" />
-    <Compile Include="GrammarRules.vb" />
+    <Compile Include="Parser_GrammarRules.vb" />
     <Compile Include="SBSPerform.vb" />
     <Compile Include="StatmentPerforms.vb" />
-    <Compile Include="TextReader.vb" />
+    <Compile Include="Parser_Tokenizer.vb" />
     <Compile Include="TestForm.vb">
       <SubType>Form</SubType>
     </Compile>
