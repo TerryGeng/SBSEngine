@@ -1,10 +1,5 @@
 ﻿Public Module GrammarRules
-    Public Enum LexiconType
-        LInteger
-        LFloat
-        LName
-        LString
-    End Enum
+
 
     Public Enum GrammarRuleType
         GStatment
