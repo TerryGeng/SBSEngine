@@ -29,9 +29,21 @@ Public Module TokenizerType
     End Class
 
     Enum PackerStatus
-        Continued 'Means the combination of current and previous characters still matchs the rule.
-        Finished 'Means the combination of current and previous characters matchs the rule.
-        PreviousFinished 'Means the combination of current and previous characters cannot match the rule but previous characters can match the rule.
+        ''' <summary>
+        ''' The combination of current and previous characters still matchs the rule.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Continued
+        ''' <summary>
+        ''' The combination of current and previous characters matchs the rule.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Finished
+        ''' <summary>
+        ''' Only previous characters match the rule.
+        ''' </summary>
+        ''' <remarks></remarks>
+        PreviousFinished
     End Enum
 
 End Module
@@ -42,7 +54,7 @@ Module TokenizerRules
     End Sub
 
     Function IntegerPacker(ByVal Character As Char, ByVal Position As Integer) As PackerStatus
-        If IsNumeric(Character) Then
+        If Char.IsNumber(Character) Then
             Return PackerStatus.Continued
         End If
         Return PackerStatus.PreviousFinished
@@ -53,7 +65,7 @@ Public Class Tokenizer
     Dim Reader As StringReader
     Dim RulesContainer As LexiconRules
 
-    Dim ReaderBuffer? As Char 'If this is not empty, GetChar() will return this and clean this.
+    Dim ReaderBuffer? As Char 'GetChar() will return and clean it if it is not empty.
 
     Sub New(ByVal Code As String)
         Reader = New StringReader(Code)
