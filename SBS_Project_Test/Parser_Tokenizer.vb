@@ -54,7 +54,7 @@ Module TokenizerRules
     End Sub
 
     Function IntegerPacker(ByVal Character As Char, ByVal Position As Integer) As PackerStatus
-        If Char.IsNumber(Character) Then
+        If Char.IsDigit(Character) Then
             Return PackerStatus.Continued
         End If
         Return PackerStatus.PreviousFinished
@@ -95,11 +95,7 @@ Public Class Tokenizer
                 Case PackerStatus.Finished
                     TokenBuffer &= Character
                     If Not BufferLength = 0 Then
-                        Dim Token As New Token
-                        Token.Type = Candidate
-                        Token.Value = TokenBuffer
-
-                        Return Token
+                        Return New Token With {.Type = Candidate, .Value = TokenBuffer}
                     Else
                         Continue For
                     End If
