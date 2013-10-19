@@ -106,7 +106,7 @@ Public Class Tokenizer
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer}
 
                     Case PackerStatus.PreviousFinished
-                        If TokenBuffer.Length Then
+                        If Not TokenBuffer.Length = 0 Then
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer}
                         Else
@@ -151,11 +151,11 @@ Class CharsReader
         Try
             Return BaseString(Pointer)
         Catch ex As IndexOutOfRangeException
-            Return Char.ConvertFromUtf32(0)
+            Return ChrW(0)
         End Try
     End Function
 
-    Public Function NextChar() As Char?
+    Public Function NextChar() As Char
         MoveNext()
         Return Current()
     End Function
