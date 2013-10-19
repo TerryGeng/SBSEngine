@@ -102,7 +102,7 @@ Public Class Tokenizer
                         TokenBuffer.Append(Character)
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
 
-                    Case PackerStatus.PreviousFinished
+                    Case CheckerStatus.PreviousFinished
                         If TokenBuffer.Length > 0 Then
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
