@@ -20,11 +20,11 @@ Public Module TokenizerType
     Public Class LexiconRule
         Delegate Function PackerFunction(ByVal Character As Char, ByVal Position As Integer) As PackerStatus
         Public Type As LexiconType
-        Public Packer As PackerFunction
+        Public Pack As PackerFunction
 
         Sub New(ByVal Type As LexiconType, ByVal Packer As PackerFunction)
             Me.Type = Type
-            Me.Packer = Packer
+            Me.Pack = Packer
         End Sub
     End Class
 
@@ -47,6 +47,22 @@ Public Module TokenizerType
 
     End Enum
 
+    Public Class UnexpectedCharacterException
+        Inherits ApplicationException
+
+        Public Position As Integer
+        Public Character As Char
+        Public Overrides ReadOnly Property Message As String
+            Get
+                Return "Unexpected Character (" & AscW(Character).ToString & ")'" & Character & "' at " & Position.ToString
+            End Get
+        End Property
+
+        Sub New(ByVal Position As Integer, ByVal Character As Char)
+            Me.Position = Position
+            Me.Character = Character
+        End Sub
+    End Class
 End Module
 
 Module TokenizerRules
@@ -63,151 +79,92 @@ Module TokenizerRules
 End Module
 
 Public Class Tokenizer
-    Dim Reader As StringReader
+    Dim Reader As CharsReader
     Dim RulesContainer As LexiconRules
 
-
-    Dim ReaderBuffer? As Char 'GetChar() will return and clean it if it is not empty.
     Sub New(ByVal Code As String)
-        Reader = New StringReader(Code)
+        Reader = New CharsReader(Code)
         RulesContainer = New LexiconRules
         TokenizerRules.LoadLexicalRules(RulesContainer)
     End Sub
 
-    Function GetChar() As Char
-        If ReaderBuffer IsNot Nothing Then 'TODO: Maybe can mix this into NextToken
-            Dim Character As Char? = ReaderBuffer
-            ReaderBuffer = Nothing
-            Return Character.Value
-        End If
-        Return ChrW(Reader.Read())
-    End Function
-
     Function NextToken() As Token
-        Dim Candidates As List(Of LexiconType) = RulesContainer.Keys.ToList()
-        Dim RemainedCandidate As List(Of LexiconType) = New List(Of LexiconType)
+        Dim Candidates As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
 
         Dim TokenBuffer As String = String.Empty
         Dim BufferLength As Integer
+        Dim Character As Char = Reader.NextChar()
 
-        For Each Candidate As LexiconType In Candidates
-            Dim Character As Char = GetChar()
-            Select Case RulesContainer(Candidate).Packer(Character, BufferLength)
-                Case PackerStatus.Finished
-                    TokenBuffer &= Character
-                    If Not BufferLength = 0 Then
+        Do
+            Dim CandidatePointer As Integer
+
+            While CandidatePointer < Candidates.Count
+                Dim Candidate As LexiconType = Candidates(CandidatePointer)
+                Select Case RulesContainer(Candidate).Pack(Character, BufferLength)
+                    Case PackerStatus.Finished
+                        TokenBuffer &= Character
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer}
-                    Else
-                        Continue For
-                    End If
-                Case PackerStatus.PreviousFinished
-                    '=== TODO ===
-                Case PackerStatus.Continued
-            End Select
-        Next
 
+                    Case PackerStatus.PreviousFinished
+                        If TokenBuffer.Length Then
+                            Reader.MovePrev()
+                            Return New Token With {.Type = Candidate, .Value = TokenBuffer}
+                        Else
+                            Candidates.RemoveAt(CandidatePointer)
+                            Continue While
+                        End If
+
+                    Case PackerStatus.Continued
+                        CandidatePointer += 1
+                End Select
+            End While
+
+            If Candidates.Count > 0 Then
+                TokenBuffer &= Character
+            Else
+                Throw New UnexpectedCharacterException(Reader.Position, Character)
+            End If
+
+        Loop While CBool(AscW(Character))
+
+        Return Nothing
     End Function
 
-    'Function GetChar(ByVal offset As Integer) As Char
-    '    If offset >= Code.Length Then
-    '        Return New Char()
-    '    End If
+End Class
 
-    '    Return Code.Substring(offset, 1)(0)
-    'End Function
+Class CharsReader
+    Dim BaseString As String
+    Dim Pointer As Integer
 
-    'Public Function GetNextChar() As Char
-    '    Dim mChar As Char = GetChar(Pos.Position)
+    Public ReadOnly Property Position As Integer
+        Get
+            Return Pointer
+        End Get
+    End Property
 
-    '    Pos.Position += 1
+    Sub New(ByRef BaseString As String)
+        Me.BaseString = BaseString
+        Pointer = -1
+    End Sub
 
-    '    If mChar = vbCr Then
-    '        Return GetNextChar()
-    '    ElseIf mChar = vbLf Then
-    '        Pos.Lines += 1
-    '    End If
+    Public Function Current() As Char
+        Try
+            Return BaseString(Pointer)
+        Catch ex As IndexOutOfRangeException
+            Return Char.ConvertFromUtf32(0)
+        End Try
+    End Function
 
-    '    If Pos.Position > DeepestPos.Position Then
-    '        DeepestPos = Pos
-    '    End If
+    Public Function NextChar() As Char?
+        MoveNext()
+        Return Current()
+    End Function
 
-    '    Return mChar
-    'End Function
+    Public Sub MoveNext()
+        Pointer += 1
+    End Sub
 
-    'Public Function PeekNextChar() As Char
-    '    Return GetChar(Pos.Position)
-    'End Function
-
-    'Public Sub RemoveBlankBeforeLf()
-    '    Dim mChar As Char = PeekNextChar()
-    '    While Char.IsWhiteSpace(mChar) AndAlso mChar <> vbLf AndAlso mChar <> vbCr
-    '        GetNextChar()
-    '        mChar = PeekNextChar()
-    '    End While
-    'End Sub
-
-    'Public Sub RemoveBlankBeforeChar()
-    '    While Char.IsWhiteSpace(PeekNextChar)
-    '        GetNextChar()
-    '    End While
-    'End Sub
-
-    'Public Property Position As TextReaderPosition
-    '    Get
-    '        Return Pos
-    '    End Get
-    '    Set(ByVal value As TextReaderPosition)
-    '        If value.Position < Code.Length Then Pos = value
-    '    End Set
-    'End Property
-
-    '<Obsolete("Please use Position property")>
-    'Public Function GetPosition() As TextReaderPosition
-    '    Return Pos
-    'End Function
-
-    '<Obsolete("Please use Position property")>
-    'Public Function SetPos(ByVal pos As TextReaderPosition) As Boolean
-    '    If pos.Position < Code.Length Then
-    '        Me.Pos.Position = pos.Position
-    '        Me.Pos.Lines = pos.Lines
-    '        Return True
-    '    Else
-    '        Return False
-    '    End If
-    'End Function
-
-    '<Obsolete("Please use Position property")>
-    'Public Sub SetPosition(ByVal position As Integer, ByVal line As Integer)
-    '    Pos.Position = position
-    '    Pos.Lines = line
-    'End Sub
-
-    'Public Sub PositionBack(Optional ByVal len As Integer = 1)
-    '    Pos.Position -= len
-    'End Sub
-
-    'Public Function IsEOF() As Boolean
-    '    Return Pos.Position >= Code.Length
-    'End Function
-
-    'Public Function IsEOF(ByVal position As Integer) As Boolean
-    '    Return position >= Code.Length
-    'End Function
-
-    'Public Function GetLength() As Integer
-    '    Return Code.Length
-    'End Function
-
-    'Public Function GetDeepestChar() As Char
-    '    If (IsEOF(DeepestPos.Position - 1)) Then
-    '        Return Nothing
-    '    Else
-    '        Return GetChar(DeepestPos.Position - 1)
-    '    End If
-    'End Function
-
-    'Public Function GetDeepestLine() As Integer
-    '    Return DeepestPos.Lines
-    'End Function
+    Public Sub MovePrev()
+        Pointer -= 1
+    End Sub
 End Class
