@@ -53,13 +53,9 @@ Public Module TokenizerType
 
         Public Position As Integer
         Public Character As Char
-        Public Overrides ReadOnly Property Message As String
-            Get
-                Return "Unexpected Character (" & AscW(Character).ToString & ")'" & Character & "' at " & Position.ToString
-            End Get
-        End Property
 
         Sub New(ByVal Position As Integer, ByVal Character As Char)
+            MyBase.New(String.Format("Unexpected Character '{0}'({1}) at {2}.", Character, Convert.ToInt32(Character), Position))
             Me.Position = Position
             Me.Character = Character
         End Sub
@@ -106,8 +102,8 @@ Public Class Tokenizer
                         TokenBuffer.Append(Character)
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
 
-                    Case CheckerStatus.PreviousFinished
-                        If Not TokenBuffer.Length = 0 Then
+                    Case PackerStatus.PreviousFinished
+                        If TokenBuffer.Length > 0 Then
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
                         Else
@@ -126,7 +122,7 @@ Public Class Tokenizer
                 Throw New UnexpectedCharacterException(Reader.Position, Character)
             End If
 
-        Loop While CBool(AscW(Character))
+        Loop While Not AscW(Character) = 0
 
         Return Nothing
     End Function
