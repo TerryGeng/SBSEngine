@@ -1,4 +1,5 @@
 ﻿Imports System.IO
+Imports System.Text
 Imports LexiconRules = System.Collections.Generic.Dictionary(Of SBSEngine.TokenizerType.LexiconType, SBSEngine.TokenizerType.LexiconRule)
 
 Public Module TokenizerType
@@ -18,17 +19,17 @@ Public Module TokenizerType
     End Structure
 
     Public Class LexiconRule
-        Delegate Function PackerFunction(ByVal Character As Char, ByVal Position As Integer) As PackerStatus
+        Delegate Function CheckerFunction(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
         Public Type As LexiconType
-        Public Pack As PackerFunction
+        Public Check As CheckerFunction
 
-        Sub New(ByVal Type As LexiconType, ByVal Packer As PackerFunction)
+        Sub New(ByVal Type As LexiconType, ByVal Checker As CheckerFunction)
             Me.Type = Type
-            Me.Pack = Packer
+            Me.Check = Checker
         End Sub
     End Class
 
-    Enum PackerStatus
+    Enum CheckerStatus
         ''' <summary>
         ''' Current and previous characters still match the rule. Match process continue.
         ''' </summary>
@@ -40,7 +41,7 @@ Public Module TokenizerType
         ''' <remarks></remarks>
         Finished
         ''' <summary>
-		''' Only previous characters match the rule. Match process end.
+        ''' Only previous characters match the rule. Match process end.
         ''' </summary>
         ''' <remarks></remarks>
         PreviousFinished
@@ -67,14 +68,14 @@ End Module
 
 Module TokenizerRules
     Sub LoadLexicalRules(ByVal Container As LexiconRules)
-        Container.Add(LexiconType.LInteger, New LexiconRule(LexiconType.LInteger, AddressOf IntegerPacker))
+        Container.Add(LexiconType.LInteger, New LexiconRule(LexiconType.LInteger, AddressOf IntegerChecker))
     End Sub
 
-    Function IntegerPacker(ByVal Character As Char, ByVal Position As Integer) As PackerStatus
+    Function IntegerChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
         If Char.IsDigit(Character) Then
-            Return PackerStatus.Continued
+            Return CheckerStatus.Continued
         End If
-        Return PackerStatus.PreviousFinished
+        Return CheckerStatus.PreviousFinished
     End Function
 End Module
 
@@ -91,7 +92,7 @@ Public Class Tokenizer
     Function NextToken() As Token
         Dim Candidates As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
 
-        Dim TokenBuffer As String = String.Empty
+        Dim TokenBuffer As New StringBuilder()
         Dim BufferLength As Integer
         Dim Character As Char = Reader.NextChar()
 
@@ -100,27 +101,27 @@ Public Class Tokenizer
 
             While CandidatePointer < Candidates.Count
                 Dim Candidate As LexiconType = Candidates(CandidatePointer)
-                Select Case RulesContainer(Candidate).Pack(Character, BufferLength)
-                    Case PackerStatus.Finished
-                        TokenBuffer &= Character
-                        Return New Token With {.Type = Candidate, .Value = TokenBuffer}
+                Select Case RulesContainer(Candidate).Check(Character, BufferLength)
+                    Case CheckerStatus.Finished
+                        TokenBuffer.Append(Character)
+                        Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
 
-                    Case PackerStatus.PreviousFinished
+                    Case CheckerStatus.PreviousFinished
                         If Not TokenBuffer.Length = 0 Then
                             Reader.MovePrev()
-                            Return New Token With {.Type = Candidate, .Value = TokenBuffer}
+                            Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
                         Else
                             Candidates.RemoveAt(CandidatePointer)
                             Continue While
                         End If
 
-                    Case PackerStatus.Continued
+                    Case CheckerStatus.Continued
                         CandidatePointer += 1
                 End Select
             End While
 
             If Candidates.Count > 0 Then
-                TokenBuffer &= Character
+                TokenBuffer.Append(Character)
             Else
                 Throw New UnexpectedCharacterException(Reader.Position, Character)
             End If
