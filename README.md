@@ -1,26 +1,27 @@
 # SBS Engine
-This is an basic implementation of SBS Parser and Executor.
+This is an basic implementation of SBS interpreter.
 
-Current Version: v0.1 (Parser v0.2, Executor v0.1)
+**The core of this engine is experiencing a big modification(core write), which is expected to make this engine faster and support more features.**
 
-## About this engine
+## About this
 This engine is written in Visual Basic.Net by a fool, with *a number of bugs and very low speed* .
 
 The author is still trying his best to make this engine faster and have less bugs.
-Yes you are right, this fool didn't use any wonderful things like `System.CodeDom`, `System.Reflection.Emit`.
+
+### Process of core rewrite
+1. ■ Tokenizer - Source code to token
+2. □ Parser - token to syntax tree
+3. □ Converter - syntax tree to bytecode
+4. □ Executor - run the bytecode
 
 ## About SBS
-SBS - **Simple Basic Script** , is a script language based on Basic language.
+SBS - **Simple Basic Script** , a script language based on Basic language.
 
-### Supported feature
-- [x] Expression
-- [x] Variable
-- [x] Function
-- [x] If...ElseIf...Else
-- [x] For...End For
-- [x] While...End While
-- [ ] Array
-- [ ] Structure
-
-### How to write a hello world in SBS
+### Hello world in SBS
+#### Print a hello-world
     Print("Hello world\n")
+
+#### Print 100 hello-worlds
+	For $i=0 To 100
+    	Print("Hello world\n")
+	End For
