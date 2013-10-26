@@ -9,7 +9,7 @@ This engine is written in Visual Basic.Net by a fool, with *a number of bugs and
 The author is still trying his best to make this engine faster and have less bugs.
 
 ### Authors
-In the beginning, this is merely my own project. However, after my first version released, [Herry(jhk)](https://github.com/jhk001) came to join me.
+In the beginning, this is merely my own project. However, after my first version released, [Henry(jhk)](https://github.com/jhk001) came to join me.
 
 Now, I'm in charge of the main structure and coding, his work is to give me some advice, review my code and sometimes help me write some part.
 
