@@ -76,11 +76,11 @@ Module TokenizerRules
 End Module
 
 Public Class Tokenizer
-    Dim Reader As CharsReader
+    Dim Reader As SourceCodeReader
     Dim RulesContainer As LexiconRules
 
     Sub New(ByVal Code As String)
-        Reader = New CharsReader(Code)
+        Reader = New SourceCodeReader(Code)
         RulesContainer = New LexiconRules
         TokenizerRules.LoadLexicalRules(RulesContainer)
     End Sub
@@ -129,7 +129,7 @@ Public Class Tokenizer
 
 End Class
 
-Class CharsReader
+Class SourceCodeReader
     Dim BaseString As String
     Dim Pointer As Integer
 
@@ -141,20 +141,28 @@ Class CharsReader
 
     Sub New(ByRef BaseString As String)
         Me.BaseString = BaseString
-        Pointer = -1
     End Sub
 
-    Public Function Current() As Char
-        Try
-            Return BaseString(Pointer)
-        Catch ex As IndexOutOfRangeException
+    Public Function Peek() As Char
+        If (Pointer < 0 OrElse Pointer > BaseString.Length) Then
             Return ChrW(0)
-        End Try
+        Else
+            Return BaseString(Pointer)
+        End If
     End Function
 
-    Public Function NextChar() As Char
+    Public Overloads Function NextChar() As Char
+        Dim result As Char = Peek()
         MoveNext()
-        Return Current()
+        Return result
+    End Function
+
+    Public Overloads Function NextChar(ByVal ch As Char) As Boolean
+        If Peek() = ch Then
+            MoveNext()
+            Return True
+        Else : Return False
+        End If
     End Function
 
     Public Sub MoveNext()
