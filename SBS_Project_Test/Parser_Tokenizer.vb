@@ -4,6 +4,7 @@ Imports LexiconRules = System.Collections.Generic.Dictionary(Of SBSEngine.Tokeni
 
 Public Module TokenizerType
     Public Enum LexiconType
+        Undefined
         LInteger
         LFloat
         LName
@@ -14,8 +15,8 @@ Public Module TokenizerType
     End Enum
 
     Public Structure Token
-        Dim Type As LexiconType
-        Dim Value As String
+        Public Type As LexiconType
+        Public Value As String
     End Structure
 
     Public Class LexiconRule
@@ -35,6 +36,11 @@ Public Module TokenizerType
         ''' </summary>
         ''' <remarks></remarks>
         Continued
+        ''' <summary>
+        ''' The emergence of current char indicated this combination unmatched the rule.
+        ''' </summary>
+        ''' <remarks></remarks>
+        Unmatch
         ''' <summary>
         ''' Current and previous characters matchs the rule. Match process end.
         ''' </summary>
@@ -65,6 +71,10 @@ End Module
 Module TokenizerRules
     Sub LoadLexicalRules(ByVal Container As LexiconRules)
         Container.Add(LexiconType.LInteger, New LexiconRule(LexiconType.LInteger, AddressOf IntegerChecker))
+        Container.Add(LexiconType.LBlank, New LexiconRule(LexiconType.LBlank, AddressOf BlankChecker))
+        Container.Add(LexiconType.LName, New LexiconRule(LexiconType.LName, AddressOf NameChecker))
+        Container.Add(LexiconType.LCrLf, New LexiconRule(LexiconType.LCrLf, AddressOf CrLfChecker))
+
     End Sub
 
     Function IntegerChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
@@ -72,6 +82,40 @@ Module TokenizerRules
             Return CheckerStatus.Continued
         End If
         Return CheckerStatus.PreviousFinished
+    End Function
+
+    Function BlankChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
+        If Char.IsWhiteSpace(Character) AndAlso Character <> vbCr AndAlso Character <> vbLf Then
+            Return CheckerStatus.Continued
+        End If
+        Return CheckerStatus.PreviousFinished
+    End Function
+
+    Function NameChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
+        If Position = 0 Then
+            If Char.IsLetter(Character) OrElse Character = "_" Then
+                Return CheckerStatus.Continued
+            End If
+        Else
+            If Char.IsLetterOrDigit(Character) OrElse Character = "_" Then
+                Return CheckerStatus.Continued
+            End If
+        End If
+        Return CheckerStatus.PreviousFinished
+    End Function
+
+    Function CrLfChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
+        Select Case Position
+            Case 0
+                If Character = vbCr Then
+                    Return CheckerStatus.Continued
+                End If
+            Case 1
+                If Character = vbLf Then
+                    Return CheckerStatus.Finished
+                End If
+        End Select
+        Return CheckerStatus.Unmatch
     End Function
 End Module
 
@@ -86,18 +130,23 @@ Public Class Tokenizer
     End Sub
 
     Function NextToken() As Token
+        If AscW(Reader.Peek()) = 0 Then Return Nothing
         Dim Candidates As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
 
         Dim TokenBuffer As New StringBuilder()
         Dim BufferLength As Integer
-        Dim Character As Char = Reader.NextChar()
+        Dim Character As Char
 
         Do
-            Dim CandidatePointer As Integer
+            Dim CandidatePointer As Integer = 0
+            Character = Reader.NextChar()
+            BufferLength = TokenBuffer.Length
 
             While CandidatePointer < Candidates.Count
                 Dim Candidate As LexiconType = Candidates(CandidatePointer)
                 Select Case RulesContainer(Candidate).Check(Character, BufferLength)
+                    Case CheckerStatus.Continued
+                        CandidatePointer += 1
                     Case CheckerStatus.Finished
                         TokenBuffer.Append(Character)
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
@@ -110,9 +159,9 @@ Public Class Tokenizer
                             Candidates.RemoveAt(CandidatePointer)
                             Continue While
                         End If
-
-                    Case CheckerStatus.Continued
-                        CandidatePointer += 1
+                    Case CheckerStatus.Unmatch
+                        Candidates.RemoveAt(CandidatePointer)
+                        Continue While
                 End Select
             End While
 
@@ -143,6 +192,14 @@ Class CharsReader
         Me.BaseString = BaseString
         Pointer = -1
     End Sub
+
+    Public Function Peek() As Char
+        Try
+            Return BaseString(Pointer + 1)
+        Catch ex As IndexOutOfRangeException
+            Return ChrW(0)
+        End Try
+    End Function
 
     Public Function Current() As Char
         Try
