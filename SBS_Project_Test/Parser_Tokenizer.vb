@@ -19,17 +19,17 @@ Public Module TokenizerType
     End Structure
 
     Public Class LexiconRule
-        Delegate Function CheckerFunction(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
+        Delegate Function ScannerFunction(ByVal Reader As SourceCodeReader) As ScannerStatus
         Public Type As LexiconType
-        Public Check As CheckerFunction
+        Public Scanner As ScannerFunction
 
-        Sub New(ByVal Type As LexiconType, ByVal Checker As CheckerFunction)
+        Sub New(ByVal Type As LexiconType, ByVal Scanner As ScannerFunction)
             Me.Type = Type
-            Me.Check = Checker
+            Me.Scanner = Scanner
         End Sub
     End Class
 
-    Enum CheckerStatus
+    Enum ScannerStatus
         ''' <summary>
         ''' Current and previous characters still match the rule. Match process continue.
         ''' </summary>
@@ -64,14 +64,14 @@ End Module
 
 Module TokenizerRules
     Sub LoadLexicalRules(ByVal Container As LexiconRules)
-        Container.Add(LexiconType.LInteger, New LexiconRule(LexiconType.LInteger, AddressOf IntegerChecker))
+        Container.Add(LexiconType.LInteger, New LexiconRule(LexiconType.LInteger, AddressOf IntegerScanner))
     End Sub
 
-    Function IntegerChecker(ByVal Character As Char, ByVal Position As Integer) As CheckerStatus
-        If Char.IsDigit(Character) Then
-            Return CheckerStatus.Continued
+    Function IntegerScanner(ByVal Reader As SourceCodeReader) As ScannerStatus
+        If Char.IsDigit(Reader.Peek()) Then
+            Return ScannerStatus.Continued
         End If
-        Return CheckerStatus.PreviousFinished
+        Return ScannerStatus.PreviousFinished
     End Function
 End Module
 
@@ -86,37 +86,35 @@ Public Class Tokenizer
     End Sub
 
     Function NextToken() As Token
-        Dim Candidates As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
-
+        Dim Candidates = RulesContainer.Keys
+        Dim MatchedRules As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
         Dim TokenBuffer As New StringBuilder()
-        Dim BufferLength As Integer
         Dim Character As Char = Reader.NextChar()
-
         Do
             Dim CandidatePointer As Integer
 
             While CandidatePointer < Candidates.Count
                 Dim Candidate As LexiconType = Candidates(CandidatePointer)
-                Select Case RulesContainer(Candidate).Check(Character, BufferLength)
-                    Case CheckerStatus.Finished
+                Select Case RulesContainer(Candidate).Scanner(Reader)
+                    Case ScannerStatus.Finished
                         TokenBuffer.Append(Character)
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
 
-                    Case CheckerStatus.PreviousFinished
+                    Case ScannerStatus.PreviousFinished
                         If TokenBuffer.Length > 0 Then
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
                         Else
-                            Candidates.RemoveAt(CandidatePointer)
+                            MatchedRules.Remove(Candidate)
                             Continue While
                         End If
 
-                    Case CheckerStatus.Continued
+                    Case ScannerStatus.Continued
                         CandidatePointer += 1
                 End Select
             End While
 
-            If Candidates.Count > 0 Then
+            If MatchedRules.Count > 0 Then
                 TokenBuffer.Append(Character)
             Else
                 Throw New UnexpectedCharacterException(Reader.Position, Character)
@@ -129,7 +127,7 @@ Public Class Tokenizer
 
 End Class
 
-Class SourceCodeReader
+Public Class SourceCodeReader
     Dim BaseString As String
     Dim Pointer As Integer
 
