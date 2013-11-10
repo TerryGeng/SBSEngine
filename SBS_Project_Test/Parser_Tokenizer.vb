@@ -78,42 +78,36 @@ Module TokenizerRules
     End Sub
 
     Function IntegerScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
-        If Char.IsDigit(Character) Then
-            Return ScannerStatus.Continued
-        End If
+        If Char.IsDigit(Character) Then Return ScannerStatus.Continued
         Return ScannerStatus.PreviousFinished
     End Function
 
     Function BlankScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
-        If Char.IsWhiteSpace(Character) AndAlso Character <> vbCr AndAlso Character <> vbLf Then
+        ' Character is neither vbCr nor vbLf
+        If (Not Char.IsControl(Character)) AndAlso _ 
+            Char.IsWhiteSpace(Character) Then _
             Return ScannerStatus.Continued
-        End If
         Return ScannerStatus.PreviousFinished
     End Function
 
     Function NameScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
-        If Position = 0 Then
-            If Char.IsLetter(Character) OrElse Character = "_" Then
-                Return ScannerStatus.Continued
-            End If
+        If Character = "_"c Then
+            Return ScannerStatus.Continued
         Else
-            If Char.IsLetterOrDigit(Character) OrElse Character = "_" Then
+            If (Position = 0 AndAlso Char.IsLetter(Character)) OrElse _
+                (Char.IsLetterOrDigit(Character)) Then _
                 Return ScannerStatus.Continued
-            End If
         End If
+
         Return ScannerStatus.PreviousFinished
     End Function
 
     Function CrLfScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
         Select Case Position
             Case 0
-                If Character = vbCr Then
-                    Return ScannerStatus.Continued
-                End If
+                If Character = vbCr Then Return ScannerStatus.Continued
             Case 1
-                If Character = vbLf Then
-                    Return ScannerStatus.Finished
-                End If
+                If Character = vbLf Then Return ScannerStatus.Finished
         End Select
         Return ScannerStatus.Unmatch
     End Function
@@ -122,30 +116,28 @@ End Module
 Public Class Tokenizer
     Dim Reader As SourceCodeReader
     Dim RulesContainer As LexiconRules
-    Dim RulesIndex As List(Of LexiconType)
 
     Sub New(ByVal Code As String)
         Reader = New SourceCodeReader(Code)
         RulesContainer = New LexiconRules
         TokenizerRules.LoadLexicalRules(RulesContainer)
-        RulesIndex = New List(Of LexiconType)(RulesContainer.Keys)
     End Sub
 
     Function NextToken() As Token
         If AscW(Reader.Peek()) = 0 Then Return Nothing
-        Dim Candidates As New BitArray(RulesIndex.Count, True)
+        Dim Rules = RulesContainer.Keys
+        Dim Matches As New BitArray(Rules.Count, True)
 
         Dim TokenBuffer As New StringBuilder()
         Dim Character As Char
 
         Do
-            Dim CandidatePointer As Integer = 0
+            Dim CandidatePos As Integer
             Character = Reader.NextChar()
 
-            While CandidatePointer < RulesIndex.Count
-                If Not Candidates(CandidatePointer) Then CandidatePointer += 1 : Continue While
-
-                Dim Candidate As LexiconType = RulesIndex(CandidatePointer)
+            While CandidatePos < Rules.Count
+                If Not Matches(CandidatePos) Then CandidatePos += 1 : Continue While
+                Dim Candidate As LexiconType = Rules(CandidatePos)
                 Select Case RulesContainer(Candidate).Scan(Character, TokenBuffer.Length)
                     Case ScannerStatus.Continued
                         Exit Select
@@ -158,17 +150,17 @@ Public Class Tokenizer
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
                         Else
-                            Candidates(CandidatePointer) = False
+                            Matches.Set(CandidatePos, False)
                         End If
                     Case ScannerStatus.Unmatch
-                        Candidates(CandidatePointer) = False
+                        Matches.Set(CandidatePos, False)
                 End Select
-                CandidatePointer += 1
+                CandidatePos += 1
             End While
 
             'Judge if there's still some candidates are true.
-            For Each Candidate As Boolean In Candidates
-                If Candidate Then
+            For Each IsMatch As Boolean In Matches
+                If IsMatch Then
                     TokenBuffer.Append(Character)
                     Continue Do
                 End If
