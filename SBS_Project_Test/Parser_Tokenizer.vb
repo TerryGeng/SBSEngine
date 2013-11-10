@@ -122,31 +122,33 @@ End Module
 Public Class Tokenizer
     Dim Reader As SourceCodeReader
     Dim RulesContainer As LexiconRules
+    Dim RulesIndex As List(Of LexiconType)
 
     Sub New(ByVal Code As String)
         Reader = New SourceCodeReader(Code)
         RulesContainer = New LexiconRules
         TokenizerRules.LoadLexicalRules(RulesContainer)
+        RulesIndex = New List(Of LexiconType)(RulesContainer.Keys)
     End Sub
 
     Function NextToken() As Token
         If AscW(Reader.Peek()) = 0 Then Return Nothing
-        Dim Candidates As List(Of LexiconType) = New List(Of LexiconType)(RulesContainer.Keys)
+        Dim Candidates As New BitArray(RulesIndex.Count, True)
 
         Dim TokenBuffer As New StringBuilder()
-        Dim BufferLength As Integer
         Dim Character As Char
 
         Do
             Dim CandidatePointer As Integer = 0
             Character = Reader.NextChar()
-            BufferLength = TokenBuffer.Length
 
-            While CandidatePointer < Candidates.Count
-                Dim Candidate As LexiconType = Candidates(CandidatePointer)
-                Select Case RulesContainer(Candidate).Scan(Character, BufferLength)
+            While CandidatePointer < RulesIndex.Count
+                If Not Candidates(CandidatePointer) Then CandidatePointer += 1 : Continue While
+
+                Dim Candidate As LexiconType = RulesIndex(CandidatePointer)
+                Select Case RulesContainer(Candidate).Scan(Character, TokenBuffer.Length)
                     Case ScannerStatus.Continued
-                        CandidatePointer += 1
+                        Exit Select
                     Case ScannerStatus.Finished
                         TokenBuffer.Append(Character)
                         Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
@@ -156,21 +158,23 @@ Public Class Tokenizer
                             Reader.MovePrev()
                             Return New Token With {.Type = Candidate, .Value = TokenBuffer.ToString}
                         Else
-                            Candidates.RemoveAt(CandidatePointer)
-                            Continue While
+                            Candidates(CandidatePointer) = False
                         End If
                     Case ScannerStatus.Unmatch
-                        Candidates.RemoveAt(CandidatePointer)
-                        Continue While
+                        Candidates(CandidatePointer) = False
                 End Select
+                CandidatePointer += 1
             End While
 
-            If Candidates.Count > 0 Then
-                TokenBuffer.Append(Character)
-            Else
-                Throw New UnexpectedCharacterException(Reader.Position, Character)
-            End If
+            'Judge if there's still some candidates are true.
+            For Each Candidate As Boolean In Candidates
+                If Candidate Then
+                    TokenBuffer.Append(Character)
+                    Continue Do
+                End If
+            Next
 
+            Throw New UnexpectedCharacterException(Reader.Position, Character)
         Loop While Not AscW(Character) = 0
 
         Return Nothing
