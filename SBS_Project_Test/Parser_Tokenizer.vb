@@ -91,13 +91,10 @@ Module TokenizerRules
     End Function
 
     Function NameScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
-        If Character = "_"c Then
+        If (Char.IsLetterOrDigit(Character)) OrElse _
+            (Character = "_"c) OrElse _
+            (Position = 0 AndAlso Char.IsLetter(Character)) Then _
             Return ScannerStatus.Continued
-        Else
-            If (Position = 0 AndAlso Char.IsLetter(Character)) OrElse _
-                (Char.IsLetterOrDigit(Character)) Then _
-                Return ScannerStatus.Continued
-        End If
 
         Return ScannerStatus.PreviousFinished
     End Function
