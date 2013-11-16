@@ -84,16 +84,16 @@ Module TokenizerRules
 
     Function BlankScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
         ' Character is neither vbCr nor vbLf
-        If (Not Char.IsControl(Character)) AndAlso _ 
+        If (Not Char.IsControl(Character)) AndAlso _
             Char.IsWhiteSpace(Character) Then _
             Return ScannerStatus.Continued
         Return ScannerStatus.PreviousFinished
     End Function
 
     Function NameScanner(ByVal Character As Char, ByVal Position As Integer) As ScannerStatus
+        ' Variable name cannot start with digit. Otherwise it will be read as two parts.
         If (Char.IsLetterOrDigit(Character)) OrElse _
-            (Character = "_"c) OrElse _
-            (Position = 0 AndAlso Char.IsLetter(Character)) Then _
+            (Character = "_"c) Then _
             Return ScannerStatus.Continued
 
         Return ScannerStatus.PreviousFinished
@@ -127,9 +127,10 @@ Public Class Tokenizer
 
         Dim TokenBuffer As New StringBuilder()
         Dim Character As Char
+        Dim CandidatePos As Integer
 
         Do
-            Dim CandidatePos As Integer
+            CandidatePos = 0
             Character = Reader.NextChar()
 
             While CandidatePos < Rules.Count
