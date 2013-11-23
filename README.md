@@ -4,7 +4,7 @@ This is an basic implementation of SBS interpreter.
 **The core of this engine is experiencing a big modification(we call it *core rewrite*), which is expected to make this engine faster and support more features.**
 
 ## About this
-This engine is written in Visual Basic.Net by a fool, with *a number of bugs and very low speed* .
+This engine is written in **C#**(which was Visual Basic.Net before) by a fool, with *a number of bugs and very low speed* .
 
 The author is still trying his best to make this engine faster and have less bugs.
 
