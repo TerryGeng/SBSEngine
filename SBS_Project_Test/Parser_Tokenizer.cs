@@ -1,125 +1,105 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Text;
-using LexiconRules = System.Collections.Generic.Dictionary<Tokenizer.TokenizerRules.LexiconType, Tokenizer.TokenizerRules.LexiconRule>;
+using LexiconRules = System.Collections.Generic.Dictionary<SBSEngine.Tokenization.LexiconType, SBSEngine.Tokenization.ScannerFunction>;
 
-namespace Tokenizer
+namespace SBSEngine.Tokenization
 {
     public struct Token
     {
-        public TokenizerRules.LexiconType Type;
+        public LexiconType Type;
         public string Value;
+    }
+
+    public delegate ScannerStatus ScannerFunction(char character, int position);
+
+    public enum LexiconType
+    {
+        Undefined,
+        LInteger,
+        LFloat,
+        LName,
+        LString,
+        LBlank,
+        LCrLf,
+        LSymbol
+    }
+
+    public enum ScannerStatus
+    {
+        /// <summary>
+        /// Current and previous characters still match the rule. Match process continue.
+        /// </summary>
+        /// <remarks></remarks>
+        Continued,
+        /// <summary>
+        /// The emergence of current char indicated this combination unmatched the rule.
+        /// </summary>
+        /// <remarks></remarks>
+        Unmatch,
+        /// <summary>
+        /// Current and previous characters matchs the rule. Match process end.
+        /// </summary>
+        /// <remarks></remarks>
+        Finished,
+        /// <summary>
+        /// Only previous characters match the rule. Match process end.
+        /// </summary>
+        /// <remarks></remarks>
+        PreviousFinished
+    }
+
+    public class UnexpectedCharacterException : ApplicationException
+    {
+        public int Position;
+
+        public char Character;
+        public UnexpectedCharacterException(int position, char character)
+            : base(string.Format("Unexpected Character '{0}'({1}) at {2}.", character, (int)character, position))
+        {
+            this.Position = position;
+            this.Character = character;
+        }
     }
 
     static public class TokenizerRules
     {
-        public class LexiconRule
+        public static void LoadLexicalRules(LexiconRules container)
         {
-            public delegate ScannerStatus ScannerFunction(char Character, int Position);
-            public LexiconType Type;
-
-            public ScannerFunction Scan;
-            public LexiconRule(LexiconType Type, ScannerFunction Scanner)
-            {
-                this.Type = Type;
-                this.Scan = Scanner;
-            }
+            container.Add(LexiconType.LInteger, IntegerScanner);
+            container.Add(LexiconType.LBlank, BlankScanner);
+            container.Add(LexiconType.LName, NameScanner);
+            container.Add(LexiconType.LCrLf, CrLfScanner);
         }
 
-        public enum LexiconType
+        public static ScannerStatus IntegerScanner(char character, int position)
         {
-            Undefined,
-            LInteger,
-            LFloat,
-            LName,
-            LString,
-            LBlank,
-            LCrLf,
-            LSymbol
+            return char.IsDigit(character) ? ScannerStatus.Continued : ScannerStatus.PreviousFinished;
         }
 
-        public enum ScannerStatus
-        {
-            /// <summary>
-            /// Current and previous characters still match the rule. Match process continue.
-            /// </summary>
-            /// <remarks></remarks>
-            Continued,
-            /// <summary>
-            /// The emergence of current char indicated this combination unmatched the rule.
-            /// </summary>
-            /// <remarks></remarks>
-            Unmatch,
-            /// <summary>
-            /// Current and previous characters matchs the rule. Match process end.
-            /// </summary>
-            /// <remarks></remarks>
-            Finished,
-            /// <summary>
-            /// Only previous characters match the rule. Match process end.
-            /// </summary>
-            /// <remarks></remarks>
-            PreviousFinished
-
-        }
-
-        public class UnexpectedCharacterException : ApplicationException
-        {
-
-            public int Position;
-
-            public char Character;
-            public UnexpectedCharacterException(int Position, char Character)
-                : base(string.Format("Unexpected Character '{0}'({1}) at {2}.", Character, Convert.ToInt32(Character), Position))
-            {
-                this.Position = Position;
-                this.Character = Character;
-            }
-        }
-
-        public static void LoadLexicalRules(LexiconRules Container)
-        {
-            Container.Add(LexiconType.LInteger, new LexiconRule(LexiconType.LInteger, IntegerScanner));
-            Container.Add(LexiconType.LBlank, new LexiconRule(LexiconType.LBlank, BlankScanner));
-            Container.Add(LexiconType.LName, new LexiconRule(LexiconType.LName, NameScanner));
-            Container.Add(LexiconType.LCrLf, new LexiconRule(LexiconType.LCrLf, CrLfScanner));
-
-        }
-
-        public static ScannerStatus IntegerScanner(char Character, int Position)
-        {
-            if (char.IsDigit(Character))
-                return ScannerStatus.Continued;
-            return ScannerStatus.PreviousFinished;
-        }
-
-        public static ScannerStatus BlankScanner(char Character, int Position)
+        public static ScannerStatus BlankScanner(char character, int position)
         {
             // Character is neither vbCr nor vbLf
-            if ((!char.IsControl(Character)) && char.IsWhiteSpace(Character))
-                return ScannerStatus.Continued;
-            return ScannerStatus.PreviousFinished;
+            return ((!char.IsControl(character)) && char.IsWhiteSpace(character)) ? ScannerStatus.Continued : ScannerStatus.PreviousFinished;
         }
 
-        public static ScannerStatus NameScanner(char Character, int Position)
+        public static ScannerStatus NameScanner(char character, int position)
         {
             // Variable name cannot start with digit. Otherwise it will be read as two parts.
-            if ((char.IsLetterOrDigit(Character)) || (Character == '_'))
-                return ScannerStatus.Continued;
-
-            return ScannerStatus.PreviousFinished;
+            return ((char.IsLetterOrDigit(character)) || (character == '_')) ? ScannerStatus.Continued : ScannerStatus.Continued;
         }
 
-        public static ScannerStatus CrLfScanner(char Character, int Position)
+        public static ScannerStatus CrLfScanner(char character, int position)
         {
-            switch (Position)
+            switch (position)
             {
                 case 0:
-                    if (Character == '\r')
+                    if (character == '\r')
                         return ScannerStatus.Continued;
                     break;
                 case 1:
-                    if (Character == '\n')
+                    if (character == '\n')
                         return ScannerStatus.Finished;
                     break;
             }
@@ -129,120 +109,110 @@ namespace Tokenizer
 
     public class Tokenizer
     {
-        SourceCodeReader Reader;
+        SourceCodeReader reader;
 
-        LexiconRules RulesContainer;
-        public Tokenizer(string Code)
+        LexiconRules rulesContainer;
+        public Tokenizer(string code)
         {
-            Reader = new SourceCodeReader(ref Code);
-            RulesContainer = new LexiconRules();
-            TokenizerRules.LoadLexicalRules(RulesContainer);
+            reader = new SourceCodeReader(code);
+            rulesContainer = new LexiconRules();
+            TokenizerRules.LoadLexicalRules(rulesContainer);
         }
 
         public Token? NextToken()
         {
-            if ((char)Reader.Peek() == 0)
+            if (reader.Peek() == 0)
                 return null;
-            LexiconRules.KeyCollection Rules = RulesContainer.Keys;
-            BitArray Matches = new BitArray(Rules.Count, true);
+            LexiconRules.KeyCollection rules = rulesContainer.Keys;
+            BitArray matches = new BitArray(rules.Count, true);
 
-            StringBuilder TokenBuffer = new StringBuilder();
-            char Character = '\0';
-            int CandidatePos = 0;
-            int RemainingCandidates = Rules.Count;
-
+            StringBuilder tokenBuffer = new StringBuilder();
+            char character = '\0';
+            int candidatePos;
+            int remaining = rules.Count;
 
             do
             {
-                CandidatePos = 0;
-                Character = Reader.NextChar();
+                candidatePos = 0;
+                character = reader.NextChar();
 
-                foreach(TokenizerRules.LexiconType Candidate in Rules)
+                foreach (LexiconType candidate in rules)
                 {
-                    if (Matches[CandidatePos])
+                    if (matches[candidatePos])
                     {
-                        switch (RulesContainer[Candidate].Scan(Character, TokenBuffer.Length))
+                        switch (rulesContainer[candidate](character, tokenBuffer.Length))
                         {
-                            case TokenizerRules.ScannerStatus.Continued:
+                            case ScannerStatus.Continued:
                                 break;
-                            case TokenizerRules.ScannerStatus.Finished:
-                                TokenBuffer.Append(Character);
+                            case ScannerStatus.Finished:
+                                tokenBuffer.Append(character);
                                 return new Token
                                 {
-                                    Type = Candidate,
-                                    Value = TokenBuffer.ToString()
-
+                                    Type = candidate,
+                                    Value = tokenBuffer.ToString()
                                 };
-                            case TokenizerRules.ScannerStatus.PreviousFinished:
-                                if (TokenBuffer.Length > 0)
+                            case ScannerStatus.PreviousFinished:
+                                if (tokenBuffer.Length > 0)
                                 {
-                                    Reader.MovePrev();
+                                    reader.MovePrev();
                                     return new Token
                                     {
-                                        Type = Candidate,
-                                        Value = TokenBuffer.ToString()
+                                        Type = candidate,
+                                        Value = tokenBuffer.ToString()
                                     };
                                 }
                                 else
                                 {
-                                    Matches.Set(CandidatePos, false);
-                                    --RemainingCandidates;
+                                    matches.Set(candidatePos, false);
+                                    --remaining;
                                 }
                                 break;
-                            case TokenizerRules.ScannerStatus.Unmatch:
-                                Matches.Set(CandidatePos, false);
-                                --RemainingCandidates;
+                            case ScannerStatus.Unmatch:
+                                matches.Set(candidatePos, false);
+                                --remaining;
                                 break;
                         }
                     }
-                    ++CandidatePos;
+                    ++candidatePos;
                 }
 
-                //Judge if there's still some candidates are true.
-
-                if (RemainingCandidates > 0)
+                // Check if there's still some candidates true
+                if (remaining > 0)
                 {
-                    TokenBuffer.Append(Character);
+                    tokenBuffer.Append(character);
                     continue;
-                }else
-                    throw new TokenizerRules.UnexpectedCharacterException(Reader.Position, Character);
-
-            } while ((char)Character != 0);
+                }
+                else throw new UnexpectedCharacterException(reader.Position, character);
+            } while (character != 0);
 
             return null;
         }
-
     }
 
     public class SourceCodeReader
     {
-        string BaseString;
+        string baseString;
 
-        int Pointer;
+        int pointer;
         public int Position
         {
-            get { return Pointer; }
+            get { return pointer; }
         }
 
-        public SourceCodeReader(ref string BaseString)
+        public SourceCodeReader(string BaseString)
         {
-            this.BaseString = BaseString;
+            this.baseString = BaseString;
         }
 
-        [System.Diagnostics.DebuggerStepThrough()]
+        [DebuggerStepThrough]
         public char Peek()
         {
-            if (Pointer < 0 || Pointer >= BaseString.Length)
-            {
+            if (pointer < 0 || pointer >= baseString.Length)
                 return (char)0;
-            }
-            else
-            {
-                return BaseString[Pointer];
-            }
+            else return baseString[pointer];
         }
 
-        [System.Diagnostics.DebuggerStepThrough()]
+        [DebuggerStepThrough]
         public char NextChar()
         {
             char result = Peek();
@@ -250,7 +220,7 @@ namespace Tokenizer
             return result;
         }
 
-        //Reserve
+        // Reserve
         public bool NextChar(char ch)
         {
             if (Peek() == ch)
@@ -258,22 +228,13 @@ namespace Tokenizer
                 MoveNext();
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            else return false;
         }
 
-        [System.Diagnostics.DebuggerStepThrough()]
-        public void MoveNext()
-        {
-            ++Pointer;
-        }
+        [DebuggerStepThrough]
+        public void MoveNext() { ++pointer; }
 
-        [System.Diagnostics.DebuggerStepThrough()]
-        public void MovePrev()
-        {
-            --Pointer;
-        }
+        [DebuggerStepThrough]
+        public void MovePrev() { --pointer; }
     }
 }
