@@ -1,24 +1,18 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SBS_Project_Test", "SBS_Project_Test\SBS_Project_Test.vbproj", "{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SBS_Project_Test", "SBS_Project_Test\SBS_Project_Test.csproj", "{DA15F79D-F611-4A45-A78C-F86206DBBE4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
-		Release|Any CPU = Release|Any CPU
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Debug|x86.ActiveCfg = Debug|x86
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Debug|x86.Build.0 = Debug|x86
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Release|Any CPU.ActiveCfg = Release|x86
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Release|x86.ActiveCfg = Release|x86
-		{2817E7E2-9CAF-4DC6-974B-9A1BE871E45F}.Release|x86.Build.0 = Release|x86
+		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Debug|x86.ActiveCfg = Debug|x86
+		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Debug|x86.Build.0 = Debug|x86
+		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Release|x86.ActiveCfg = Release|x86
+		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
