@@ -4,19 +4,13 @@ using System.Diagnostics;
 using System.Text;
 using LexiconRules = System.Collections.Generic.Dictionary<SBSEngine.Tokenization.LexiconType, SBSEngine.Tokenization.ScannerFunction>;
 
-namespace SBSEngine.Tokenization
+namespace SBSEngine.Tokenization // Tokenizer configurations part
 {
-    public struct Token
-    {
-        public LexiconType Type;
-        public string Value;
-    }
-
-    public delegate ScannerStatus ScannerFunction(char character, int position);
-
     public enum LexiconType
     {
         Undefined,
+
+        // Set lexicon type below.
         LInteger,
         LFloat,
         LName,
@@ -26,52 +20,18 @@ namespace SBSEngine.Tokenization
         LSymbol
     }
 
-    public enum ScannerStatus
-    {
-        /// <summary>
-        /// Current and previous characters still match the rule. Match process continue.
-        /// </summary>
-        /// <remarks></remarks>
-        Continued,
-        /// <summary>
-        /// The emergence of current char indicated this combination unmatched the rule.
-        /// </summary>
-        /// <remarks></remarks>
-        Unmatch,
-        /// <summary>
-        /// Current and previous characters matchs the rule. Match process end.
-        /// </summary>
-        /// <remarks></remarks>
-        Finished,
-        /// <summary>
-        /// Only previous characters match the rule. Match process end.
-        /// </summary>
-        /// <remarks></remarks>
-        PreviousFinished
-    }
-
-    public class UnexpectedCharacterException : ApplicationException
-    {
-        public int Position;
-
-        public char Character;
-        public UnexpectedCharacterException(int position, char character)
-            : base(string.Format("Unexpected Character '{0}'({1}) at {2}.", character, (int)character, position))
-        {
-            this.Position = position;
-            this.Character = character;
-        }
-    }
-
     static public class TokenizerRules
     {
         public static void LoadLexicalRules(LexiconRules container)
         {
+            // Add available types and corresponding scanners.
             container.Add(LexiconType.LInteger, IntegerScanner);
             container.Add(LexiconType.LBlank, BlankScanner);
             container.Add(LexiconType.LName, NameScanner);
             container.Add(LexiconType.LCrLf, CrLfScanner);
         }
+
+        // Add your scanner below.
 
         public static ScannerStatus IntegerScanner(char character, int position)
         {
@@ -106,12 +66,57 @@ namespace SBSEngine.Tokenization
             return ScannerStatus.Unmatch;
         }
     }
+}
+
+namespace SBSEngine.Tokenization // Tokenizer core part
+{
+    public struct Token
+    {
+        public LexiconType Type;
+        public string Value;
+    }
+
+    public delegate ScannerStatus ScannerFunction(char character, int position);
+
+    public enum ScannerStatus
+    {
+        /// <summary>
+        /// Current and previous characters still match the rule. Match process continue.
+        /// </summary>
+        Continued,
+        /// <summary>
+        /// The emergence of current char indicated this combination unmatched the rule.
+        /// </summary>
+        Unmatch,
+        /// <summary>
+        /// Current and previous characters matchs the rule. Match process end.
+        /// </summary>
+        Finished,
+        /// <summary>
+        /// Only previous characters match the rule. Match process end.
+        /// </summary>
+        PreviousFinished
+    }
+
+    public class UnexpectedCharacterException : ApplicationException
+    {
+        public int Position;
+
+        public char Character;
+        public UnexpectedCharacterException(int position, char character)
+            : base(string.Format("Unexpected Character '{0}'({1}) at {2}.", character, (int)character, position))
+        {
+            this.Position = position;
+            this.Character = character;
+        }
+    }
+
 
     public class Tokenizer
     {
         SourceCodeReader reader;
-
         LexiconRules rulesContainer;
+
         public Tokenizer(string code)
         {
             reader = new SourceCodeReader(code);
