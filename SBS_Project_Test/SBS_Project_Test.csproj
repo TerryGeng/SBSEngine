@@ -52,7 +52,9 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Parser_Tokenizer.cs" />
+    <Compile Include="SBSEngine.Tokenization\IRulesProvider.cs" />
+    <Compile Include="SBSEngine.Tokenization\SBSRulesProvider.cs" />
+    <Compile Include="SBSEngine.Tokenization\Tokenizer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

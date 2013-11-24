@@ -1,85 +1,24 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using LexiconRules = System.Collections.Generic.Dictionary<SBSEngine.Tokenization.LexiconType, SBSEngine.Tokenization.ScannerFunction>;
-
-namespace SBSEngine.Tokenization // Tokenizer configurations part
-{
-    public enum LexiconType
-    {
-        Undefined,
-
-        // Set lexicon type below.
-        LInteger,
-        LFloat,
-        LName,
-        LString,
-        LBlank,
-        LCrLf,
-        LSymbol
-    }
-
-    static public class TokenizerRules
-    {
-        public static void LoadLexicalRules(LexiconRules container)
-        {
-            // Add available types and corresponding scanners.
-            container.Add(LexiconType.LInteger, IntegerScanner);
-            container.Add(LexiconType.LBlank, BlankScanner);
-            container.Add(LexiconType.LName, NameScanner);
-            container.Add(LexiconType.LCrLf, CrLfScanner);
-        }
-
-        // Add your scanner below.
-
-        public static ScannerStatus IntegerScanner(char character, int position)
-        {
-            return char.IsDigit(character) ? ScannerStatus.Continued : ScannerStatus.PreviousFinished;
-        }
-
-        public static ScannerStatus BlankScanner(char character, int position)
-        {
-            // Character is neither vbCr nor vbLf
-            return ((!char.IsControl(character)) && char.IsWhiteSpace(character)) ? ScannerStatus.Continued : ScannerStatus.PreviousFinished;
-        }
-
-        public static ScannerStatus NameScanner(char character, int position)
-        {
-            // Variable name cannot start with digit. Otherwise it will be read as two parts.
-            return ((char.IsLetterOrDigit(character)) || (character == '_')) ? ScannerStatus.Continued : ScannerStatus.Continued;
-        }
-
-        public static ScannerStatus CrLfScanner(char character, int position)
-        {
-            switch (position)
-            {
-                case 0:
-                    if (character == '\r')
-                        return ScannerStatus.Continued;
-                    break;
-                case 1:
-                    if (character == '\n')
-                        return ScannerStatus.Finished;
-                    break;
-            }
-            return ScannerStatus.Unmatch;
-        }
-    }
-}
 
 namespace SBSEngine.Tokenization // Tokenizer core part
 {
     public struct Token
     {
-        public LexiconType Type;
+        public int Type;
         public string Value;
     }
 
-    public delegate ScannerStatus ScannerFunction(char character, int position);
+    public delegate ProviderResultCode ScannerFunction(char character, int position);
 
-    public enum ScannerStatus
+    public enum ProviderResultCode
     {
+        Undefined,
+
         /// <summary>
         /// Current and previous characters still match the rule. Match process continue.
         /// </summary>
@@ -115,48 +54,50 @@ namespace SBSEngine.Tokenization // Tokenizer core part
     public class Tokenizer
     {
         SourceCodeReader reader;
-        LexiconRules rulesContainer;
+        IRulesProvider rulesProvider;
+        readonly int[] lexiconTypes;
 
-        public Tokenizer(string code)
+        public Tokenizer(IRulesProvider rulesProvider,string code)
         {
             reader = new SourceCodeReader(code);
-            rulesContainer = new LexiconRules();
-            TokenizerRules.LoadLexicalRules(rulesContainer);
+            this.rulesProvider = rulesProvider;
+            lexiconTypes = this.rulesProvider.GetLexiconType();
         }
 
         public Token? NextToken()
         {
             if (reader.Peek() == 0)
                 return null;
-            LexiconRules.KeyCollection rules = rulesContainer.Keys;
-            BitArray matches = new BitArray(rules.Count, true);
+            BitArray matches = new BitArray(lexiconTypes.Length, true);
 
             StringBuilder tokenBuffer = new StringBuilder();
             char character = '\0';
             int candidatePos;
-            int remaining = rules.Count;
+            int remaining = lexiconTypes.Length;
+
+            rulesProvider.ResetScanner();
 
             do
             {
                 candidatePos = 0;
                 character = reader.NextChar();
 
-                foreach (LexiconType candidate in rules)
+                foreach (int candidate in lexiconTypes)
                 {
                     if (matches[candidatePos])
                     {
-                        switch (rulesContainer[candidate](character, tokenBuffer.Length))
+                        switch (rulesProvider.CallScanner(candidate,character))
                         {
-                            case ScannerStatus.Continued:
+                            case ProviderResultCode.Continued:
                                 break;
-                            case ScannerStatus.Finished:
+                            case ProviderResultCode.Finished:
                                 tokenBuffer.Append(character);
                                 return new Token
                                 {
                                     Type = candidate,
                                     Value = tokenBuffer.ToString()
                                 };
-                            case ScannerStatus.PreviousFinished:
+                            case ProviderResultCode.PreviousFinished:
                                 if (tokenBuffer.Length > 0)
                                 {
                                     reader.MovePrev();
@@ -172,7 +113,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                                     --remaining;
                                 }
                                 break;
-                            case ScannerStatus.Unmatch:
+                            case ProviderResultCode.Unmatch:
                                 matches.Set(candidatePos, false);
                                 --remaining;
                                 break;
