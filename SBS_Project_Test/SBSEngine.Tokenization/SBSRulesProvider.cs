@@ -5,119 +5,141 @@ using System.Text;
 
 namespace SBSEngine.Tokenization
 {
-    public enum LexiconType
-    {
-        Undefined,
-
-        // Set lexicon type below.
-        LInteger,
-        LFloat,
-        LName,
-        LString,
-        LBlank,
-        LCrLf,
-        LSymbol
-    }
-
+    
     public class SBSRulesProvider : IRulesProvider
     {
+        public enum LexiconType
+        {
+            Undefined,
+
+            // Set lexicon type below.
+            LInteger,
+            LFloat,
+            LName,
+            LBlank,
+            LCrLf,
+            LString,
+            LSymbol
+        }
+
         private struct ScannerResult
         {
             public ProviderResultCode result;
             public int status;
         }
 
-        readonly static ScannerResult RESULT_UNDEF = new ScannerResult { result = ProviderResultCode.Undefined };
-        readonly static ScannerResult RESULT_CONTINUED = new ScannerResult { result = ProviderResultCode.Continued };
-        readonly static ScannerResult RESULT_PRE_FIN = new ScannerResult { result = ProviderResultCode.PreviousFinished };
-        readonly static ScannerResult RESULT_FIN = new ScannerResult { result = ProviderResultCode.Finished };
-        readonly static ScannerResult RESULT_UNMATCH = new ScannerResult { result = ProviderResultCode.Unmatch };
 
-
-        Dictionary<int, int> statusPool;
+        int[] statusPool;
 
         public SBSRulesProvider()
         {
-            statusPool = new Dictionary<int, int>(7);
-            statusPool.Add((int)LexiconType.LInteger, 0);
-            statusPool.Add((int)LexiconType.LName, 0);
-            statusPool.Add((int)LexiconType.LBlank, 0);
-            statusPool.Add((int)LexiconType.LCrLf, 0);
+            statusPool = new int[6];
         }
 
         int[] IRulesProvider.GetLexiconType()
         {
-            return new int[] { (int)LexiconType.LInteger, (int)LexiconType.LName , (int)LexiconType.LBlank , (int)LexiconType.LCrLf };
+            return new int[] { (int)LexiconType.LInteger, (int)LexiconType.LFloat ,(int)LexiconType.LName , (int)LexiconType.LBlank , (int)LexiconType.LCrLf };
         }
 
         ProviderResultCode IRulesProvider.CallScanner(int scanner, char character)
         {
-            int status;
-            ScannerResult result = RESULT_UNDEF;
+            int status = 0;
+            ProviderResultCode result = ProviderResultCode.Undefined;
 
             switch((LexiconType)scanner)
             {
                 case LexiconType.LInteger :
                     result = IntegerScanner(character);
                     break;
+                case LexiconType.LFloat:
+                    status = statusPool[scanner];
+                    result = FloatScanner(character,ref status);
+                    break;
                 case LexiconType.LName :
-                    result = NameScanner(character);
+                    status = statusPool[scanner];
+                    result = NameScanner(character, ref status);
                     break;
                 case LexiconType.LBlank :
                     result = BlankScanner(character);
                     break;
                 case LexiconType.LCrLf :
                     status = statusPool[scanner];
-                    result = CrLfScanner(character, status);
+                    result = CrLfScanner(character, ref status);
                     break;
             }
 
-            statusPool[scanner] = result.status;
+            statusPool[scanner] = status;
 
-            return result.result;
+            return result;
         }
 
         void IRulesProvider.ResetScanner() 
         {
-            statusPool[(int)LexiconType.LInteger] = 0;
-            statusPool[(int)LexiconType.LName] = 0;
-            statusPool[(int)LexiconType.LBlank] = 0;
-            statusPool[(int)LexiconType.LCrLf] = 0;
+            Array.Clear(statusPool,0,statusPool.Length);
         }
 
         // Following are scanners.
 
-        private ScannerResult IntegerScanner(char character)
+        private ProviderResultCode IntegerScanner(char character)
         {
-            return char.IsDigit(character) ? RESULT_CONTINUED : RESULT_PRE_FIN;
+            return char.IsDigit(character) ? ProviderResultCode.Continued : ((character!='.') ? ProviderResultCode.PreviousFinished : ProviderResultCode.Unmatch);
         }
 
-        private ScannerResult BlankScanner(char character)
+        private ProviderResultCode FloatScanner(char character, ref int status)
+        {
+            if (char.IsDigit(character))
+            {
+                if (status == 1) 
+                    status = 2;
+                return ProviderResultCode.Continued;
+            }
+            else if (character == '.' && status == 0)
+            {
+                status = 1;
+                return ProviderResultCode.Continued;
+            }
+
+            return (status == 2) ? ProviderResultCode.PreviousFinished : ProviderResultCode.Unmatch;
+        }
+
+        private ProviderResultCode BlankScanner(char character)
         {
             // Character is neither vbCr nor vbLf
-            return ((!char.IsControl(character)) && char.IsWhiteSpace(character)) ? RESULT_CONTINUED : RESULT_PRE_FIN;
+            return ((!char.IsControl(character)) && char.IsWhiteSpace(character)) ? ProviderResultCode.Continued : ProviderResultCode.PreviousFinished;
         }
 
-        private ScannerResult NameScanner(char character)
+        private ProviderResultCode NameScanner(char character, ref int status)
         {
-            // Variable name cannot start with digit. Otherwise it will be read as two parts.
-            return ((char.IsLetterOrDigit(character)) || (character == '_')) ? RESULT_CONTINUED : RESULT_PRE_FIN;
+            if (status == 0 && char.IsDigit(character))
+            {
+                return ProviderResultCode.Unmatch;
+            }
+
+            status = 1;
+
+            if (char.IsLetterOrDigit(character) || character == '_')
+                return ProviderResultCode.Continued;
+
+            return ProviderResultCode.PreviousFinished;
         }
 
-        private ScannerResult CrLfScanner(char character, int status)
+        private ProviderResultCode CrLfScanner(char character, ref int status)
         {
             switch (status)
             {
                 case 0:
                     if (character == '\r')
-                        return new ScannerResult { result = ProviderResultCode.Continued , status = 1};
+                    {
+                        status = 1;
+                        return ProviderResultCode.Continued;
+                    }
                     break;
                 case 1:
                     if (character == '\n')
-                        return RESULT_FIN;
+                        return ProviderResultCode.Finished;
                     break;
             }
-            return RESULT_UNMATCH;
+            return ProviderResultCode.Unmatch;
         }
     }
 }
