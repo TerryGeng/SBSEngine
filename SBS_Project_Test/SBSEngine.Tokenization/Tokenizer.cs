@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using LexiconRules = System.Collections.Generic.Dictionary<SBSEngine.Tokenization.LexiconType, SBSEngine.Tokenization.ScannerFunction>;
 
 namespace SBSEngine.Tokenization // Tokenizer core part
 {
