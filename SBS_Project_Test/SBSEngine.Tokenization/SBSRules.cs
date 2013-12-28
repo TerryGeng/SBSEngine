@@ -125,7 +125,10 @@ namespace SBSEngine.Tokenization.SBSRules
             return null;
         }
 
-        void IRule.Reset();
+        void IRule.Reset() 
+        {
+            status = SPACE;
+        }
     }
 
     class NameRule : IRule

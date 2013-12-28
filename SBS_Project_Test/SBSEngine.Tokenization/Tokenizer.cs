@@ -62,7 +62,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
 
         public Token? NextToken()
         {
-            if (reader.Peek() == 0)
+            if (reader.Peek() == -1)
                 return null;
             BitArray matches = new BitArray(rules.Count, true);
 
@@ -76,8 +76,9 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             {
                 character = reader.Peek();
 
-                for (int i = 0; i < rules.Count && matches[i]; ++i)
+                for (int i = 0; i < rules.Count; ++i)
                 {
+                    if (!matches[i]) continue;
                     switch (rules[i].Scan(character))
                     {
                         case ScannerResult.Continued:
