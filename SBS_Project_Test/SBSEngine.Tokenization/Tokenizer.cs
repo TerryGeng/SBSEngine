@@ -107,7 +107,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 // Check if there's still some candidates true
                 if (remaining > 0)
                 {
-                    tokenBuffer.Append(character);
+                    tokenBuffer.Append((char)character);
                     reader.Read();
                     continue;
                 }
