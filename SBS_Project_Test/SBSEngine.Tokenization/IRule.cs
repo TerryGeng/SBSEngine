@@ -7,7 +7,7 @@ namespace SBSEngine.Tokenization
 {
     public interface IRule
     {
-        ScannerResult scan(char character);
+        ScannerResult scan(int character);
         Token pack(StringBuilder buffer);
         void reset();
     }

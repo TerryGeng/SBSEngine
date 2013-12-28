@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,12 +51,12 @@ namespace SBSEngine.Tokenization // Tokenizer core part
 
     public class Tokenizer
     {
-        SourceCodeReader reader;
+        StringReader reader;
         List<IRule> rules;
 
         public Tokenizer(List<IRule> rules, string code)
         {
-            reader = new SourceCodeReader(code);
+            reader = new StringReader(code);
             this.rules = rules;
         }
 
@@ -66,16 +67,14 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             BitArray matches = new BitArray(rules.Count, true);
 
             StringBuilder tokenBuffer = new StringBuilder();
-            char character = '\0';
-            int candidatePos;
+            int character;
             int remaining = rules.Count;
 
             this.resetRules();
 
             do
             {
-                candidatePos = 0;
-                character = reader.NextChar();
+                character = reader.Peek();
 
                 for (int i = 0; i < rules.Count && matches[i]; ++i)
                 {
@@ -85,21 +84,21 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                             break;
                         case ScannerResult.Finished:
                             tokenBuffer.Append(character);
+                            reader.Read();
                             return rules[i].pack(tokenBuffer);
                         case ScannerResult.PreviousFinished:
                             if (tokenBuffer.Length > 0)
                             {
-                                reader.MovePrev();
                                 return rules[i].pack(tokenBuffer);
                             }
                             else
                             {
-                                matches.Set(candidatePos, false);
+                                matches.Set(i, false);
                                 --remaining;
                             }
                             break;
                         case ScannerResult.Unmatch:
-                            matches.Set(candidatePos, false);
+                            matches.Set(i, false);
                             --remaining;
                             break;
                     }
@@ -109,10 +108,11 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 if (remaining > 0)
                 {
                     tokenBuffer.Append(character);
+                    reader.Read();
                     continue;
                 }
-                else throw new UnexpectedCharacterException(reader.Position, character);
-            } while (character != 0);
+                else throw new UnexpectedCharacterException(0, (char)character);
+            } while (character != -1);
 
             return null;
         }
