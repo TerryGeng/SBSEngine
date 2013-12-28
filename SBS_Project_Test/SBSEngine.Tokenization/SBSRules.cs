@@ -82,6 +82,11 @@ namespace SBSEngine.Tokenization.SBSRules
 
             return new Token();
         }
+
+        void IRule.Reset()
+        {
+            status = INT;
+        }
         
     }
 
