@@ -13,7 +13,7 @@ namespace SBSEngine.Tokenization.SBSRules
         LFloat,
         LName,
         LBlank,
-        LCrLf,
+        LLineBreak,
         LString,
         LSymbol
     }
@@ -29,7 +29,7 @@ namespace SBSEngine.Tokenization.SBSRules
         {
             switch (status)
             {
-                case 0:
+                case INT:
                     if (char.IsDigit((char)character))
                     {
                         return ScannerResult.Continued;
@@ -40,15 +40,15 @@ namespace SBSEngine.Tokenization.SBSRules
                         return ScannerResult.Continued;
                     }
                     break;
-                case 1:
+                case DOT:
                     if (char.IsDigit((char)character))
                     {
                         status = FLOAT;
                         return ScannerResult.Continued;
                     }
                     break;
-                case 2:
-                    if(char.IsDigit((char)character))
+                case FLOAT:
+                    if (char.IsDigit((char)character))
                     {
                         return ScannerResult.Continued;
                     }
@@ -87,22 +87,42 @@ namespace SBSEngine.Tokenization.SBSRules
         {
             status = INT;
         }
-        
+
     }
 
     class BlankRule : IRule
     {
+        const int SPACE = 0;
+        const int LINEBREAK = 1;
+        int status = SPACE;
+
         ScannerResult IRule.Scan(int character)
         {
-            return ((!char.IsControl((char)character)) && char.IsWhiteSpace((char)character)) ? ScannerResult.Continued : ScannerResult.PreviousFinished;
+            if (char.IsWhiteSpace((char)character))
+            {
+                if (character == (char)'\n') status = LINEBREAK;
+                return ScannerResult.Continued;
+            }
+
+            return ScannerResult.PreviousFinished;
         }
 
         Token IRule.Pack(StringBuilder buffer)
         {
-            return new Token{
-                Type = (int)LexiconType.LBlank,
-                Value = null
-            };
+            if (status == SPACE)
+                return new Token
+                {
+                    Type = (int)LexiconType.LBlank,
+                    Value = null
+                };
+            else if (status == LINEBREAK)
+                return new Token
+                {
+                    Type = (int)LexiconType.LLineBreak,
+                    Value = null
+                };
+
+            return new Token();
         }
 
         void IRule.Reset();
