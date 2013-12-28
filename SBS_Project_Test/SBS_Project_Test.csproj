@@ -52,7 +52,9 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="SBSEngine.Tokenization\IRule.cs" />
     <Compile Include="SBSEngine.Tokenization\IRulesProvider.cs" />
+    <Compile Include="SBSEngine.Tokenization\SBSRules.cs" />
     <Compile Include="SBSEngine.Tokenization\SBSRulesProvider.cs" />
     <Compile Include="SBSEngine.Tokenization\Tokenizer.cs" />
     <Compile Include="Program.cs" />

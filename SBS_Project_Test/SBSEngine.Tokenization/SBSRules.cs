@@ -61,7 +61,7 @@ namespace SBSEngine.Tokenization.SBSRules
                 return ScannerResult.Unmatch;
         }
 
-        Token IRule.Pack(StringBuilder buffer)
+        Token? IRule.Pack(StringBuilder buffer)
         {
             if (status == INT)
             {
@@ -80,7 +80,7 @@ namespace SBSEngine.Tokenization.SBSRules
                 };
             }
 
-            return new Token();
+            return null;
         }
 
         void IRule.Reset()
@@ -107,7 +107,7 @@ namespace SBSEngine.Tokenization.SBSRules
             return ScannerResult.PreviousFinished;
         }
 
-        Token IRule.Pack(StringBuilder buffer)
+        Token? IRule.Pack(StringBuilder buffer)
         {
             if (status == SPACE)
                 return new Token
@@ -122,10 +122,47 @@ namespace SBSEngine.Tokenization.SBSRules
                     Value = null
                 };
 
-            return new Token();
+            return null;
         }
 
         void IRule.Reset();
+    }
+
+    class NameRule : IRule
+    {
+        const int FIRST = 0;
+        const int AFTER = 1;
+
+        int status = 0;
+
+        ScannerResult IRule.Scan(int character)
+        {
+            if (status == 0 && (char.IsLetter((char)character) || character == (int)'_'))
+            {
+                status = 1;
+                return ScannerResult.Continued;
+            }
+            else if (status == 1 && (char.IsLetterOrDigit((char)character) || character == (int)'_'))
+            {
+                return ScannerResult.Continued;
+            }
+
+            return ScannerResult.PreviousFinished;
+        }
+
+        Token? IRule.Pack(StringBuilder buffer)
+        {
+            return new Token
+            {
+                Type = (int)LexiconType.LName,
+                Value = buffer.ToString()
+            };
+        }
+
+        void IRule.Reset()
+        {
+            status = 0;
+        }
     }
 
 }

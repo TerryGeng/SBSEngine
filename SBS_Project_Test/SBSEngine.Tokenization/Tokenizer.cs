@@ -78,18 +78,18 @@ namespace SBSEngine.Tokenization // Tokenizer core part
 
                 for (int i = 0; i < rules.Count && matches[i]; ++i)
                 {
-                    switch (rules[i].scan(character))
+                    switch (rules[i].Scan(character))
                     {
                         case ScannerResult.Continued:
                             break;
                         case ScannerResult.Finished:
                             tokenBuffer.Append(character);
                             reader.Read();
-                            return rules[i].pack(tokenBuffer);
+                            return rules[i].Pack(tokenBuffer);
                         case ScannerResult.PreviousFinished:
                             if (tokenBuffer.Length > 0)
                             {
-                                return rules[i].pack(tokenBuffer);
+                                return rules[i].Pack(tokenBuffer);
                             }
                             else
                             {
@@ -121,7 +121,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         {
             for (int i = 0; i < rules.Count; ++i)
             {
-                rules[i].reset();
+                rules[i].Reset();
             }
         }
     }
