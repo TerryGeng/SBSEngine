@@ -90,4 +90,22 @@ namespace SBSEngine.Tokenization.SBSRules
         
     }
 
+    class BlankRule : IRule
+    {
+        ScannerResult IRule.Scan(int character)
+        {
+            return ((!char.IsControl((char)character)) && char.IsWhiteSpace((char)character)) ? ScannerResult.Continued : ScannerResult.PreviousFinished;
+        }
+
+        Token IRule.Pack(StringBuilder buffer)
+        {
+            return new Token{
+                Type = (int)LexiconType.LBlank,
+                Value = null
+            };
+        }
+
+        void IRule.Reset();
+    }
+
 }
