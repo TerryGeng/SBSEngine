@@ -12,9 +12,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         public string Value;
     }
 
-    public delegate ProviderResultCode ScannerFunction(char character, int position);
-
-    public enum ProviderResultCode
+    public enum ScannerResult
     {
         Undefined,
 
@@ -53,72 +51,58 @@ namespace SBSEngine.Tokenization // Tokenizer core part
     public class Tokenizer
     {
         SourceCodeReader reader;
-        IRulesProvider rulesProvider;
-        readonly int[] lexiconTypes;
+        List<IRule> rules;
 
-        public Tokenizer(IRulesProvider rulesProvider,string code)
+        public Tokenizer(List<IRule> rules, string code)
         {
             reader = new SourceCodeReader(code);
-            this.rulesProvider = rulesProvider;
-            lexiconTypes = this.rulesProvider.GetLexiconType();
+            this.rules = rules;
         }
 
         public Token? NextToken()
         {
             if (reader.Peek() == 0)
                 return null;
-            BitArray matches = new BitArray(lexiconTypes.Length, true);
+            BitArray matches = new BitArray(rules.Count, true);
 
             StringBuilder tokenBuffer = new StringBuilder();
             char character = '\0';
             int candidatePos;
-            int remaining = lexiconTypes.Length;
+            int remaining = rules.Count;
 
-            rulesProvider.ResetScanner();
+            this.resetRules();
 
             do
             {
                 candidatePos = 0;
                 character = reader.NextChar();
 
-                foreach (int candidate in lexiconTypes)
+                for (int i = 0; i < rules.Count && matches[i]; ++i)
                 {
-                    if (matches[candidatePos])
+                    switch (rules[i].scan(character))
                     {
-                        switch (rulesProvider.CallScanner(candidate,character))
-                        {
-                            case ProviderResultCode.Continued:
-                                break;
-                            case ProviderResultCode.Finished:
-                                tokenBuffer.Append(character);
-                                return new Token
-                                {
-                                    Type = candidate,
-                                    Value = tokenBuffer.ToString()
-                                };
-                            case ProviderResultCode.PreviousFinished:
-                                if (tokenBuffer.Length > 0)
-                                {
-                                    reader.MovePrev();
-                                    return new Token
-                                    {
-                                        Type = candidate,
-                                        Value = tokenBuffer.ToString()
-                                    };
-                                }
-                                else
-                                {
-                                    matches.Set(candidatePos, false);
-                                    --remaining;
-                                }
-                                break;
-                            case ProviderResultCode.Unmatch:
+                        case ScannerResult.Continued:
+                            break;
+                        case ScannerResult.Finished:
+                            tokenBuffer.Append(character);
+                            return rules[i].pack(tokenBuffer);
+                        case ScannerResult.PreviousFinished:
+                            if (tokenBuffer.Length > 0)
+                            {
+                                reader.MovePrev();
+                                return rules[i].pack(tokenBuffer);
+                            }
+                            else
+                            {
                                 matches.Set(candidatePos, false);
                                 --remaining;
-                                break;
-                        }
+                            }
+                            break;
+                        case ScannerResult.Unmatch:
+                            matches.Set(candidatePos, false);
+                            --remaining;
+                            break;
                     }
-                    ++candidatePos;
                 }
 
                 // Check if there's still some candidates true
@@ -131,6 +115,14 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             } while (character != 0);
 
             return null;
+        }
+
+        private void resetRules()
+        {
+            for (int i = 0; i < rules.Count; ++i)
+            {
+                rules[i].reset();
+            }
         }
     }
 
