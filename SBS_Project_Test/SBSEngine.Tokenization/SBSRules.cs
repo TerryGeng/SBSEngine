@@ -63,24 +63,23 @@ namespace SBSEngine.Tokenization.SBSRules
 
         Token? IRule.Pack(StringBuilder buffer)
         {
-            if (status == INT)
+            switch (status)
             {
-                return new Token
-                {
-                    Type = (int)LexiconType.LInteger,
-                    Value = buffer.ToString()
-                };
+                case INT:
+                    return new Token
+                    {
+                        Type = (int)LexiconType.LInteger,
+                        Value = buffer.ToString()
+                    };
+                case FLOAT:
+                    return new Token
+                    {
+                        Type = (int)LexiconType.LFloat,
+                        Value = buffer.ToString()
+                    };
+                default:
+                    return null;
             }
-            else if (status == FLOAT)
-            {
-                return new Token
-                {
-                    Type = (int)LexiconType.LFloat,
-                    Value = buffer.ToString()
-                };
-            }
-
-            return null;
         }
 
         void IRule.Reset()
@@ -100,7 +99,7 @@ namespace SBSEngine.Tokenization.SBSRules
         {
             if (char.IsWhiteSpace((char)character))
             {
-                if (character == (char)'\n') status = LINEBREAK;
+                if (character == '\n') status = LINEBREAK;
                 return ScannerResult.Continued;
             }
 
@@ -109,20 +108,23 @@ namespace SBSEngine.Tokenization.SBSRules
 
         Token? IRule.Pack(StringBuilder buffer)
         {
-            if (status == SPACE)
-                return new Token
-                {
-                    Type = (int)LexiconType.LBlank,
-                    Value = null
-                };
-            else if (status == LINEBREAK)
-                return new Token
-                {
-                    Type = (int)LexiconType.LLineBreak,
-                    Value = null
-                };
-
-            return null;
+            switch (status)
+            {
+                case SPACE:
+                    return new Token
+                    {
+                        Type = (int)LexiconType.LBlank,
+                        Value = null
+                    };
+                case LINEBREAK:
+                    return new Token
+                    {
+                        Type = (int)LexiconType.LLineBreak,
+                        Value = null
+                    };
+                default:
+                    return null;
+            }
         }
 
         void IRule.Reset() 
@@ -140,12 +142,12 @@ namespace SBSEngine.Tokenization.SBSRules
 
         ScannerResult IRule.Scan(int character)
         {
-            if (status == 0 && (char.IsLetter((char)character) || character == (int)'_'))
+            if (status == FIRST && (char.IsLetter((char)character) || character == (int)'_'))
             {
-                status = 1;
+                status = AFTER;
                 return ScannerResult.Continued;
             }
-            else if (status == 1 && (char.IsLetterOrDigit((char)character) || character == (int)'_'))
+            else if (status == AFTER && (char.IsLetterOrDigit((char)character) || character == (int)'_'))
             {
                 return ScannerResult.Continued;
             }
@@ -164,7 +166,7 @@ namespace SBSEngine.Tokenization.SBSRules
 
         void IRule.Reset()
         {
-            status = 0;
+            status = FIRST;
         }
     }
 
