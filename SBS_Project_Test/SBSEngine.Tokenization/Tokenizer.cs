@@ -52,9 +52,9 @@ namespace SBSEngine.Tokenization // Tokenizer core part
     public class Tokenizer
     {
         StringReader reader;
-        List<IRule> rules;
+        IList<IRule> rules;
 
-        public Tokenizer(List<IRule> rules, string code)
+        public Tokenizer(IList<IRule> rules, string code)
         {
             reader = new StringReader(code);
             this.rules = rules;
@@ -70,7 +70,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             int character;
             int remaining = rules.Count;
 
-            this.resetRules();
+            this.ResetRules();
 
             do
             {
@@ -118,61 +118,12 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             return null;
         }
 
-        private void resetRules()
+        private void ResetRules()
         {
             for (int i = 0; i < rules.Count; ++i)
             {
                 rules[i].Reset();
             }
         }
-    }
-
-    public class SourceCodeReader
-    {
-        string baseString;
-
-        int pointer;
-        public int Position
-        {
-            get { return pointer; }
-        }
-
-        public SourceCodeReader(string BaseString)
-        {
-            this.baseString = BaseString;
-        }
-
-        [DebuggerStepThrough]
-        public char Peek()
-        {
-            if (pointer < 0 || pointer >= baseString.Length)
-                return (char)0;
-            else return baseString[pointer];
-        }
-
-        [DebuggerStepThrough]
-        public char NextChar()
-        {
-            char result = Peek();
-            MoveNext();
-            return result;
-        }
-
-        // Reserve
-        public bool NextChar(char ch)
-        {
-            if (Peek() == ch)
-            {
-                MoveNext();
-                return true;
-            }
-            else return false;
-        }
-
-        [DebuggerStepThrough]
-        public void MoveNext() { ++pointer; }
-
-        [DebuggerStepThrough]
-        public void MovePrev() { --pointer; }
     }
 }
