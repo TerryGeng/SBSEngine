@@ -142,12 +142,12 @@ namespace SBSEngine.Tokenization.SBSRules
 
         ScannerResult IRule.Scan(int character)
         {
-            if (status == FIRST && (char.IsLetter((char)character) || character == (int)'_'))
+            if (status == FIRST && (char.IsLetter((char)character) || character == '_'))
             {
                 status = AFTER;
                 return ScannerResult.Continued;
             }
-            else if (status == AFTER && (char.IsLetterOrDigit((char)character) || character == (int)'_'))
+            else if (status == AFTER && (char.IsLetterOrDigit((char)character) || character == '_'))
             {
                 return ScannerResult.Continued;
             }
