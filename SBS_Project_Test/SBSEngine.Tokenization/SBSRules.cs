@@ -15,7 +15,10 @@ namespace SBSEngine.Tokenization.SBSRules
         LBlank,
         LLineBreak,
         LString,
-        LSymbol
+        LSymbol,
+
+        LSLRoundBracket,
+        LSRRoundBracket
     }
 
     class NumberRule : IRule
@@ -167,6 +170,40 @@ namespace SBSEngine.Tokenization.SBSRules
         void IRule.Reset()
         {
             status = FIRST;
+        }
+    }
+
+    class SymbolRule : IRule
+    {
+        LexiconType type = LexiconType.Undefined;
+
+        ScannerResult IRule.Scan(int character)
+        {
+            switch (character)
+            {
+                case '(':
+                    type = LexiconType.LSLRoundBracket;
+                    return ScannerResult.Finished;
+                case ')':
+                    type = LexiconType.LSRRoundBracket;
+                    return ScannerResult.Finished;
+                default:
+                    return ScannerResult.Unmatch;
+            }
+        }
+
+        Token? IRule.Pack(StringBuilder buffer)
+        {
+            return new Token
+            {
+                Type = (int)type,
+                Value = null
+            };
+        }
+
+        void IRule.Reset()
+        {
+            type = LexiconType.Undefined;
         }
     }
 
