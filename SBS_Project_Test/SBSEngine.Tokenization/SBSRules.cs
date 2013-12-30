@@ -18,7 +18,16 @@ namespace SBSEngine.Tokenization.SBSRules
         LSymbol,
 
         LSLRoundBracket,
-        LSRRoundBracket
+        LSRRoundBracket,
+        LSDollar,
+        LSComma,
+        LSPlus,
+        LSMinus,
+        LSAsterisk,
+        LSSlash,
+        LSEqual,
+        LSGreater,
+        LSLess
     }
 
     class NumberRule : IRule
@@ -186,6 +195,33 @@ namespace SBSEngine.Tokenization.SBSRules
                     return ScannerResult.Finished;
                 case ')':
                     type = LexiconType.LSRRoundBracket;
+                    return ScannerResult.Finished;
+                case '$':
+                    type = LexiconType.LSDollar;
+                    return ScannerResult.Finished;
+                case ',':
+                    type = LexiconType.LSComma;
+                    return ScannerResult.Finished;
+                case '+':
+                    type = LexiconType.LSPlus;
+                    return ScannerResult.Finished;
+                case '-':
+                    type = LexiconType.LSMinus;
+                    return ScannerResult.Finished;
+                case '*':
+                    type = LexiconType.LSAsterisk;
+                    return ScannerResult.Finished;
+                case '/':
+                    type = LexiconType.LSSlash;
+                    return ScannerResult.Finished;
+                case '=':
+                    type = LexiconType.LSEqual;
+                    return ScannerResult.Finished;
+                case '>':
+                    type = LexiconType.LSGreater;
+                    return ScannerResult.Finished;
+                case '<':
+                    type = LexiconType.LSLess;
                     return ScannerResult.Finished;
                 default:
                     return ScannerResult.Unmatch;
