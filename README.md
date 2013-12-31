@@ -14,10 +14,10 @@ In the beginning, this is merely my own project. However, after my first version
 Now, I'm in charge of the main structure and coding, his work is to give me some advice, review my code and sometimes help me write some part.
 
 ### Process of core rewrite
-1. ◧ Tokenizer - Source code to token
-2. □ Parser - token to syntax tree
-3. □ Converter - syntax tree to bytecode
-4. □ Executor - run the bytecode
+1. ◕ Tokenizer - Source code to token
+2. ○ Parser - token to syntax tree
+3. ○ Converter - syntax tree to bytecode
+4. ○ Executor - run the bytecode
 
 ## About SBS
 SBS - **Simple Basic Script** , a script language based on Basic language.
