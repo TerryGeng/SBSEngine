@@ -27,7 +27,10 @@ namespace SBSEngine.Tokenization.SBSRules
         LSSlash,
         LSEqual,
         LSGreater,
-        LSLess
+        LSLess,
+        LSDot,
+
+        LComment
     }
 
     class NumberRule : IRule
@@ -223,6 +226,9 @@ namespace SBSEngine.Tokenization.SBSRules
                 case '<':
                     type = LexiconType.LSLess;
                     return ScannerResult.Finished;
+                case '.':
+                    type = LexiconType.LSDot;
+                    return ScannerResult.Finished;
                 default:
                     return ScannerResult.Unmatch;
             }
@@ -240,6 +246,98 @@ namespace SBSEngine.Tokenization.SBSRules
         void IRule.Reset()
         {
             type = LexiconType.Undefined;
+        }
+    }
+
+    class StringRule : IRule
+    {
+        bool firstChar = true;
+        bool backslash = false;
+
+        ScannerResult IRule.Scan(int character)
+        {
+            if (firstChar)
+            {
+                if (character == (int)'"')
+                {
+                    firstChar = false;
+                    return ScannerResult.Continued;
+                }
+
+                return ScannerResult.Unmatch;
+            }
+            else
+            {
+                switch ((char)character)
+                {
+                    case '\\':
+                        backslash = true;
+                        return ScannerResult.Continued;
+                    case '"':
+                        if (!backslash) 
+                            return ScannerResult.Finished;
+                        break;
+                }
+
+                backslash = false;
+                return ScannerResult.Continued;
+            }
+        }
+
+        Token? IRule.Pack(StringBuilder buffer)
+        {
+            return new Token
+            {
+                Type = (int)LexiconType.LString,
+                Value = buffer.ToString(1, buffer.Length - 3)
+            };
+        }
+
+        void IRule.Reset()
+        {
+            firstChar = true;
+            backslash = false;
+        }
+    }
+
+    class CommentRule : IRule
+    {
+        bool firstChar = true;
+
+        ScannerResult IRule.Scan(int character)
+        {
+            if (firstChar)
+            {
+                if (character == (int)'\'')
+                {
+                    firstChar = false;
+                    return ScannerResult.Continued;
+                }
+            }
+            else
+            {
+                if (character == (int)'\n')
+                {
+                    return ScannerResult.PreviousFinished;
+                }
+                return ScannerResult.Continued;
+            }
+
+            return ScannerResult.Unmatch;
+        }
+
+        Token? IRule.Pack(StringBuilder buffer)
+        {
+            return new Token
+            {
+                Type = (int)LexiconType.LComment,
+                Value = null
+            };
+        }
+
+        void IRule.Reset()
+        {
+            firstChar = true;
         }
     }
 
