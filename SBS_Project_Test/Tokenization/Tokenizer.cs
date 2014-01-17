@@ -54,6 +54,16 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         StringReader reader;
         IList<IRule> rules;
 
+        int currentPosition = 1;
+
+        public int Position
+        {
+            get
+            {
+                return currentPosition;
+            }
+        }
+
         public Tokenizer(IList<IRule> rules, string code)
         {
             reader = new StringReader(code);
@@ -86,6 +96,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                         case ScannerResult.Finished:
                             tokenBuffer.Append(character);
                             reader.Read();
+                            currentPosition += 1;
                             return rules[i].Pack(tokenBuffer);
                         case ScannerResult.PreviousFinished:
                             if (tokenBuffer.Length > 0)
@@ -110,9 +121,10 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 {
                     tokenBuffer.Append((char)character);
                     reader.Read();
+                    currentPosition += 1;
                     continue;
                 }
-                else throw new UnexpectedCharacterException(0, (char)character);
+                else throw new UnexpectedCharacterException(currentPosition, (char)character);
             } while (character != -1);
 
             return null;
