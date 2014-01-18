@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
-namespace SBSEngine.Tokenization.SBSRules
+namespace SBSEngine.Tokenization
 {
     public enum LexiconType
     {
-        Undefined,
+        Null,
 
         LInteger,
         LFloat,
@@ -47,36 +44,36 @@ namespace SBSEngine.Tokenization.SBSRules
                 case INT:
                     if (char.IsDigit((char)character))
                     {
-                        return ScannerResult.Continued;
+                        return new ScannerResult{ Result = ScannerStatus.Continued };
                     }
                     else if ((char)character == '.')
                     {
                         status = DOT;
-                        return ScannerResult.Continued;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
                     }
                     break;
                 case DOT:
                     if (char.IsDigit((char)character))
                     {
                         status = FLOAT;
-                        return ScannerResult.Continued;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
                     }
                     break;
                 case FLOAT:
                     if (char.IsDigit((char)character))
                     {
-                        return ScannerResult.Continued;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
                     }
                     break;
             }
 
             if (status != DOT)
-                return ScannerResult.PreviousFinished;
+                return new ScannerResult { Result = ScannerStatus.PreviousFinished };
             else
-                return ScannerResult.Unmatch;
+                return new ScannerResult { Result = ScannerStatus.Unmatch };
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             switch (status)
             {
@@ -93,7 +90,7 @@ namespace SBSEngine.Tokenization.SBSRules
                         Value = buffer.ToString()
                     };
                 default:
-                    return null;
+                    return new Token();
             }
         }
 
@@ -109,19 +106,24 @@ namespace SBSEngine.Tokenization.SBSRules
         const int SPACE = 0;
         const int LINEBREAK = 1;
         int status = SPACE;
+        ReadingOption option = ReadingOption.IgnoreCurrent;
 
         ScannerResult IRule.Scan(int character)
         {
             if (char.IsWhiteSpace((char)character))
             {
-                if (character == '\n') status = LINEBREAK;
-                return ScannerResult.Continued;
+                if (character == '\n')
+                {
+                    status = LINEBREAK;
+                    option = ReadingOption.Normal;
+                }
+                return new ScannerResult { Result = ScannerStatus.Continued };
             }
 
-            return ScannerResult.PreviousFinished;
+            return new ScannerResult { Result = ScannerStatus.PreviousFinished ,Option = option };
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             switch (status)
             {
@@ -138,13 +140,14 @@ namespace SBSEngine.Tokenization.SBSRules
                         Value = null
                     };
                 default:
-                    return null;
+                    return new Token();
             }
         }
 
         void IRule.Reset() 
         {
             status = SPACE;
+            option = ReadingOption.IgnoreCurrent;
         }
     }
 
@@ -160,17 +163,17 @@ namespace SBSEngine.Tokenization.SBSRules
             if (status == FIRST && (char.IsLetter((char)character) || character == '_'))
             {
                 status = AFTER;
-                return ScannerResult.Continued;
+                return new ScannerResult { Result = ScannerStatus.Continued  };
             }
             else if (status == AFTER && (char.IsLetterOrDigit((char)character) || character == '_'))
             {
-                return ScannerResult.Continued;
+                return new ScannerResult { Result = ScannerStatus.Continued };
             }
 
-            return ScannerResult.PreviousFinished;
+            return new ScannerResult { Result = ScannerStatus.PreviousFinished };
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             return new Token
             {
@@ -187,7 +190,7 @@ namespace SBSEngine.Tokenization.SBSRules
 
     class SymbolRule : IRule
     {
-        LexiconType type = LexiconType.Undefined;
+        LexiconType type = LexiconType.Null;
 
         ScannerResult IRule.Scan(int character)
         {
@@ -195,46 +198,46 @@ namespace SBSEngine.Tokenization.SBSRules
             {
                 case '(':
                     type = LexiconType.LSLRoundBracket;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case ')':
                     type = LexiconType.LSRRoundBracket;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '$':
                     type = LexiconType.LSDollar;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case ',':
                     type = LexiconType.LSComma;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '+':
                     type = LexiconType.LSPlus;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '-':
                     type = LexiconType.LSMinus;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '*':
                     type = LexiconType.LSAsterisk;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '/':
                     type = LexiconType.LSSlash;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '=':
                     type = LexiconType.LSEqual;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '>':
                     type = LexiconType.LSGreater;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '<':
                     type = LexiconType.LSLess;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 case '.':
                     type = LexiconType.LSDot;
-                    return ScannerResult.Finished;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
                 default:
-                    return ScannerResult.Unmatch;
+                    return new ScannerResult { Result = ScannerStatus.Unmatch };
             }
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             return new Token
             {
@@ -245,7 +248,7 @@ namespace SBSEngine.Tokenization.SBSRules
 
         void IRule.Reset()
         {
-            type = LexiconType.Undefined;
+            type = LexiconType.Null;
         }
     }
 
@@ -261,10 +264,10 @@ namespace SBSEngine.Tokenization.SBSRules
                 if (character == (int)'"')
                 {
                     firstChar = false;
-                    return ScannerResult.Continued;
+                    return new ScannerResult { Result = ScannerStatus.Continued };
                 }
 
-                return ScannerResult.Unmatch;
+                return new ScannerResult { Result = ScannerStatus.Unmatch };
             }
             else
             {
@@ -272,19 +275,19 @@ namespace SBSEngine.Tokenization.SBSRules
                 {
                     case '\\':
                         backslash = true;
-                        return ScannerResult.Continued;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
                     case '"':
-                        if (!backslash) 
-                            return ScannerResult.Finished;
+                        if (!backslash)
+                            return new ScannerResult { Result = ScannerStatus.Finished };
                         break;
                 }
 
                 backslash = false;
-                return ScannerResult.Continued;
+                return new ScannerResult { Result = ScannerStatus.Continued };
             }
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             return new Token
             {
@@ -311,22 +314,22 @@ namespace SBSEngine.Tokenization.SBSRules
                 if (character == (int)'\'')
                 {
                     firstChar = false;
-                    return ScannerResult.Continued;
+                    return new ScannerResult { Result = ScannerStatus.Continued };
                 }
             }
             else
             {
                 if (character == (int)'\n')
                 {
-                    return ScannerResult.PreviousFinished;
+                    return new ScannerResult { Result = ScannerStatus.PreviousFinished , Option = ReadingOption.IgnoreCurrent};
                 }
-                return ScannerResult.Continued;
+                return new ScannerResult { Result = ScannerStatus.Continued };
             }
 
-            return ScannerResult.Unmatch;
+            return new ScannerResult { Result = ScannerStatus.Unmatch };
         }
 
-        Token? IRule.Pack(StringBuilder buffer)
+        Token IRule.Pack(StringBuilder buffer)
         {
             return new Token
             {

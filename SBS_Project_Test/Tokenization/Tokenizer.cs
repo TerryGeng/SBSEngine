@@ -13,7 +13,28 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         public string Value;
     }
 
-    public enum ScannerResult
+    public struct ScannerResult
+    {
+        public ScannerStatus Result;
+        public ReadingOption Option;
+    }
+
+    public enum ReadingOption
+    {
+        Normal,
+
+        /// <summary>
+        /// Discard current token, and do ReadToken() again. 
+        /// </summary>
+        IgnoreCurrent,
+
+        /// <summary>
+        /// Interrupt the reading process, for ReadToken() and scanner while meeting eof.
+        /// </summary>
+        FinishReading
+    }
+
+    public enum ScannerStatus
     {
         Undefined,
 
@@ -53,6 +74,9 @@ namespace SBSEngine.Tokenization // Tokenizer core part
     {
         StringReader reader;
         IList<IRule> rules;
+        BitArray matches; // Available rules for NextToken().
+        ReadingOption lastReadingOption; 
+        StringBuilder tokenBuffer;
 
         int currentPosition = 1;
 
@@ -68,19 +92,45 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         {
             reader = new StringReader(code);
             this.rules = rules;
+            matches = new BitArray(rules.Count, true);
+            tokenBuffer = new StringBuilder();
         }
 
-        public Token? NextToken()
+        public Token NextToken()
+        {
+            int matched;
+
+            while (true)
+            {
+                matched = ReadToken();
+                switch (lastReadingOption)
+                {
+                    case ReadingOption.FinishReading: 
+                        return new Token();
+                    case ReadingOption.IgnoreCurrent:
+                        continue;
+                    case ReadingOption.Normal:
+                    default:
+                        return rules[matched].Pack(tokenBuffer);
+                }
+            }
+
+        }
+
+        // return val: Matched rules.
+        public int ReadToken()
         {
             if (reader.Peek() == -1)
-                return null;
-            BitArray matches = new BitArray(rules.Count, true);
+            {
+                lastReadingOption = ReadingOption.FinishReading;
+                return -1;
+            }
 
-            StringBuilder tokenBuffer = new StringBuilder();
+            
             int character;
             int remaining = rules.Count;
 
-            this.ResetRules();
+            this.ResetFormerStatus();
 
             do
             {
@@ -89,19 +139,23 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 for (int i = 0; i < rules.Count; ++i)
                 {
                     if (!matches[i]) continue;
-                    switch (rules[i].Scan(character))
+                    ScannerResult result = rules[i].Scan(character);
+
+                    switch (result.Result)
                     {
-                        case ScannerResult.Continued:
+                        case ScannerStatus.Continued:
                             break;
-                        case ScannerResult.Finished:
+                        case ScannerStatus.Finished:
                             tokenBuffer.Append(character);
                             reader.Read();
                             currentPosition += 1;
-                            return rules[i].Pack(tokenBuffer);
-                        case ScannerResult.PreviousFinished:
+                            lastReadingOption = result.Option;
+                            return i;
+                        case ScannerStatus.PreviousFinished:
                             if (tokenBuffer.Length > 0)
                             {
-                                return rules[i].Pack(tokenBuffer);
+                                lastReadingOption = result.Option;
+                                return i;
                             }
                             else
                             {
@@ -109,7 +163,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                                 --remaining;
                             }
                             break;
-                        case ScannerResult.Unmatch:
+                        case ScannerStatus.Unmatch:
                             matches.Set(i, false);
                             --remaining;
                             break;
@@ -127,15 +181,18 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 else throw new UnexpectedCharacterException(currentPosition, (char)character);
             } while (character != -1);
 
-            return null;
+            return -1;
         }
 
-        private void ResetRules()
+        private void ResetFormerStatus()
         {
             for (int i = 0; i < rules.Count; ++i)
             {
                 rules[i].Reset();
             }
+
+            matches.SetAll(true);
+            tokenBuffer.Clear();
         }
     }
 }
