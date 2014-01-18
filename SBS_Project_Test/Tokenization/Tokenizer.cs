@@ -74,9 +74,10 @@ namespace SBSEngine.Tokenization // Tokenizer core part
     {
         StringReader reader;
         IList<IRule> rules;
-        BitArray matches; // Available rules for NextToken().
+        BitArray matches; // Available rules for ReadToken().
         ReadingOption lastReadingOption; 
         StringBuilder tokenBuffer;
+        Token lastPeek; // If this is not empty, NextToken() will directly return this and empty this with a null token;
 
         int currentPosition = 1;
 
@@ -96,8 +97,21 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             tokenBuffer = new StringBuilder();
         }
 
+        public Token PeekToken()
+        {
+            if(lastPeek.Type == 0) lastPeek = NextToken();
+            return lastPeek;
+        }
+
         public Token NextToken()
         {
+            if (lastPeek.Type != 0)
+            {
+                Token token = lastPeek;
+                lastPeek = new Token();
+                return token;
+            }
+
             int matched;
 
             while (true)
