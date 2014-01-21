@@ -1,4 +1,6 @@
 /SBS_Project_Test/bin/
 /SBS_Project_Test/obj/
+/SBS_Tester/bin/
+/SBS_Tester/obj/
 *.suo
 *.TMP
