@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SBS_Project_Test", "SBS_Project_Test\SBS_Project_Test.csproj", "{DA15F79D-F611-4A45-A78C-F86206DBBE4A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SBSEngineTester", "SBS_Tester\SBSEngineTester.csproj", "{25B7FC1F-FA8E-4167-83EB-DBAF4B845E26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -15,6 +17,10 @@ Global
 		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Debug|x86.Build.0 = Debug|x86
 		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Release|x86.ActiveCfg = Release|x86
 		{DA15F79D-F611-4A45-A78C-F86206DBBE4A}.Release|x86.Build.0 = Release|x86
+		{25B7FC1F-FA8E-4167-83EB-DBAF4B845E26}.Debug|x86.ActiveCfg = Debug|x86
+		{25B7FC1F-FA8E-4167-83EB-DBAF4B845E26}.Debug|x86.Build.0 = Debug|x86
+		{25B7FC1F-FA8E-4167-83EB-DBAF4B845E26}.Release|x86.ActiveCfg = Release|x86
+		{25B7FC1F-FA8E-4167-83EB-DBAF4B845E26}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
