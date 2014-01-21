@@ -30,7 +30,7 @@ namespace SBSEngine.Tokenization
         LComment
     }
 
-    class NumberRule : IRule
+    public class NumberRule : IRule
     {
         const int INT = 0;
         const int DOT = 1;
@@ -101,7 +101,7 @@ namespace SBSEngine.Tokenization
 
     }
 
-    class BlankRule : IRule
+    public class BlankRule : IRule
     {
         const int SPACE = 0;
         const int LINEBREAK = 1;
@@ -151,7 +151,7 @@ namespace SBSEngine.Tokenization
         }
     }
 
-    class NameRule : IRule
+    public class NameRule : IRule
     {
         const int FIRST = 0;
         const int AFTER = 1;
@@ -188,7 +188,7 @@ namespace SBSEngine.Tokenization
         }
     }
 
-    class SymbolRule : IRule
+    public class SymbolRule : IRule
     {
         LexiconType type = LexiconType.Null;
 
@@ -252,7 +252,7 @@ namespace SBSEngine.Tokenization
         }
     }
 
-    class StringRule : IRule
+    public class StringRule : IRule
     {
         bool firstChar = true;
         bool backslash = false;
@@ -303,7 +303,7 @@ namespace SBSEngine.Tokenization
         }
     }
 
-    class CommentRule : IRule
+    public class CommentRule : IRule
     {
         bool firstChar = true;
 

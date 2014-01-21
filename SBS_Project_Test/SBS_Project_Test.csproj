@@ -52,9 +52,16 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="SBSEngine.Tokenization\IRule.cs" />
-    <Compile Include="SBSEngine.Tokenization\SBSRules.cs" />
-    <Compile Include="SBSEngine.Tokenization\Tokenizer.cs" />
+    <Compile Include="Parsing\IPacker.cs" />
+    <Compile Include="Parsing\IStatment.cs" />
+    <Compile Include="Parsing\Packers.cs" />
+    <Compile Include="Parsing\ExprStatment.cs" />
+    <Compile Include="Runtime\IConstValue.cs" />
+    <Compile Include="Runtime\ExprCalcu.cs" />
+    <Compile Include="Runtime\ValueTypes.cs" />
+    <Compile Include="Tokenization\IRule.cs" />
+    <Compile Include="Tokenization\SBSRules.cs" />
+    <Compile Include="Tokenization\Tokenizer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -77,6 +84,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -132,7 +132,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         }
 
         // return val: Matched rules.
-        public int ReadToken()
+        private int ReadToken()
         {
             if (reader.Peek() == -1)
             {
