@@ -26,7 +26,7 @@ namespace SBSEngine.Parsing
 
     //}
 
-    public class ExpressionPacker : IPacker // TODO: public(for debug) => private
+    internal class ExpressionPacker : IPacker
     {
         private static ExpressionPacker instance;
 
@@ -47,7 +47,7 @@ namespace SBSEngine.Parsing
             return null;
         }
 
-        public Expression PackExpression() // TODO: public(for debug) => private
+        internal Expression PackExpression()
         {
             // Expression= Factor*
 
