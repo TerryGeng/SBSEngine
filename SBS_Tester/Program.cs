@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Tokenizer_debug
+namespace SBSEngine.Tests
 {
     static class Program
     {
@@ -15,7 +15,7 @@ namespace Tokenizer_debug
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new TestForm());
         }
     }
 }

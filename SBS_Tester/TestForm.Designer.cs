@@ -1,6 +1,6 @@
-﻿namespace Tokenizer_debug
+﻿namespace SBSEngine.Tests
 {
-    partial class Form1
+    partial class TestForm
     {
         /// <summary>
         /// 必需的设计器变量。

@@ -1,4 +1,4 @@
-﻿namespace Tokenizer_debug
+﻿namespace SBSEngine.Tests
 {
     using System.Windows.Forms;
     using SBSEngine.Tokenization;
@@ -7,12 +7,12 @@
     using SBSEngine.Parsing;
     using SBSEngine.Parsing.ExprStatment;
 
-    public partial class Form1 : Form
+    public partial class TestForm : Form
     {
         List<IRule> rules = new List<IRule>();
         Tokenizer Tokenizer;
 
-        public Form1()
+        public TestForm()
         {
             InitializeComponent();
             rules.Add(new NumberRule());
