@@ -80,11 +80,14 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         Token lastPeek; // If this is not empty, NextToken() will directly return this and empty this with a null token;
 
         int currentPosition = 1;
+        int virtualPosition = 1;
 
         public int Position
         {
             get
             {
+                if (lastPeek.Type != 0)
+                    return virtualPosition;
                 return currentPosition;
             }
         }
@@ -99,8 +102,22 @@ namespace SBSEngine.Tokenization // Tokenizer core part
 
         public Token PeekToken()
         {
-            if(lastPeek.Type == 0) lastPeek = NextToken();
+            if (lastPeek.Type == 0)
+            {
+                virtualPosition = currentPosition;
+                lastPeek = NextToken();
+            }
             return lastPeek;
+        }
+
+        public int PeekTokenType()
+        {
+            return PeekToken().Type;
+        }
+
+        public int NextTokenType()
+        {
+            return NextToken().Type;
         }
 
         public Token NextToken()
