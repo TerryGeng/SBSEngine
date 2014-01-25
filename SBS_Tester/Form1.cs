@@ -5,7 +5,8 @@
     using System.Diagnostics;
     using System.Collections.Generic;
     using SBSEngine.Parsing;
-    using SBSEngine.Parsing.ExprStatment;
+    using System.Linq.Expressions;
+    using System;
 
     public partial class Form1 : Form
     {
@@ -24,42 +25,17 @@
 
         }
 
-        public void emptyFunc(string str){}
+        public void emptyFunc(string str) { }
 
         private void button1_Click_1(object sender, System.EventArgs e)
         {
             this.textBox2.Clear();
-            Tokenizer = new Tokenizer(rules, textBox1.Text);
-            ExpressionPacker exprPacker = new ExpressionPacker();
-            exprPacker.Tokenizer = Tokenizer;
-
-            Stopwatch Watch = Stopwatch.StartNew();
-
-            Expression expr = exprPacker.PackExpression();
-            TestExprVisior testVisitor;
-
-            if (checkBox1.Checked)
-            {
-                testVisitor = new TestExprVisior(textBox2.AppendText);
-            }
-            else
-            {
-                testVisitor = new TestExprVisior(emptyFunc);
-            }
-            
-            testVisitor.Visit(expr);
-            textBox2.AppendText("Done. \r\n");
-
-            Watch.Stop();
-
-            textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n");
-
+            ExpressionPackTest();
         }
 
         private void TokenizerTest()
         {
             Tokenizer = new Tokenizer(rules, textBox1.Text);
-            this.textBox2.Clear();
             Token Token;
             int TokenCount = 0;
             Stopwatch Watch = Stopwatch.StartNew();
@@ -97,6 +73,52 @@
 
             textBox2.AppendText(string.Format("Processed {0:d} token(s).", TokenCount) + "\r\n");
             textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n");
+        }
+
+        private void ExpressionPackTest()
+        {
+            Tokenizer = new Tokenizer(rules, textBox1.Text);
+            ExpressionPacker exprPacker = new ExpressionPacker();
+            exprPacker.Tokenizer = Tokenizer;
+
+            try
+            {
+                // Packing
+                textBox2.AppendText("Packing Code... ");
+                Stopwatch Watch = Stopwatch.StartNew();
+                Expression expr = exprPacker.PackExpression();
+                Watch.Stop();
+                textBox2.AppendText("Done. ");
+                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
+                if (checkBox1.Checked)
+                    textBox2.AppendText("Packing Result: " + expr.ToString() + "\r\n\r\n");
+
+                // Compiling
+                Func<double> code;
+                textBox2.AppendText("Compiling... ");
+                Watch = Stopwatch.StartNew();
+                code = Expression.Lambda<Func<double>>(expr).Compile();
+                Watch.Stop();
+                textBox2.AppendText("Done. ");
+                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
+
+                // Executing
+                double result;
+                textBox2.AppendText("Executing... ");
+                Watch = Stopwatch.StartNew();
+                result = code();
+                Watch.Stop();
+
+                textBox2.AppendText("Done. ");
+                textBox2.AppendText(string.Format("Result: {0}. ",result));
+                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
+            }
+            catch (ApplicationException ex)
+            {
+                textBox2.AppendText(string.Format("\r\nError: {0} \r\n\r\n", ex.Message));
+            }
+
+
         }
 
     }
