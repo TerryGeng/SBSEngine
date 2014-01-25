@@ -175,7 +175,13 @@ namespace SBSEngine.Parsing
 
         private Expression PackFactor()
         {
-            return PackConstantFactor();
+            switch ((LexiconType)Tokenizer.PeekTokenType())
+            {
+                case LexiconType .LSLRoundBracket :
+                    return PackExprFactor();
+                default:
+                    return PackConstantFactor();
+            }
         }
 
         /*
@@ -200,6 +206,18 @@ namespace SBSEngine.Parsing
                     ThrowHelper.ThrowUnexpectedTokenException("Invalid constant value factor.");
                     return null;
             }
+        }
+
+        private Expression PackExprFactor()
+        {
+            Tokenizer.NextToken();
+
+            Expression expr = PackExpression();
+
+            if (Tokenizer.NextTokenType() != (int)LexiconType.LSRRoundBracket)
+                ThrowHelper.ThrowUnexpectedTokenException("Invalid expression factor ending.");
+
+            return expr;
         }
 
         // TODO: This is a simplified implementation. Need to extend as the expansion of the data types.
