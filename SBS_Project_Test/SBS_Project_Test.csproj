@@ -55,10 +55,7 @@
     <Compile Include="Parsing\IPacker.cs" />
     <Compile Include="Parsing\IStatment.cs" />
     <Compile Include="Parsing\Packers.cs" />
-    <Compile Include="Parsing\ExprStatment.cs" />
-    <Compile Include="Runtime\IConstValue.cs" />
-    <Compile Include="Runtime\ExprCalcu.cs" />
-    <Compile Include="Runtime\ValueTypes.cs" />
+    <Compile Include="Parsing\Statments.cs" />
     <Compile Include="Tokenization\IRule.cs" />
     <Compile Include="Tokenization\SBSRules.cs" />
     <Compile Include="Tokenization\Tokenizer.cs" />
