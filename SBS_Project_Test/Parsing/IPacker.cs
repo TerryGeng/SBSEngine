@@ -12,10 +12,7 @@ namespace SBSEngine.Parsing
         {
             set;
         }
-        //IPacker Instance // Singleton pattern
-        //{
-        //    get;
-        //}
+
         IStatment PackStatment();
     }
 }
