@@ -61,7 +61,7 @@ namespace SBSEngine.Parsing
 
     //}
 
-    public class ExpressionPacker : IPacker // TODO: public(for debug) => private
+    internal class ExpressionPacker : IPacker
     {
         public Tokenizer Tokenizer { set; private get; }
 
@@ -74,7 +74,7 @@ namespace SBSEngine.Parsing
          * Expression = ['+'|'-'] Term   (('+'|'-') Term)*
          *                  (*1*)                 (*2*)
          */
-        public Expression PackExpression() // TODO: public(for debug) => private
+        internal Expression PackExpression()
         {
             ThrowHelper.Tokenizer = Tokenizer; // TODO: This line is for debug. Remove this.
 
@@ -118,7 +118,7 @@ namespace SBSEngine.Parsing
                         Tokenizer.NextToken();
                         break;
                     default:
-                        mainExpr = Expression.Convert(mainExpr,typeof(double)); // TODO: This line is for debug output. Remove this.
+                        mainExpr = Expression.Convert(mainExpr, typeof(double)); // TODO: This line is for debug output. Remove this.
                         return mainExpr;
                 }
 
@@ -153,7 +153,7 @@ namespace SBSEngine.Parsing
                         type = ExpressionType.Multiply;
                         Tokenizer.NextToken();
                         break;
-                    case LexiconType .LSSlash:
+                    case LexiconType.LSSlash:
                         type = ExpressionType.Divide;
                         Tokenizer.NextToken();
                         break;
@@ -165,7 +165,7 @@ namespace SBSEngine.Parsing
 
                 if (factor != null)
                 {
-                    ImplicitComversion(ref factors,ref factor);
+                    ImplicitComversion(ref factors, ref factor);
                     factors = Expression.MakeBinary(type, factors, factor);
                 }
                 else
@@ -177,7 +177,7 @@ namespace SBSEngine.Parsing
         {
             switch ((LexiconType)Tokenizer.PeekTokenType())
             {
-                case LexiconType .LSLRoundBracket :
+                case LexiconType.LSLRoundBracket:
                     return PackExprFactor();
                 default:
                     return PackConstantFactor();
@@ -226,7 +226,7 @@ namespace SBSEngine.Parsing
             Type type1 = expr1.Type;
             Type type2 = expr2.Type;
 
-            if (type1 != type2)
+            if (!type1.IsAssignableFrom(type2) && !type2.IsAssignableFrom(type1))
             {
                 if (type1 == typeof(double) && type2 == typeof(int))
                 {

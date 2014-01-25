@@ -55,7 +55,6 @@
     <Compile Include="Parsing\IPacker.cs" />
     <Compile Include="Parsing\IStatment.cs" />
     <Compile Include="Parsing\Packers.cs" />
-    <Compile Include="Parsing\Statments.cs" />
     <Compile Include="Tokenization\IRule.cs" />
     <Compile Include="Tokenization\SBSRules.cs" />
     <Compile Include="Tokenization\Tokenizer.cs" />
