@@ -27,14 +27,14 @@ namespace SBSEngine.Runtime
 
         /*
          *  TODO: Implicit Conversion Rules
-         *  Only who has the same branch top can be convert implicitly.
+         *  Only two who have the same branch top can be convert implicitly.
          *  
-         *                (B1)            (B2)
+         *                (B1)               (B2)
          *               Int(W1)         
          *                 |
          *               Double(W2)
          *                 |
-         *  BranchTop:   String(W3)     Array(W1)(Not implemented)
+         *  BranchTop:   String(W3)     Array(W1)(Not implemented yet)
          * 
          */
 
