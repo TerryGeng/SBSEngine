@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using SBSEngine.Tokenization;
+using SBSEngine.Runtime;
 
 namespace SBSEngine.Parsing
 {
@@ -80,53 +81,29 @@ namespace SBSEngine.Parsing
 
             Expression mainExpr = null;
             Expression currentExpr = null;
-            ExpressionType type;
-
-            // Dealing with (*1*) of the expression.
-            switch ((LexiconType)Tokenizer.PeekTokenType())
-            {
-                case LexiconType.LSMinus:
-                    Tokenizer.NextToken();
-                    if ((currentExpr = PackTerm()) != null)
-                        mainExpr = Expression.MakeBinary(ExpressionType.Subtract, Expression.Constant(0), currentExpr);
-                    else
-                        ThrowHelper.ThrowUnexpectedTokenException("Invalid expression term.");
-                    break;
-                case LexiconType.LSPlus:
-                    Tokenizer.NextToken();
-                    if ((mainExpr = PackTerm()) == null)
-                        ThrowHelper.ThrowUnexpectedTokenException("Invalid expression term.");
-                    break;
-                default:
-                    if ((mainExpr = PackTerm()) == null)
-                        ThrowHelper.ThrowUnexpectedTokenException("Invalid expression term.");
-                    break;
-            }
-
-            // Dealing with (*2*).
+            LexiconType opType;
 
             while (true)
             {
-                switch ((LexiconType)Tokenizer.PeekTokenType())
-                {
-                    case LexiconType.LSPlus:
-                        type = ExpressionType.Add;
-                        Tokenizer.NextToken();
-                        break;
-                    case LexiconType.LSMinus:
-                        type = ExpressionType.Subtract;
-                        Tokenizer.NextToken();
-                        break;
-                    default:
-                        mainExpr = Expression.Convert(mainExpr, typeof(double)); // TODO: This line is for debug output. Remove this.
+                opType = (LexiconType)Tokenizer.PeekTokenType();
+
+                if (!IsTermOperator(opType))
+                    if (mainExpr == null) // (*1*)
+                        opType = LexiconType.LSPlus;
+                    else
                         return mainExpr;
-                }
+                else
+                    Tokenizer.NextToken();
 
                 if ((currentExpr = PackTerm()) != null)
                 {
-                    ImplicitComversion(ref mainExpr, ref currentExpr);
-                    mainExpr = Expression.MakeBinary(type, mainExpr, currentExpr);
+                    mainExpr = MakeBinaryExpression(opType, mainExpr, currentExpr);
                 }
+                else
+                {
+                    ThrowHelper.ThrowUnexpectedTokenException("Invalid expression term.");
+                }
+
             }
         }
 
@@ -136,9 +113,9 @@ namespace SBSEngine.Parsing
          */
         private Expression PackTerm()
         {
-            Expression factors;
-            Expression factor;
-            ExpressionType type;
+            Expression factors = null;
+            Expression factor = null;
+            LexiconType opType;
 
             // Dealing with (*1*).
             if ((factors = PackFactor()) == null)
@@ -147,26 +124,17 @@ namespace SBSEngine.Parsing
             // Dealing with (*2*).
             while (true)
             {
-                switch ((LexiconType)Tokenizer.PeekTokenType())
-                {
-                    case LexiconType.LSAsterisk:
-                        type = ExpressionType.Multiply;
-                        Tokenizer.NextToken();
-                        break;
-                    case LexiconType.LSSlash:
-                        type = ExpressionType.Divide;
-                        Tokenizer.NextToken();
-                        break;
-                    default:
-                        return factors;
-                }
+                opType = (LexiconType)Tokenizer.PeekTokenType();
+                if (!IsFactorOperator(opType))
+                    return factors;
+                else
+                    Tokenizer.NextToken();
 
                 factor = PackFactor();
 
                 if (factor != null)
                 {
-                    ImplicitComversion(ref factors, ref factor);
-                    factors = Expression.MakeBinary(type, factors, factor);
+                    factors = MakeBinaryExpression(opType,factors,factor);
                 }
                 else
                     ThrowHelper.ThrowUnexpectedTokenException("Invalid factor term.");
@@ -220,24 +188,108 @@ namespace SBSEngine.Parsing
             return expr;
         }
 
-        // TODO: This is a simplified implementation. Need to extend as the expansion of the data types.
-        private void ImplicitComversion(ref Expression expr1, ref Expression expr2)
-        {
-            Type type1 = expr1.Type;
-            Type type2 = expr2.Type;
+        // ------ Pack Binary Expression ------
+        // TODO: Maybe should move this out of this class.
 
-            if (!type1.IsAssignableFrom(type2) && !type2.IsAssignableFrom(type1))
+        private Expression MakeBinaryExpression(LexiconType op, Expression left, Expression right)
+        {
+            switch (op)
             {
-                if (type1 == typeof(double) && type2 == typeof(int))
-                {
-                    expr2 = Expression.Convert(expr2, typeof(double));
-                }
-                else if (type2 == typeof(double) && type1 == typeof(int))
-                {
-                    expr1 = Expression.Convert(expr1, typeof(double));
-                }
+                case LexiconType.LSPlus:
+                    return OperationAdd(left,right);
+                case LexiconType.LSMinus:
+                    return OperationSub(left, right);
+                case LexiconType.LSAsterisk:
+                    return OperationMultiply(left, right);
+                case LexiconType.LSSlash:
+                    return OperationDivide(left, right);
+
             }
 
+            return null;
         }
+
+        private Expression OperationAdd(Expression left,Expression right)
+        {
+            if (left == null)
+            {
+                return right;
+            }
+
+            if (TypeConversion.Implicit(ref left, ref right) == TypeConversion.AbstractType.Numeric)
+            {
+                return Expression.Add(left, right);
+            }
+            else
+            {
+                throw new ApplicationException("Implicit conversion error.");
+            }
+        }
+
+        private Expression OperationSub(Expression left, Expression right)
+        {
+            if (left == null)
+            {
+                left = Expression.Constant(0);
+            }
+
+            if (TypeConversion.Implicit(ref left, ref right) == TypeConversion.AbstractType.Numeric)
+            {
+                return Expression.Subtract(left, right);
+            }
+            else
+            {
+                throw new ApplicationException("Implicit conversion error.");
+            }
+        }
+
+        private Expression OperationMultiply(Expression left, Expression right)
+        {
+            if (TypeConversion.Implicit(ref left, ref right) == TypeConversion.AbstractType.Numeric)
+            {
+                return Expression.Multiply(left, right);
+            }
+            else
+            {
+                throw new ApplicationException("Implicit conversion error.");
+            }
+        }
+
+        private Expression OperationDivide(Expression left, Expression right)
+        {
+            if (TypeConversion.Implicit(ref left, ref right) == TypeConversion.AbstractType.Numeric)
+            {
+                return Expression.Divide(left, right);
+            }
+            else
+            {
+                throw new ApplicationException("Implicit conversion error.");
+            }
+        }
+
+        private bool IsFactorOperator(LexiconType op)
+        {
+            switch (op)
+            {
+                case LexiconType.LSAsterisk:
+                case LexiconType.LSSlash:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private bool IsTermOperator(LexiconType op)
+        {
+            switch (op)
+            {
+                case LexiconType.LSPlus:
+                case LexiconType.LSMinus:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
     }
 }
