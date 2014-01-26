@@ -120,6 +120,17 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             return NextToken().Type;
         }
 
+        public bool TestNextTokenType(int type)
+        {
+            if (PeekTokenType() == type)
+            {
+                NextToken();
+                return true;
+            }
+
+            return false;
+        }
+
         public Token NextToken()
         {
             if (lastPeek.Type != 0)
