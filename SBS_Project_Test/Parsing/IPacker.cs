@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq.Expressions;
 using SBSEngine.Tokenization;
 
 namespace SBSEngine.Parsing
 {
     interface IPacker
     {
-        Tokenizer Tokenizer
-        {
-            set;
-        }
+        Tokenizer Tokenizer { set; }
 
-        IStatment PackStatment();
+        Scope Scope { set; }
+
+        Expression PackStatment();
     }
 }
