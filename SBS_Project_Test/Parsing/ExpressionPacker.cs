@@ -44,31 +44,15 @@ namespace SBSEngine.Parsing
             );
         }
     }
-    //class StatmentPacker : IPacker
-    //{
-    //    private static StatmentPacker instance;
 
-    //    public Tokenizer Tokenizer { get; private set; }
-
-    //    public IPacker Instance  // TODO: Use Cache<T> to replace.
-    //    {
-    //        get
-    //        {
-    //            if (instance == null)
-    //                instance = new StatmentPacker();
-    //            return instance;
-    //        }
-    //    }
-
-    //}
 
     internal class ExpressionPacker : IPacker
     {
         public Tokenizer Tokenizer { set; private get; }
 
-        public IStatment PackStatment()
+        public Expression PackStatment()
         {
-            return null;
+            return PackExpression();
         }
 
         /* 
