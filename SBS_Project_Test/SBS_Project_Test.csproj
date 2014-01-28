@@ -52,13 +52,18 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Parsing\AssginExpressionPacker.cs" />
-    <Compile Include="Parsing\IPacker.cs" />
-    <Compile Include="Parsing\ExpressionPacker.cs" />
+    <Compile Include="Parsing\Ast\BinaryExpression.cs" />
+    <Compile Include="Parsing\Ast\SBSOperator.cs" />
+    <Compile Include="Parsing\Parser\AssignExpressionPacker.cs" />
+    <Compile Include="Parsing\Parser\BlockPacker.cs" />
+    <Compile Include="Parsing\Parser\Packer.cs" />
+    <Compile Include="Parsing\Parser\ExpressionPacker.cs" />
+    <Compile Include="Parsing\ParsingError.cs" />
     <Compile Include="Parsing\Scope.cs" />
-    <Compile Include="Parsing\StatmentPacker.cs" />
-    <Compile Include="Parsing\PackerCache.cs" />
-    <Compile Include="Parsing\VariableAccessPacker.cs" />
+    <Compile Include="Parsing\Parser\Parser.cs" />
+    <Compile Include="Parsing\Parser\VariableAccessPacker.cs" />
+    <Compile Include="Parsing\SourceContent.cs" />
+    <Compile Include="Parsing\SourcePosition.cs" />
     <Compile Include="Runtime\TypeConversion.cs" />
     <Compile Include="Runtime\Variable.cs" />
     <Compile Include="Tokenization\IRule.cs" />
