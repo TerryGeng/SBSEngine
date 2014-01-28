@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SBSEngine.Parsing
 {
-    class AssignExpressionPacker : IPacker
+    class AssignExpressionPacker : Packer
     {
         public Tokenizer Tokenizer { private get; set; }
         public Scope Scope { private get; set; }
@@ -35,13 +35,13 @@ namespace SBSEngine.Parsing
                     if (leftName.Count != 0)
                         break;
                     else
-                        ThrowHelper.ThrowUnexpectedTokenException("Invalid left side of assign expression.");
+                        ParsingError.ThrowUnexpectedTokenException("Invalid left side of assign expression.");
                     }
                 
                 if((nameToken = Tokenizer.PeekToken()).Type == (int)LexiconType.LName)
                    Tokenizer.NextToken();
                 else
-                    ThrowHelper.ThrowUnexpectedTokenException("Invalid left side of assign expression.");
+                    ParsingError.ThrowUnexpectedTokenException("Invalid left side of assign expression.");
 
                 leftName.Push(nameToken.Value);
 
@@ -51,7 +51,7 @@ namespace SBSEngine.Parsing
                     if (leftName.Count > 1)
                         break;
                     else
-                        ThrowHelper.ThrowUnexpectedTokenException("Invalid assignment operator.");
+                        ParsingError.ThrowUnexpectedTokenException("Invalid assignment operator.");
                 }
             }
 
