@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using MSAst = System.Linq.Expressions;
+
+namespace SBSEngine.Parsing.Ast
+{
+    class ScopeStatment : MSAst.Expression
+    {
+        public IEnumerable<MSAst.Expression> Statments;
+        public Scope LocalScope;
+
+        public ScopeStatment(IEnumerable<MSAst.Expression> statments, Scope parentScope)
+        {
+            Statments = statments;
+            LocalScope = new Scope(parentScope);
+        }
+
+        public ScopeStatment(IEnumerable<MSAst.Expression> statments){
+            LocalScope = null;
+            Statments = new LinkedList<MSAst.Expression>();
+        }
+
+        public override MSAst.Expression Reduce()
+        {
+            var list = new LinkedList<MSAst.Expression>();
+            var iterator = Statments.GetEnumerator();
+
+            foreach (MSAst.Expression stmt in Statments)
+            {
+                list.AddLast(stmt.Reduce());
+            }
+
+            return MSAst.Expression.Block(list);
+        }
+    }
+}
