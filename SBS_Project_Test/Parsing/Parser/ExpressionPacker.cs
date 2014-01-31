@@ -1,25 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using MSAst = System.Linq.Expressions;
-using System.Text;
 using SBSEngine.Tokenization;
 using SBSEngine.Parsing.Ast;
+using SBSEngine.Runtime;
 
 namespace SBSEngine.Parsing
 {
-    internal class ExpressionStmtPacker : Packer
+    internal static class ExpressionStmtPacker
     {
-
+        public static MSAst.Expression PackStatment(ParsingContext content)
+        {
+            return null; // TODO
+        }
     }
 
-    internal class BinaryExprPacker : Packer
+    internal static class BinaryExprPacker
     {
         /* 
          * BinaryExpr = ['+'|'-'] Term   (('+'|'-') Term)*
          *                  (*1*)              (*2*)
          */
-        public static override MSAst.Expression PackStatment(SourceContent content)
+        public static MSAst.Expression PackBinaryExpr(ParsingContext context)
         {
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
@@ -27,7 +28,7 @@ namespace SBSEngine.Parsing
 
             while (true)
             {
-                op = PeekAsSBSOperator(content);
+                op = PeekAsSBSOperator(context);
 
                 if (!IsTermOperator(op))
                     if (mainExpr == null) // (*1*)
@@ -35,15 +36,15 @@ namespace SBSEngine.Parsing
                     else
                         return mainExpr;
                 else
-                    content.NextToken();
+                    context.NextToken();
 
-                if ((currentExpr = PackTerm(content)) != null)
+                if ((currentExpr = PackTerm(context)) != null)
                 {
-                    mainExpr = new BinaryExpression(mainExpr, currentExpr, op);
+                    mainExpr = new BinaryExpression(mainExpr, currentExpr, op,context);
                 }
                 else
                 {
-                    content.Error.ThrowUnexpectedTokenException("Invalid expression term.");
+                    context.Error.ThrowUnexpectedTokenException("Invalid expression term.");
                 }
 
             }
@@ -53,37 +54,37 @@ namespace SBSEngine.Parsing
          * Term = Factor   (('*'|'/') Factor)*
          *          (*1*)      (*2*)
          */
-        private static MSAst.Expression PackTerm(SourceContent content)
+        private static MSAst.Expression PackTerm(ParsingContext context)
         {
             MSAst.Expression factors = null;
             MSAst.Expression factor = null;
             SBSOperator op;
 
             // Dealing with (*1*).
-            if ((factors = PackFactor(content)) == null)
+            if ((factors = PackFactor(context)) == null)
                 return null;
 
             // Dealing with (*2*).
             while (true)
             {
-                op = PeekAsSBSOperator(content);
+                op = PeekAsSBSOperator(context);
                 if (!IsFactorOperator(op))
                     return factors;
                 else
-                    content.NextToken();
+                    context.NextToken();
 
-                factor = PackFactor(content);
+                factor = PackFactor(context);
 
                 if (factor != null)
                 {
-                    factors = new BinaryExpression(factors,factor,op);
+                    factors = new BinaryExpression(factors,factor,op,context);
                 }
                 else
-                    content.Error.ThrowUnexpectedTokenException("Invalid factor term.");
+                    context.Error.ThrowUnexpectedTokenException("Invalid factor term.");
             }
         }
 
-        private static MSAst.Expression PackFactor(SourceContent content)
+        private static MSAst.Expression PackFactor(ParsingContext content)
         {
             switch (content.PeekTokenType())
             {
@@ -97,7 +98,7 @@ namespace SBSEngine.Parsing
         /*
          * ConstantFactor = (Integer|Double)
          */
-        private static MSAst.Expression PackConstantFactor(SourceContent content)
+        private static MSAst.Expression PackConstantFactor(ParsingContext content)
         {
             Token token = content.PeekToken();
 
@@ -118,16 +119,16 @@ namespace SBSEngine.Parsing
             }
         }
 
-        private static MSAst.Expression PackExprFactor(SourceContent content)
+        private static MSAst.Expression PackExprFactor(ParsingContext content)
         {
             content.NextTokenType(LexiconType.LSLRoundBracket);
-            MSAst.Expression expr = PackStatment(content);
+            MSAst.Expression expr = PackBinaryExpr(content);
             content.NextTokenType(LexiconType.LSRRoundBracket, "Invalid expression factor ending.");
 
             return expr;
         }
 
-        private static SBSOperator PeekAsSBSOperator(SourceContent content)
+        private static SBSOperator PeekAsSBSOperator(ParsingContext content)
         {
             return GetSBSOperator(content.PeekTokenType());
         }
