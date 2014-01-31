@@ -53,19 +53,20 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Parsing\Ast\BinaryExpression.cs" />
-    <Compile Include="Parsing\Ast\SBSOperator.cs" />
+    <Compile Include="Parsing\Ast\AdvToken.cs" />
+    <Compile Include="Parsing\Variable.cs" />
+    <Compile Include="Runtime\SBSOperator.cs" />
+    <Compile Include="Parsing\Ast\ScopeStatment.cs" />
     <Compile Include="Parsing\Parser\AssignExpressionPacker.cs" />
-    <Compile Include="Parsing\Parser\BlockPacker.cs" />
-    <Compile Include="Parsing\Parser\Packer.cs" />
+    <Compile Include="Parsing\Parser\ScopePacker.cs" />
     <Compile Include="Parsing\Parser\ExpressionPacker.cs" />
     <Compile Include="Parsing\ParsingError.cs" />
     <Compile Include="Parsing\Scope.cs" />
-    <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Parser\VariableAccessPacker.cs" />
-    <Compile Include="Parsing\SourceContent.cs" />
+    <Compile Include="Parsing\ParsingContext.cs" />
     <Compile Include="Parsing\SourcePosition.cs" />
+    <Compile Include="Runtime\BinaryOpBinder.cs" />
     <Compile Include="Runtime\TypeConversion.cs" />
-    <Compile Include="Runtime\Variable.cs" />
     <Compile Include="Tokenization\IRule.cs" />
     <Compile Include="Tokenization\SBSRules.cs" />
     <Compile Include="Tokenization\Tokenizer.cs" />
