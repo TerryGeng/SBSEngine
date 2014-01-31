@@ -4,16 +4,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SBSEngine.Tokenization;
+using SBSEngine.Runtime;
+using SBSEngine.Parsing.Ast;
 
 namespace SBSEngine.Parsing
 {
-    class SourceContent
+    class ParsingContext
     {
         private Tokenizer Tokenizer;
         private SourcePosition Position;
         public ParsingError Error { get; private set; }
+        public BinaryOpBinder BinaryBinder;
 
-        public SourceContent(TextReader reader)
+        public ParsingContext(TextReader reader)
         {
             Tokenizer = new Tokenizer(
                 new IRule[]{
@@ -29,10 +32,15 @@ namespace SBSEngine.Parsing
 
             Position = new SourcePosition();
             Error = new ParsingError(Tokenizer, Position);
+            BinaryBinder = new BinaryOpBinder();
+
+            MaybeNext(LexiconType.LLineBreak); 
         }
 
-        // Functions about operating tokenizer.
-
+        /*
+         * Functions about operating tokenizer.
+         */
+        #region Tokenizer Operating
         public Token NextToken()
         {
             Token t = Tokenizer.NextToken();
@@ -42,6 +50,11 @@ namespace SBSEngine.Parsing
                 Position.AddLine();
 
             return Tokenizer.NextToken();
+        }
+
+        public AdvToken NextAdvToken()
+        {
+            return new AdvToken(NextToken());
         }
 
         public LexiconType NextTokenType()
@@ -80,6 +93,14 @@ namespace SBSEngine.Parsing
 
             return true;
         }
+        #endregion
+
+        /*
+         * Functions about scopes.
+         */
+        #region Scope Operating
+        
+        #endregion
 
     }
 }
