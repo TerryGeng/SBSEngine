@@ -72,7 +72,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
 
     public class Tokenizer
     {
-        StringReader reader;
+        TextReader reader;
         IList<IRule> rules;
         BitArray matches; // Available rules for ReadToken().
         ReadingOption lastReadingOption; 
@@ -92,9 +92,9 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             }
         }
 
-        public Tokenizer(IList<IRule> rules, string code)
+        public Tokenizer(IList<IRule> rules, TextReader codeReader)
         {
-            reader = new StringReader(code);
+            reader = codeReader;
             this.rules = rules;
             matches = new BitArray(rules.Count, true);
             tokenBuffer = new StringBuilder();
@@ -120,7 +120,7 @@ namespace SBSEngine.Tokenization // Tokenizer core part
             return NextToken().Type;
         }
 
-        public bool TestNextTokenType(int type)
+        public bool NextTokenType(int type)
         {
             if (PeekTokenType() == type)
             {
