@@ -4,17 +4,18 @@ using System.Collections.Generic;
 using MSAst = System.Linq.Expressions;
 using SBSEngine.Tokenization;
 using System.Text;
+using SBSEngine.Parsing.Packer;
 
 namespace SBSEngine.Parsing 
 {
-    class Parser
+    public class Parser
     {
-        private SourceContent content;
+        private ParsingContext context;
 
         public static Parser CreateParserFromFile(string fileName,Encoding encoding){
             Parser p = new Parser();
 
-            p.content = new SourceContent(new StreamReader(new FileStream(fileName,FileMode.Open),encoding));
+            p.context = new ParsingContext(new StreamReader(new FileStream(fileName, FileMode.Open), encoding));
 
             return p;
         }
@@ -23,14 +24,14 @@ namespace SBSEngine.Parsing
         {
             Parser p = new Parser();
 
-            p.content = new SourceContent(new StringReader(code));
+            p.context = new ParsingContext(new StringReader(code));
 
             return p;
         }
 
         public MSAst.Expression Parse()
         {
-
+            return ScopePacker.PackScope(context).Reduce();
         }
     }
 }

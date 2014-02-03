@@ -6,23 +6,16 @@
     using System.Collections.Generic;
     using SBSEngine.Parsing;
     using System.Linq.Expressions;
+    using System.IO;
     using System;
 
     public partial class TestForm : Form
     {
-        List<IRule> rules = new List<IRule>();
-        Tokenizer Tokenizer;
+        Parser parser;
 
         public TestForm()
         {
             InitializeComponent();
-            rules.Add(new NumberRule());
-            rules.Add(new BlankRule());
-            rules.Add(new NameRule());
-            rules.Add(new SymbolRule());
-            rules.Add(new StringRule());
-            rules.Add(new CommentRule());
-
         }
 
         public void emptyFunc(string str) { }
@@ -35,7 +28,19 @@
 
         private void TokenizerTest()
         {
-            Tokenizer = new Tokenizer(rules, textBox1.Text);
+            Tokenizer tokenizer;
+            tokenizer = new Tokenizer(
+                new IRule[]{
+                new NumberRule(),
+                new BlankRule(),
+                new NameRule(),
+                new SymbolRule(),
+                new StringRule(),
+                new CommentRule()
+                },
+                new StringReader(textBox1.Text)
+            );
+
             Token Token;
             int TokenCount = 0;
             Stopwatch Watch = Stopwatch.StartNew();
@@ -46,7 +51,7 @@
                 {
                     while (true)
                     {
-                        Token = Tokenizer.NextToken();
+                        Token = tokenizer.NextToken();
                         if (Token.Type == (int)LexiconType.Null)
                             break;
                         textBox2.AppendText("Token: " + ((SBSEngine.Tokenization.LexiconType)Token.Type).ToString() + " " + Token.Value + "\r\n");
@@ -57,7 +62,7 @@
                 {
                     while (true)
                     {
-                        Token = Tokenizer.NextToken();
+                        Token = tokenizer.NextToken();
                         if (Token.Type == (int)LexiconType.Null)
                             break;
                         TokenCount += 1;
@@ -77,16 +82,14 @@
 
         private void ExpressionPackTest()
         {
-            Tokenizer = new Tokenizer(rules, textBox1.Text);
-            ExpressionPacker exprPacker = new ExpressionPacker();
-            exprPacker.Tokenizer = Tokenizer;
+            parser = Parser.CreateParserFromString(textBox1.Text);
 
             try
             {
                 // Packing
                 textBox2.AppendText("Packing Code... ");
                 Stopwatch Watch = Stopwatch.StartNew();
-                Expression expr = exprPacker.PackExpression();
+                Expression expr = parser.Parse();
                 Watch.Stop();
                 textBox2.AppendText("Done. ");
                 textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
@@ -94,16 +97,16 @@
                     textBox2.AppendText("Packing Result: " + expr.ToString() + "\r\n\r\n");
 
                 // Compiling
-                Func<double> code;
+                Func<object> code;
                 textBox2.AppendText("Compiling... ");
                 Watch = Stopwatch.StartNew();
-                code = Expression.Lambda<Func<double>>(Expression.Convert(expr,typeof(double))).Compile();
+                code = Expression.Lambda<Func<object>>(expr).Compile();
                 Watch.Stop();
                 textBox2.AppendText("Done. ");
                 textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
 
                 // Executing
-                double result;
+                object result;
                 textBox2.AppendText("Executing... ");
                 Watch = Stopwatch.StartNew();
                 result = code();

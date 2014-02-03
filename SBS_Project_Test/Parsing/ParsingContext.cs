@@ -41,20 +41,44 @@ namespace SBSEngine.Parsing
          * Functions about operating tokenizer.
          */
         #region Tokenizer Operating
+
+        private Token _peekToken;
+
         public Token NextToken()
         {
-            Token t = Tokenizer.NextToken();
+            Token t;
+            if (_peekToken.Type == 0)
+            {
+                t = Tokenizer.NextToken();
+            }
+            else
+            {
+                t = _peekToken;
+                _peekToken = default(Token);
+            }
 
             Position.SetPosition(Tokenizer.Position);
             if (t.Type == (int)LexiconType.LLineBreak)
                 Position.AddLine();
 
-            return Tokenizer.NextToken();
+            return t;
         }
 
-        public AdvToken NextAdvToken()
+        public Token PeekToken()
         {
-            return new AdvToken(NextToken());
+            if (_peekToken.Type == 0)
+                _peekToken = Tokenizer.NextToken();
+            return _peekToken;
+        }
+
+        public TokenDetail NextTokenDetail()
+        {
+            return new TokenDetail(NextToken());
+        }
+
+        public TokenDetail PeekTokenDetail()
+        {
+            return new TokenDetail(PeekToken());
         }
 
         public LexiconType NextTokenType()
@@ -62,14 +86,9 @@ namespace SBSEngine.Parsing
             return (LexiconType)NextToken().Type;
         }
 
-        public Token PeekToken()
-        {
-            return Tokenizer.PeekToken();
-        }
-
         public LexiconType PeekTokenType()
         {
-            return (LexiconType)Tokenizer.PeekToken().Type;
+            return (LexiconType)PeekToken().Type;
         }
 
         public bool MaybeNext(LexiconType type)

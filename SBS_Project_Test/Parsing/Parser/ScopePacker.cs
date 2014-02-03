@@ -5,16 +5,16 @@ using SBSEngine.Tokenization;
 using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
 
-namespace SBSEngine.Parsing.Parser
+namespace SBSEngine.Parsing.Packer
 {
     internal static class ScopePacker
     {
-        public MSAst.Expression PackScope(ParsingContext context)
+        public static  MSAst.Expression PackScope(ParsingContext context)
         {
             var list = new LinkedList<MSAst.Expression>();
-            AdvToken token;
+            TokenDetail token;
 
-            while ((token = context.NextAdvToken()).Type != LexiconType.Null)
+            while ((token = context.PeekTokenDetail()).Type != LexiconType.Null)
             {
                 switch (token.AbstractType)
                 {

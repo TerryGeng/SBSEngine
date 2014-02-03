@@ -4,7 +4,7 @@ using SBSEngine.Tokenization;
 using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
 
-namespace SBSEngine.Parsing
+namespace SBSEngine.Parsing.Packer
 {
     internal static class ExpressionStmtPacker
     {

@@ -53,7 +53,8 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Parsing\Ast\BinaryExpression.cs" />
-    <Compile Include="Parsing\Ast\AdvToken.cs" />
+    <Compile Include="Parsing\Ast\TokenDetail.cs" />
+    <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />

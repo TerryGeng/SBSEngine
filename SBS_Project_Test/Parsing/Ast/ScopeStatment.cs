@@ -19,7 +19,7 @@ namespace SBSEngine.Parsing.Ast
 
         public ScopeStatment(IEnumerable<MSAst.Expression> statments){
             LocalScope = null;
-            Statments = new LinkedList<MSAst.Expression>();
+            Statments = statments;
         }
 
         public override MSAst.Expression Reduce()

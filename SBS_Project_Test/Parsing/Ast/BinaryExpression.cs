@@ -20,15 +20,20 @@ namespace SBSEngine.Parsing.Ast
             left = _left;
             right = _right;
             this._operator = _operator;
+            this._context = _context;
         }
 
         public override MSAst.Expression Reduce()
         {
+            if (left == null || right == null)
+                return left ?? right;
+
             return MSAst.Expression.Dynamic(
                 _context.BinaryBinder,
                 typeof(object),
-                left.Reduce(),
-                right.Reduce()
+                MSAst.Expression.Convert(left.Reduce(),typeof(object)),
+                MSAst.Expression.Convert(right.Reduce(), typeof(object)),
+                MSAst.Expression.Constant(_operator)
                 );
         }
     }
