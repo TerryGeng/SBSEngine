@@ -9,52 +9,40 @@ namespace SBSEngine.Parsing.Ast
     /// <summary>
     /// This struct provides some advanced methods to process the Tokenization.Token.
     /// </summary>
-    internal struct AdvToken
+    internal struct TokenDetail
     {
         public readonly Token BaseToken;
+        public readonly LexiconType Type;
+        public readonly String Value;
+        public readonly AbstractTokenType AbstractType;
+        public readonly KeywordType KeywordType;
 
-        public LexiconType Type
-        {
-            get
-            {
-                return (LexiconType)BaseToken.Type;
-            }
-        }
-
-        public String Value
-        {
-            get
-            {
-                return BaseToken.Value;
-            }
-        }
-
-
-        public AbstractTokenType AbstractType { get; private set; }
-        public KeywordType KeywordType { get; private set; }
-
-        public AdvToken(Token baseToken)
+        public TokenDetail(Token baseToken)
+            : this()
         {
             BaseToken = baseToken;
-            SetAbstractAndKeywordType();
-        }
+            Type = (LexiconType)BaseToken.Type;
+            Value = BaseToken.Value;
 
-        private void SetAbstractAndKeywordType()
-        {
             switch (Type)
             {
                 case LexiconType.LInteger:
                 case LexiconType.LFloat:
                     AbstractType = AbstractTokenType.Number;
-                    break;
+                    return;
 
                 case LexiconType.LName:
-                    if (SetKeywordType())
-                        AbstractType = AbstractTokenType.Keyword;
-                    else
-                        AbstractType = AbstractTokenType.Name;
-
-                    break;
+                    switch (Value.ToLower())
+                    {
+                        case "if": KeywordType = KeywordType.KeywordIf; break;
+                        case "else": KeywordType = KeywordType.KeywordElse; break;
+                        case "for": KeywordType = KeywordType.KeywordFor; break;
+                        case "while": KeywordType = KeywordType.KeywordWhile; break;
+                        default: AbstractType = AbstractTokenType.Name; 
+                            return;
+                    }
+                    AbstractType = AbstractTokenType.Keyword;
+                    return;
 
                 case LexiconType.LSEqual:
                 case LexiconType.LSGreater:
@@ -64,41 +52,30 @@ namespace SBSEngine.Parsing.Ast
                 case LexiconType.LSAsterisk:
                 case LexiconType.LSSlash:
                     AbstractType = AbstractTokenType.Operator;
-                    break;
+                    return;
 
                 case LexiconType.LSDollar:
                     AbstractType = AbstractTokenType.VarPrefix;
-                    break;
+                    return;
 
                 case LexiconType.LString:
                     AbstractType = AbstractTokenType.String;
-                    break;
+                    return;
 
                 case LexiconType.LSLRoundBracket:
                 case LexiconType.LSRRoundBracket:
                     AbstractType = AbstractTokenType.Bracket;
-                    break;
+                    return;
 
                 case LexiconType.LSComma:
                     AbstractType = AbstractTokenType.Comma;
-                    break;
+                    return;
 
                 case LexiconType.LLineBreak:
                     AbstractType = AbstractTokenType.LineBreak;
-                    break;
+                    return;
             }
-        }
 
-        private bool SetKeywordType()
-        {
-            switch (Value.ToLower())
-            {
-                case "if": KeywordType = KeywordType.KeywordIf; return true;
-                case "else": KeywordType = KeywordType.KeywordElse; return true;
-                case "for": KeywordType = KeywordType.KeywordFor; return true;
-                case "while": KeywordType = KeywordType.KeywordWhile; return true;
-                default: return false;
-            }
         }
     }
 
