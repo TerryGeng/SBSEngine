@@ -9,12 +9,12 @@ namespace SBSEngine.Parsing.Packer
 {
     internal static class ScopePacker
     {
-        public static  MSAst.Expression PackScope(ParsingContext context)
+        public static MSAst.Expression PackScope(ParsingContext context)
         {
             var list = new LinkedList<MSAst.Expression>();
-            TokenDetail token;
+            TokenDetail token = context.PeekTokenDetail();
 
-            while ((token = context.PeekTokenDetail()).Type != LexiconType.Null)
+            while (true)
             {
                 switch (token.AbstractType)
                 {
@@ -22,6 +22,10 @@ namespace SBSEngine.Parsing.Packer
                         list.AddLast(BinaryExprPacker.PackBinaryExpr(context));
                         break;
                 }
+
+                if (!context.MaybeNext(LexiconType.LLineBreak))
+                    if (context.NextTokenType(LexiconType.Null, "Unexpected statment end."))
+                        break;
             }
 
             return new ScopeStatment(list);
