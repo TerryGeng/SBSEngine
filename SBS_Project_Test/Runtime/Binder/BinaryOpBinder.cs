@@ -27,6 +27,12 @@ namespace SBSEngine.Runtime.Binder
             {
                 case SBSOperator.Add:
                     return BinaryOperationDelegate.AddOperation<T>(args[0], args[1]);
+                case SBSOperator.Subtract:
+                    return BinaryOperationDelegate.SubtractOperation<T>(args[0], args[1]);
+                case SBSOperator.Multiply:
+                    return BinaryOperationDelegate.MultiplyOperation<T>(args[0], args[1]);
+                case SBSOperator.Divide:
+                    return BinaryOperationDelegate.DivideOperation<T>(args[0], args[1]);
             }
 
             throw new ApplicationException();
