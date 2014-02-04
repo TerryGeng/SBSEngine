@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using SBSEngine.Tokenization;
 using SBSEngine.Runtime;
+using SBSEngine.Runtime.Binder;
 using SBSEngine.Parsing.Ast;
 
 namespace SBSEngine.Parsing
