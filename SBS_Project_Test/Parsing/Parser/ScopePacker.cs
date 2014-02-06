@@ -9,8 +9,14 @@ namespace SBSEngine.Parsing.Packer
 {
     internal static class ScopePacker
     {
-        public static MSAst.Expression PackScope(ParsingContext context)
+        public static MSAst.Expression Pack(ParsingContext context)
         {
+            return Pack(context, new Scope());
+        }
+
+        public static MSAst.Expression Pack(ParsingContext context, Scope scope)
+        {
+
             var list = new LinkedList<MSAst.Expression>();
             TokenDetail token = context.PeekTokenDetail();
 
@@ -18,8 +24,8 @@ namespace SBSEngine.Parsing.Packer
             {
                 switch (token.AbstractType)
                 {
-                    case AbstractTokenType.Number:
-                        list.AddLast(BinaryExprPacker.PackBinaryExpr(context));
+                    default:
+                        list.AddLast(BinaryExprPacker.Pack(context, scope));
                         break;
                 }
 
@@ -28,7 +34,7 @@ namespace SBSEngine.Parsing.Packer
                         break;
             }
 
-            return new ScopeStatment(list);
+            return new ScopeStatment(list, scope);
         }
     }
 }

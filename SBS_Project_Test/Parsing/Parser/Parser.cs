@@ -31,7 +31,7 @@ namespace SBSEngine.Parsing
 
         public MSAst.Expression Parse()
         {
-            return ScopePacker.PackScope(context).Reduce();
+            return ScopePacker.Pack(context).Reduce();
         }
     }
 }

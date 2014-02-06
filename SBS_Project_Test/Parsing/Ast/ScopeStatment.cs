@@ -11,10 +11,10 @@ namespace SBSEngine.Parsing.Ast
         public IEnumerable<MSAst.Expression> Statments;
         public Scope LocalScope;
 
-        public ScopeStatment(IEnumerable<MSAst.Expression> statments, Scope parentScope)
+        public ScopeStatment(IEnumerable<MSAst.Expression> statments, Scope scope)
         {
             Statments = statments;
-            LocalScope = new Scope(parentScope);
+            LocalScope = scope;
         }
 
         public ScopeStatment(IEnumerable<MSAst.Expression> statments){
@@ -32,7 +32,7 @@ namespace SBSEngine.Parsing.Ast
                 list.AddLast(stmt.Reduce());
             }
 
-            return MSAst.Expression.Block(list);
+            return MSAst.Expression.Block(LocalScope.LocalVariables,list);
         }
     }
 }

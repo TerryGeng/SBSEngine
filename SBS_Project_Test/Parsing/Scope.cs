@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using SBSEngine.Runtime;
+using MSAst = System.Linq.Expressions;
 
 namespace SBSEngine.Parsing
 {
@@ -10,19 +11,27 @@ namespace SBSEngine.Parsing
     {
         private Scope parentScope;
         private Dictionary<string, Variable> localVarsDict;
-        private List<Variable> localVars;
+        private List<MSAst.ParameterExpression> localVars;
+
+        public List<MSAst.ParameterExpression> LocalVariables
+        {
+            get
+            {
+                return localVars;
+            }
+        }
 
         public Scope()
         {
             localVarsDict = new Dictionary<string, Variable>(10);
-            localVars = new List<Variable>(10);
+            localVars = new List<MSAst.ParameterExpression>(10);
             parentScope = null;
         }
 
         public Scope(Scope parent)
         {
             parentScope = parent;
-            localVars = new List<Variable>(10);
+            localVars = new List<MSAst.ParameterExpression>(10);
         }
 
         /// <summary>
@@ -55,7 +64,7 @@ namespace SBSEngine.Parsing
         public ParameterExpression MakeVaribaleExpr(string name)
         {
             Variable variable = new Variable(name, typeof(object));
-            localVars.Add(variable);
+            localVars.Add(variable.Expr);
             localVarsDict.Add(name, variable);
 
             return variable.Expr;

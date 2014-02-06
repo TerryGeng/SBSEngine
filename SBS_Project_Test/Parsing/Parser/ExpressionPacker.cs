@@ -12,6 +12,19 @@ namespace SBSEngine.Parsing.Packer
         {
             return null; // TODO
         }
+
+        /*
+         * Variable =  '$'   Name   (['(' (String|Integer) ')'])*
+         *            (*1*)  (*2*)            (*3*)<TODO>
+         */
+        public static MSAst.Expression PackVariable(ParsingContext context, Scope scope)
+        {
+            context.NextTokenType(LexiconType.LSDollar);
+
+            string name = context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
+
+            return new VariableAccess(name, context, scope,VariableAccess.AccessMethod.Get);
+        }
     }
 
     internal static class BinaryExprPacker
@@ -20,7 +33,7 @@ namespace SBSEngine.Parsing.Packer
          * BinaryExpr = ['+'|'-'] Term   (('+'|'-') Term)*
          *                  (*1*)              (*2*)
          */
-        public static MSAst.Expression PackBinaryExpr(ParsingContext context)
+        public static MSAst.Expression Pack(ParsingContext context, Scope scope)
         {
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
@@ -30,17 +43,39 @@ namespace SBSEngine.Parsing.Packer
             {
                 op = PeekAsSBSOperator(context);
 
-                if (!IsTermOperator(op))
+                if (IsTermOperator(op))
+                {
+                    context.NextToken();
+                }
+                else if (IsAssignOperator(op))
+                {
+                    context.NextToken();
+                    if (mainExpr is VariableAccess)
+                    {
+                        ((VariableAccess)mainExpr).Access = VariableAccess.AccessMethod.GetOrMake;
+                        return new AssignExpression((VariableAccess)mainExpr, Pack(context, scope));
+                    }
+                    else
+                    {
+                        context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+                        return null;
+                    }
+                }
+                else
+                {
                     if (mainExpr == null) // (*1*)
                         op = SBSOperator.Add;
                     else
                         return mainExpr;
-                else
-                    context.NextToken();
+                }
 
-                if ((currentExpr = PackTerm(context)) != null)
+
+                if ((currentExpr = PackTerm(context, scope)) != null)
                 {
-                    mainExpr = new BinaryExpression(mainExpr, currentExpr, op,context);
+                    if (mainExpr == null)
+                        mainExpr = currentExpr;
+                    else
+                        mainExpr = new BinaryExpression(mainExpr, currentExpr, op, context);
                 }
                 else
                 {
@@ -54,14 +89,14 @@ namespace SBSEngine.Parsing.Packer
          * Term = Factor   (('*'|'/') Factor)*
          *          (*1*)      (*2*)
          */
-        private static MSAst.Expression PackTerm(ParsingContext context)
+        private static MSAst.Expression PackTerm(ParsingContext context ,Scope scope)
         {
             MSAst.Expression factors = null;
             MSAst.Expression factor = null;
             SBSOperator op;
 
             // Dealing with (*1*).
-            if ((factors = PackFactor(context)) == null)
+            if ((factors = PackFactor(context ,scope)) == null)
                 return null;
 
             // Dealing with (*2*).
@@ -73,7 +108,7 @@ namespace SBSEngine.Parsing.Packer
                 else
                     context.NextToken();
 
-                factor = PackFactor(context);
+                factor = PackFactor(context,scope);
 
                 if (factor != null)
                 {
@@ -84,14 +119,16 @@ namespace SBSEngine.Parsing.Packer
             }
         }
 
-        private static MSAst.Expression PackFactor(ParsingContext content)
+        private static MSAst.Expression PackFactor(ParsingContext context, Scope scope)
         {
-            switch (content.PeekTokenType())
+            switch (context.PeekTokenType())
             {
                 case LexiconType.LSLRoundBracket:
-                    return PackExprFactor(content);
+                    return PackExprFactor(context, scope);
+                case LexiconType.LSDollar:
+                    return ExpressionStmtPacker.PackVariable(context, scope);
                 default:
-                    return PackConstantFactor(content);
+                    return PackConstantFactor(context);
             }
         }
 
@@ -119,10 +156,10 @@ namespace SBSEngine.Parsing.Packer
             }
         }
 
-        private static MSAst.Expression PackExprFactor(ParsingContext content)
+        private static MSAst.Expression PackExprFactor(ParsingContext content,Scope scope)
         {
             content.NextTokenType(LexiconType.LSLRoundBracket);
-            MSAst.Expression expr = PackBinaryExpr(content);
+            MSAst.Expression expr = Pack(content, scope);
             content.NextTokenType(LexiconType.LSRRoundBracket, "Invalid expression factor ending.");
 
             return expr;
@@ -147,6 +184,13 @@ namespace SBSEngine.Parsing.Packer
             return false;
         }
 
+        private static bool IsAssignOperator(SBSOperator op)
+        {
+            if (op == SBSOperator.Equal)
+                return true;
+            return false;
+        }
+
         private static SBSOperator GetSBSOperator(LexiconType tokentype) // TODO: Add more.
         {
             switch (tokentype)
@@ -159,6 +203,8 @@ namespace SBSEngine.Parsing.Packer
                     return SBSOperator.Multiply;
                 case LexiconType.LSSlash:
                     return SBSOperator.Divide;
+                case LexiconType.LSEqual:
+                    return SBSOperator.Equal;
             }
 
             return 0;
