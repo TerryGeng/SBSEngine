@@ -65,6 +65,16 @@ namespace SBSEngine.Parsing
             return t;
         }
 
+        public Token NextToken(LexiconType type,string error = null)
+        {
+            Token t = NextToken();
+
+            if(t.Type != (int)type)
+                Error.ThrowUnexpectedTokenException(error);
+
+            return t;
+        }
+
         public Token PeekToken()
         {
             if (_peekToken.Type == 0)
