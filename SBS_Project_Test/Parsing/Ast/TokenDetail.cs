@@ -7,7 +7,7 @@ using SBSEngine.Tokenization;
 namespace SBSEngine.Parsing.Ast
 {
     /// <summary>
-    /// This struct provides some advanced methods to process the Tokenization.Token.
+    /// This struct provides some advanced methods to process the Token.
     /// </summary>
     internal struct TokenDetail
     {

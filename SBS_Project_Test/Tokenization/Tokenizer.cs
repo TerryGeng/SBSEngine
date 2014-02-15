@@ -26,7 +26,9 @@ namespace SBSEngine.Tokenization // Tokenizer core part
         /// <summary>
         /// Discard current token, and do ReadToken() again. 
         /// </summary>
-        IgnoreCurrent,
+        IgnoreCurrent, 
+        // *** Note: REALLY BAD THING. Only goal to use it is to ignore blanks. It messes up all logic.
+        // *** Todo: KILL THIS. Using ParsingContext to dealing with blanks.
 
         /// <summary>
         /// Interrupt the reading process, for ReadToken() and scanner while meeting eof.
@@ -108,27 +110,6 @@ namespace SBSEngine.Tokenization // Tokenizer core part
                 lastPeek = NextToken();
             }
             return lastPeek;
-        }
-
-        public int PeekTokenType()
-        {
-            return PeekToken().Type;
-        }
-
-        public int NextTokenType()
-        {
-            return NextToken().Type;
-        }
-
-        public bool NextTokenType(int type)
-        {
-            if (PeekTokenType() == type)
-            {
-                NextToken();
-                return true;
-            }
-
-            return false;
         }
 
         public Token NextToken()
