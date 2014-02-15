@@ -23,7 +23,7 @@ namespace SBSEngine.Parsing.Packer
 
             string name = context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
 
-            return new VariableAccess(name, context, scope,VariableAccess.AccessMethod.Get);
+            return new VariableAccess(name, context, scope);
         }
     }
 
@@ -41,32 +41,41 @@ namespace SBSEngine.Parsing.Packer
 
             while (true)
             {
-                op = PeekAsSBSOperator(context);
+                op = PeekSBSOperator(context);
 
                 if (IsTermOperator(op))
                 {
                     context.NextToken();
                 }
-                else if (IsAssignOperator(op))
-                {
-                    context.NextToken();
-                    if (mainExpr is VariableAccess)
-                    {
-                        ((VariableAccess)mainExpr).Access = VariableAccess.AccessMethod.GetOrMake;
-                        return new AssignExpression((VariableAccess)mainExpr, Pack(context, scope));
-                    }
-                    else
-                    {
-                        context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
-                        return null;
-                    }
-                }
                 else
                 {
-                    if (mainExpr == null) // (*1*)
-                        op = SBSOperator.Add;
+                    if (op != SBSOperator.Null)
+                    {
+                        if (IsAssignOperator(op))
+                        {
+                            context.NextToken();
+                            if (mainExpr is VariableAccess)
+                            {
+                                return new AssignExpression((VariableAccess)mainExpr, Pack(context, scope), op);
+                            }
+                            else
+                            {
+                                context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            context.Error.ThrowUnexpectedTokenException("Unexpected expression operator.");
+                        }
+                    }
                     else
-                        return mainExpr;
+                    {
+                        if (mainExpr == null) // (*1*)
+                            op = SBSOperator.Add;
+                        else
+                            return mainExpr;
+                    }
                 }
 
 
@@ -102,7 +111,7 @@ namespace SBSEngine.Parsing.Packer
             // Dealing with (*2*).
             while (true)
             {
-                op = PeekAsSBSOperator(context);
+                op = PeekSBSOperator(context);
                 if (!IsFactorOperator(op))
                     return factors;
                 else
@@ -165,9 +174,36 @@ namespace SBSEngine.Parsing.Packer
             return expr;
         }
 
-        private static SBSOperator PeekAsSBSOperator(ParsingContext content)
+        #region Operator
+
+        /* Note: Why There Isn't A 'NextSBSOperator':
+         *       Consider that a low-level packer(e.g. factor packer) may get a high-level operator(e.g. '+')
+         *       and in this static class we can not store any information, thus whether eat this token or not should
+         *       be judged by packer itself. That's why we don't have a 'NextSBSOperator'.
+         *       Besides, the only aim of using 'NextSBSOperator', which is to read a 'Two-part operator'(e.g. '+='),
+         *       has been already assigned to Tokenizer. So there is no reason to use 'NextSBSOperator'.
+         */
+        private static SBSOperator PeekSBSOperator(ParsingContext content) 
         {
-            return GetSBSOperator(content.PeekTokenType());
+            switch (content.PeekTokenType())
+            {
+                case LexiconType.LSPlus:
+                    return SBSOperator.Add;
+                case LexiconType.LSMinus:
+                    return SBSOperator.Subtract;
+                case LexiconType.LSAsterisk:
+                    return SBSOperator.Multiply;
+                case LexiconType.LSSlash:
+                    return SBSOperator.Divide;
+                case LexiconType.LSEqual:
+                    return SBSOperator.Assign;
+                case LexiconType.LSDoubleEqual:
+                    return SBSOperator.Equal;
+                case LexiconType.LSPlusEqual:
+                    return SBSOperator.AddAssign;
+            }
+
+            return 0;
         }
 
         private static bool IsTermOperator(SBSOperator op)
@@ -186,29 +222,11 @@ namespace SBSEngine.Parsing.Packer
 
         private static bool IsAssignOperator(SBSOperator op)
         {
-            if (op == SBSOperator.Equal)
+            if (op == SBSOperator.Assign || op == SBSOperator.AddAssign)
                 return true;
             return false;
         }
-
-        private static SBSOperator GetSBSOperator(LexiconType tokentype) // TODO: Add more.
-        {
-            switch (tokentype)
-            {
-                case LexiconType .LSPlus:
-                    return SBSOperator.Add;
-                case LexiconType.LSMinus:
-                    return SBSOperator.Subtract;
-                case LexiconType.LSAsterisk:
-                    return SBSOperator.Multiply;
-                case LexiconType.LSSlash:
-                    return SBSOperator.Divide;
-                case LexiconType.LSEqual:
-                    return SBSOperator.Equal;
-            }
-
-            return 0;
-        }
+        #endregion
 
     }
 }

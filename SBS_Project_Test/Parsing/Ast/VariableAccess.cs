@@ -5,6 +5,7 @@ using System.Text;
 using MSAst = System.Linq.Expressions;
 using SBSEngine.Runtime;
 using SBSEngine.Parsing;
+using System.Diagnostics;
 
 namespace SBSEngine.Parsing.Ast
 {
@@ -12,47 +13,45 @@ namespace SBSEngine.Parsing.Ast
     {
         private string _name;
         private string _sub;
-        private AccessMethod _method;
         private ParsingContext _context;
         private Scope _scope;
 
-        public AccessMethod Access
-        {
-            get { return _method; }
-            set { _method = value; }
-        }
-
-        public VariableAccess(string name, ParsingContext context, Scope scope, AccessMethod method)
+        public VariableAccess(string name, ParsingContext context, Scope scope)
         {
             _name = name;
             _context = context;
             _scope = scope;
-            _method = method;
         }
 
         public override MSAst.Expression Reduce()
         {
-            switch (_method)
-            {
-                case AccessMethod.Get:
-                    return _scope.GetVariableExpr(_name);
-                case AccessMethod.GetOrMake:
-                default:
-                    return _scope.GetOrMakeVariableExpr(_name);
-            }
+            return _scope.GetVariableExpr(_name);
         }
 
         public MSAst.Expression Assign(MSAst.Expression value)
         {
-            return MSAst.Expression.Assign(this.Reduce(), MSAst.Expression.Convert(value.Reduce(),typeof(object)));
+            return MSAst.Expression.Assign(_scope.GetOrMakeVariableExpr(_name), MSAst.Expression.Convert(value.Reduce(),typeof(object)));
         }
 
-        public enum AccessMethod
+        public MSAst.Expression Assign(MSAst.Expression value, SBSOperator op)
         {
-            Null,
+            if(op == SBSOperator.Assign)
+                return MSAst.Expression.Assign(_scope.GetOrMakeVariableExpr(_name), MSAst.Expression.Convert(value.Reduce(), typeof(object)));
 
-            Get,
-            GetOrMake
+            var variable = _scope.GetVariableExpr(_name);
+            BinaryExpression binary = null;
+
+            switch (op)
+            {
+                case SBSOperator.AddAssign:
+                    binary = new BinaryExpression(variable, value, SBSOperator.Add, _context);
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+
+            return MSAst.Expression.Assign(variable, binary.Reduce());
         }
     }
 }

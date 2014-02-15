@@ -12,16 +12,19 @@ namespace SBSEngine.Parsing.Ast
     {
         private VariableAccess _variable;
         private MSAst.Expression _value;
+        private SBSOperator _assignOp;
 
-        public AssignExpression(VariableAccess variable, MSAst.Expression value)
+        public AssignExpression(VariableAccess variable, MSAst.Expression value, SBSOperator assignOp)
         {
             _variable = variable;
             _value = value;
+            _assignOp = assignOp;
         }
 
         public override MSAst.Expression Reduce()
         {
-            return _variable.Assign(_value);
+            return _variable.Assign(_value, _assignOp);
         }
+
     }
 }
