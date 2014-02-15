@@ -23,9 +23,16 @@ namespace SBSEngine.Tokenization
         LSAsterisk,
         LSSlash,
         LSEqual,
+        LSDoubleEqual,
         LSGreater,
         LSLess,
+        LSPlusEqual,
         LSDot,
+
+        LKIf,
+        LKElse,
+        LKFor,
+        LKWhile,
 
         LComment
     }
@@ -175,10 +182,41 @@ namespace SBSEngine.Tokenization
 
         Token IRule.Pack(StringBuilder buffer)
         {
+            string value = buffer.ToString();
+            int type = (int)LexiconType.LName;
+
+            // Dealing with keywords.
+            if (value.Length <= 5) // Note: Avoid trying to convert a long string(longer than the longest keyword) to lower and compare.
+            {
+                switch (value.ToLower()) // Note: Maybe a performance killer. Consider about using string.CompareOrdinal instead.
+                {
+                    case "if":
+                        type = (int)LexiconType.LKIf;
+                        value = null;
+                        break;
+
+                    case "else":
+                        type = (int)LexiconType.LKElse;
+                        value = null;
+                        break;
+
+                    case "for":
+                        type = (int)LexiconType.LKFor;
+                        value = null;
+                        break;
+
+                    case "while":
+                        type = (int)LexiconType.LKWhile;
+                        value = null;
+                        break;
+                }
+            }
+
+
             return new Token
             {
-                Type = (int)LexiconType.LName,
-                Value = buffer.ToString()
+                Type = type,
+                Value = value
             };
         }
 
@@ -191,49 +229,74 @@ namespace SBSEngine.Tokenization
     public class SymbolRule : IRule
     {
         LexiconType type = LexiconType.Null;
+        int status = 0;
+        /* 1: While meeting '+', maybe next is '='.
+         * 2: '=' , '='
+         */
 
         ScannerResult IRule.Scan(int character)
         {
-            switch (character)
+            if (status == 0)
             {
-                case '(':
-                    type = LexiconType.LSLRoundBracket;
+                switch (character)
+                {
+                    case '+':
+                        type = LexiconType.LSPlus;
+                        status = 1;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
+
+                    case '(':
+                        type = LexiconType.LSLRoundBracket;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case ')':
+                        type = LexiconType.LSRRoundBracket;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '$':
+                        type = LexiconType.LSDollar;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case ',':
+                        type = LexiconType.LSComma;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '-':
+                        type = LexiconType.LSMinus;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '*':
+                        type = LexiconType.LSAsterisk;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '/':
+                        type = LexiconType.LSSlash;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '=':
+                        type = LexiconType.LSEqual;
+                        status = 2;
+                        return new ScannerResult { Result = ScannerStatus.Continued };
+
+                    case '>':
+                        type = LexiconType.LSGreater;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '<':
+                        type = LexiconType.LSLess;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    case '.':
+                        type = LexiconType.LSDot;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    default:
+                        return new ScannerResult { Result = ScannerStatus.Unmatch };
+                }
+            }
+            else
+            {
+                if (status == 1 && (char)character == '=')
+                {
+                    type = LexiconType.LSPlusEqual;
                     return new ScannerResult { Result = ScannerStatus.Finished };
-                case ')':
-                    type = LexiconType.LSRRoundBracket;
+                }
+                else if (status == 2 && (char)character == '=')
+                {
+                    type = LexiconType.LSDoubleEqual;
                     return new ScannerResult { Result = ScannerStatus.Finished };
-                case '$':
-                    type = LexiconType.LSDollar;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case ',':
-                    type = LexiconType.LSComma;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '+':
-                    type = LexiconType.LSPlus;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '-':
-                    type = LexiconType.LSMinus;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '*':
-                    type = LexiconType.LSAsterisk;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '/':
-                    type = LexiconType.LSSlash;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '=':
-                    type = LexiconType.LSEqual;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '>':
-                    type = LexiconType.LSGreater;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '<':
-                    type = LexiconType.LSLess;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                case '.':
-                    type = LexiconType.LSDot;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
-                default:
-                    return new ScannerResult { Result = ScannerStatus.Unmatch };
+                }
+                return new ScannerResult { Result = ScannerStatus.PreviousFinished };
             }
         }
 
@@ -249,6 +312,7 @@ namespace SBSEngine.Tokenization
         void IRule.Reset()
         {
             type = LexiconType.Null;
+            status = 0;
         }
     }
 

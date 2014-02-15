@@ -7,12 +7,15 @@ namespace SBSEngine.Runtime
 {
     public enum SBSOperator
     {
-        Undefined,
+        Null,
 
         Add,
         Subtract,
         Multiply,
         Divide,
+
+        Assign,
+        AddAssign,
 
         GreaterThan,
         LessThan,
