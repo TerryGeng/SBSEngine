@@ -23,7 +23,39 @@
         private void button1_Click_1(object sender, System.EventArgs e)
         {
             this.textBox2.Clear();
-            ExpressionPackTest();
+
+
+            if (ifCatch.Checked)
+            {
+                try
+                {
+                    ExpressionPackTest();
+                }
+                catch (ApplicationException ex)
+                {
+                    textBox2.AppendText(string.Format("\r\nError: {0} \r\n\r\n", ex.Message));
+                }
+            }
+            else
+            {
+                ExpressionPackTest();
+            }
+
+            //if (ifCatch.Checked)
+            //{
+            //    try
+            //    {
+            //        TokenizerTest();
+            //    }
+            //    catch (ApplicationException ex)
+            //    {
+            //        textBox2.AppendText(string.Format("\r\nError: {0} \r\n\r\n", ex.Message));
+            //    }
+            //}
+            //else
+            //{
+            //    TokenizerTest();
+            //}
         }
 
         private void TokenizerTest()
@@ -45,34 +77,28 @@
             int TokenCount = 0;
             Stopwatch Watch = Stopwatch.StartNew();
 
-            try
+            if (ifDisplay.Checked)
             {
-                if (checkBox1.Checked)
+                while (true)
                 {
-                    while (true)
-                    {
-                        Token = tokenizer.NextToken();
-                        if (Token.Type == (int)LexiconType.Null)
-                            break;
-                        textBox2.AppendText("Token: " + ((SBSEngine.Tokenization.LexiconType)Token.Type).ToString() + " " + Token.Value + "\r\n");
-                        TokenCount += 1;
-                    }
-                }
-                else
-                {
-                    while (true)
-                    {
-                        Token = tokenizer.NextToken();
-                        if (Token.Type == (int)LexiconType.Null)
-                            break;
-                        TokenCount += 1;
-                    }
+                    Token = tokenizer.NextToken();
+                    if (Token.Type == (int)LexiconType.Null)
+                        break;
+                    textBox2.AppendText("Token: " + ((SBSEngine.Tokenization.LexiconType)Token.Type).ToString() + " " + Token.Value + "\r\n");
+                    TokenCount += 1;
                 }
             }
-            catch (UnexpectedCharacterException ex)
+            else
             {
-                textBox2.AppendText(string.Format("Error: {0}", ex.Message) + "\r\n");
+                while (true)
+                {
+                    Token = tokenizer.NextToken();
+                    if (Token.Type == (int)LexiconType.Null)
+                        break;
+                    TokenCount += 1;
+                }
             }
+
 
             Watch.Stop();
 
@@ -84,43 +110,35 @@
         {
             parser = Parser.CreateParserFromString(textBox1.Text);
 
-            try
-            {
-                // Packing
-                textBox2.AppendText("Packing Code... ");
-                Stopwatch Watch = Stopwatch.StartNew();
-                Expression expr = parser.Parse();
-                Watch.Stop();
-                textBox2.AppendText("Done. ");
-                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
-                if (checkBox1.Checked)
-                    textBox2.AppendText("Packing Result: " + expr.ToString() + "\r\n\r\n");
+            // Packing
+            textBox2.AppendText("Packing Code... ");
+            Stopwatch Watch = Stopwatch.StartNew();
+            Expression expr = parser.Parse();
+            Watch.Stop();
+            textBox2.AppendText("Done. ");
+            textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
+            if (ifDisplay.Checked)
+                textBox2.AppendText("Packing Result: " + expr.ToString() + "\r\n\r\n");
 
-                // Compiling
-                Func<object> code;
-                textBox2.AppendText("Compiling... ");
-                Watch = Stopwatch.StartNew();
-                code = Expression.Lambda<Func<object>>(expr).Compile();
-                Watch.Stop();
-                textBox2.AppendText("Done. ");
-                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
+            // Compiling
+            Func<object> code;
+            textBox2.AppendText("Compiling... ");
+            Watch = Stopwatch.StartNew();
+            code = Expression.Lambda<Func<object>>(expr).Compile();
+            Watch.Stop();
+            textBox2.AppendText("Done. ");
+            textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
 
-                // Executing
-                object result;
-                textBox2.AppendText("Executing... ");
-                Watch = Stopwatch.StartNew();
-                result = code();
-                Watch.Stop();
+            // Executing
+            object result;
+            textBox2.AppendText("Executing... ");
+            Watch = Stopwatch.StartNew();
+            result = code();
+            Watch.Stop();
 
-                textBox2.AppendText("Done. ");
-                textBox2.AppendText(string.Format("Result: {0}. ",result));
-                textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
-            }
-            catch (ApplicationException ex)
-            {
-                textBox2.AppendText(string.Format("\r\nError: {0} \r\n\r\n", ex.Message));
-            }
-
+            textBox2.AppendText("Done. ");
+            textBox2.AppendText(string.Format("Result: {0}. ", result));
+            textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");
 
         }
 

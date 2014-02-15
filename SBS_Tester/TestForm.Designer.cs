@@ -32,7 +32,8 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.ifDisplay = new System.Windows.Forms.CheckBox();
+            this.ifCatch = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // textBox1
@@ -64,26 +65,39 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
-            // checkBox1
+            // ifDisplay
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(12, 354);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(120, 16);
-            this.checkBox1.TabIndex = 3;
-            this.checkBox1.Text = "Display process.";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.ifDisplay.AutoSize = true;
+            this.ifDisplay.Location = new System.Drawing.Point(12, 354);
+            this.ifDisplay.Name = "ifDisplay";
+            this.ifDisplay.Size = new System.Drawing.Size(120, 16);
+            this.ifDisplay.TabIndex = 3;
+            this.ifDisplay.Text = "Display process.";
+            this.ifDisplay.UseVisualStyleBackColor = true;
             // 
-            // Form1
+            // ifCatch
+            // 
+            this.ifCatch.AutoSize = true;
+            this.ifCatch.Checked = true;
+            this.ifCatch.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ifCatch.Location = new System.Drawing.Point(138, 354);
+            this.ifCatch.Name = "ifCatch";
+            this.ifCatch.Size = new System.Drawing.Size(102, 16);
+            this.ifCatch.TabIndex = 4;
+            this.ifCatch.Text = "Enable catch.";
+            this.ifCatch.UseVisualStyleBackColor = true;
+            // 
+            // TestForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(460, 382);
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.ifCatch);
+            this.Controls.Add(this.ifDisplay);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.textBox1);
-            this.Name = "Form1";
+            this.Name = "TestForm";
             this.Text = "Form1";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -95,7 +109,8 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox ifDisplay;
+        private System.Windows.Forms.CheckBox ifCatch;
     }
 }
 
