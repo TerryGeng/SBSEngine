@@ -29,11 +29,53 @@ namespace SBSEngine.Parsing.Packer
 
     internal static class BinaryExprPacker
     {
+        public static MSAst.Expression Pack(ParsingContext context, Scope scope)
+        {
+            return PackAssign(context,scope);
+        }
+        /*
+         * Return a BinaryExpr or an AssignExpr.
+         * 
+         * AssignExpr = Variable AssignOp BinaryExpr
+         *                (*1*)   (*2*)     (*3*)
+         *                
+         * This function will return a expr in BinaryExpr(if don't have 1 and 2) or a AssignExpr.
+         */
+        public static MSAst.Expression PackAssign(ParsingContext context, Scope scope)
+        {
+            MSAst.Expression first = PackBinary(context, scope);
+
+            if (first == null)
+                context.Error.ThrowUnexpectedTokenException("Invaild binary expression.");
+
+            SBSOperator op = PeekSBSOperator(context);
+            if (IsAssignOperator(op))
+            {
+                if (first is VariableAccess)
+                {
+                    context.NextToken();
+
+                    MSAst.Expression second = Pack(context, scope);
+                    if (second != null)
+                        return new AssignExpression((VariableAccess)first, Pack(context, scope), op);
+                    else
+                        context.Error.ThrowUnexpectedTokenException("Invaild binary expression.");
+                }
+                else
+                {
+                    context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+                    return null;
+                }
+            }
+
+            return first;
+        }
+
         /* 
-         * BinaryExpr = ['+'|'-'] Term   (('+'|'-') Term)*
+         * BinaryExpr = ['+'|'-'] Term   [('+'|'-') Term]*
          *                  (*1*)              (*2*)
          */
-        public static MSAst.Expression Pack(ParsingContext context, Scope scope)
+        public static MSAst.Expression PackBinary(ParsingContext context, Scope scope)
         {
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
@@ -43,39 +85,16 @@ namespace SBSEngine.Parsing.Packer
             {
                 op = PeekSBSOperator(context);
 
-                if (IsTermOperator(op))
+                if (!IsTermOperator(op))
                 {
-                    context.NextToken();
+                    if (op == SBSOperator.Null && mainExpr == null) // (*1*)
+                        op = SBSOperator.Add;
+                    else
+                        return mainExpr;
                 }
                 else
                 {
-                    if (op != SBSOperator.Null)
-                    {
-                        if (IsAssignOperator(op))
-                        {
-                            context.NextToken();
-                            if (mainExpr is VariableAccess)
-                            {
-                                return new AssignExpression((VariableAccess)mainExpr, Pack(context, scope), op);
-                            }
-                            else
-                            {
-                                context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            context.Error.ThrowUnexpectedTokenException("Unexpected expression operator.");
-                        }
-                    }
-                    else
-                    {
-                        if (mainExpr == null) // (*1*)
-                            op = SBSOperator.Add;
-                        else
-                            return mainExpr;
-                    }
+                    context.NextToken();
                 }
 
 
@@ -95,7 +114,7 @@ namespace SBSEngine.Parsing.Packer
         }
 
         /* 
-         * Term = Factor   (('*'|'/') Factor)*
+         * Term = Factor   [('*'|'/') Factor]*
          *          (*1*)      (*2*)
          */
         private static MSAst.Expression PackTerm(ParsingContext context ,Scope scope)

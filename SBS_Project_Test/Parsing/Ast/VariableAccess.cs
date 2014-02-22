@@ -25,6 +25,9 @@ namespace SBSEngine.Parsing.Ast
 
         public override MSAst.Expression Reduce()
         {
+            var expr = _scope.GetVariableExpr(_name);
+            Debug.Assert(expr != null, "Undefined variable."); // TODO: Add new exception.
+
             return _scope.GetVariableExpr(_name);
         }
 
