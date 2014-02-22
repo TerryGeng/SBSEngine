@@ -18,11 +18,11 @@ namespace SBSEngine.Parsing.Packer
         {
 
             var list = new LinkedList<MSAst.Expression>();
-            TokenDetail token = context.PeekTokenDetail();
+            LexiconType type = context.PeekTokenType();
 
             while (true)
             {
-                switch (token.AbstractType)
+                switch (type)
                 {
                     default:
                         list.AddLast(BinaryExprPacker.Pack(context, scope));

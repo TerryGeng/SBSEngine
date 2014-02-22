@@ -82,16 +82,6 @@ namespace SBSEngine.Parsing
             return _peekToken;
         }
 
-        public TokenDetail NextTokenDetail()
-        {
-            return new TokenDetail(NextToken());
-        }
-
-        public TokenDetail PeekTokenDetail()
-        {
-            return new TokenDetail(PeekToken());
-        }
-
         public LexiconType NextTokenType()
         {
             return (LexiconType)NextToken().Type;
