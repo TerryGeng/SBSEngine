@@ -186,30 +186,30 @@ namespace SBSEngine.Tokenization
             int type = (int)LexiconType.LName;
 
             // Dealing with keywords.
-            if (value.Length <= 5) // Note: Avoid trying to convert a long string(longer than the longest keyword) to lower and compare.
+            if (value.Length <= 5) // Note: Avoid trying to compare a long string(longer than the longest keyword).
             {
-                switch (value.ToLower()) // Note: Maybe a performance killer. Consider about using string.CompareOrdinal instead.
+                if (string.Compare(value, "if", true) == 0)
                 {
-                    case "if":
-                        type = (int)LexiconType.LKIf;
-                        value = null;
-                        break;
-
-                    case "else":
-                        type = (int)LexiconType.LKElse;
-                        value = null;
-                        break;
-
-                    case "for":
-                        type = (int)LexiconType.LKFor;
-                        value = null;
-                        break;
-
-                    case "while":
-                        type = (int)LexiconType.LKWhile;
-                        value = null;
-                        break;
+                    value = null;
+                    type = (int)LexiconType.LKIf;
                 }
+                else if (string.Compare(value, "else", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKElse;
+                }
+                else if (string.Compare(value, "for", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKFor;
+                }
+                else if (string.Compare(value, "while", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKWhile;
+                }
+
+                
             }
 
 
