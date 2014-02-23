@@ -5,6 +5,7 @@ using System.Text;
 using System.Runtime.CompilerServices;
 using SBSEngine.Runtime;
 using SBSEngine.Runtime.Binder;
+using System.Diagnostics;
 
 namespace SBSEngine.Runtime.Binder
 {
@@ -33,9 +34,12 @@ namespace SBSEngine.Runtime.Binder
                     return BinaryOperationDelegate.MultiplyOperation<T>(args[0], args[1]);
                 case SBSOperator.Divide:
                     return BinaryOperationDelegate.DivideOperation<T>(args[0], args[1]);
+                case SBSOperator.GreaterThan:
+                    return BinaryOperationDelegate.GreaterThanOperation<T>(args[0], args[1]);
             }
 
-            throw new ApplicationException();
+            Debug.Assert(false,"Unimplemented op.");
+            return null;
         }
 
 

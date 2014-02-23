@@ -54,7 +54,6 @@
     </Compile>
     <Compile Include="Parsing\Ast\AssignExpression.cs" />
     <Compile Include="Parsing\Ast\BinaryExpression.cs" />
-    <Compile Include="Parsing\Ast\TokenDetail.cs" />
     <Compile Include="Parsing\Ast\VariableAccess.cs" />
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
@@ -95,7 +94,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

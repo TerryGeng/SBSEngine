@@ -29,24 +29,31 @@ namespace SBSEngine.Parsing.Packer
 
     internal static class BinaryExprPacker
     {
+        /*
+         * Expression level(High to low):
+         * AssignExpr
+         * ConditionalExpr
+         * Comparison
+         * ArithExpr
+         */
         public static MSAst.Expression Pack(ParsingContext context, Scope scope)
         {
             return PackAssign(context,scope);
         }
         /*
-         * Return a BinaryExpr or an AssignExpr.
+         * Return an AssignExpr or a lower-level expr.
          * 
-         * AssignExpr = Variable AssignOp BinaryExpr
+         * AssignExpr = Variable AssignOp ArithExpr
          *                (*1*)   (*2*)     (*3*)
          *                
-         * This function will return a expr in BinaryExpr(if don't have 1 and 2) or a AssignExpr.
+         * This function will return a expr from PackComparison(if don't have 1 and 2) or a AssignExpr.
          */
         public static MSAst.Expression PackAssign(ParsingContext context, Scope scope)
         {
-            MSAst.Expression first = PackBinary(context, scope);
+            MSAst.Expression first = PackComparison(context, scope);
 
             if (first == null)
-                context.Error.ThrowUnexpectedTokenException("Invaild binary expression.");
+                context.Error.ThrowUnexpectedTokenException("Invaild expression.");
 
             SBSOperator op = PeekSBSOperator(context);
             if (IsAssignOperator(op))
@@ -57,9 +64,9 @@ namespace SBSEngine.Parsing.Packer
 
                     MSAst.Expression second = Pack(context, scope);
                     if (second != null)
-                        return new AssignExpression((VariableAccess)first, Pack(context, scope), op);
+                        return new AssignExpression((VariableAccess)first, second, op);
                     else
-                        context.Error.ThrowUnexpectedTokenException("Invaild binary expression.");
+                        context.Error.ThrowUnexpectedTokenException("Invaild expression.");
                 }
                 else
                 {
@@ -71,11 +78,39 @@ namespace SBSEngine.Parsing.Packer
             return first;
         }
 
+        /*
+         * Return a Comparison or a lower-level expr from PackArith.
+         * Comparison = ArithExpr ComparisonOp ArithExpr
+         *                (*1*)      (*2*)       (*3*)
+         */
+        public static MSAst.Expression PackComparison(ParsingContext context, Scope scope)
+        {
+            MSAst.Expression first = PackArith(context,scope);
+
+            if (first == null) 
+                context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+
+            SBSOperator op = PeekSBSOperator(context);
+            if (IsComparisonOperator(op))
+            {
+                context.NextToken();
+                MSAst.Expression second = PackArith(context,scope);
+
+                if (first == null)
+                    context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+
+                return new BinaryExpression(first, second, op, context);
+            }
+
+            return first;
+        }
+
+
         /* 
-         * BinaryExpr = ['+'|'-'] Term   [('+'|'-') Term]*
+         * ArithExpr = ['+'|'-'] Term   [('+'|'-') Term]*
          *                  (*1*)              (*2*)
          */
-        public static MSAst.Expression PackBinary(ParsingContext context, Scope scope)
+        public static MSAst.Expression PackArith(ParsingContext context, Scope scope)
         {
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
@@ -220,6 +255,8 @@ namespace SBSEngine.Parsing.Packer
                     return SBSOperator.Equal;
                 case LexiconType.LSPlusEqual:
                     return SBSOperator.AddAssign;
+                case LexiconType.LSGreater:
+                    return SBSOperator.GreaterThan;
             }
 
             return 0;
@@ -245,6 +282,15 @@ namespace SBSEngine.Parsing.Packer
                 return true;
             return false;
         }
+
+        private static bool IsComparisonOperator(SBSOperator op)
+        {
+            if (op == SBSOperator.Equal || op == SBSOperator.NotEqual || op == SBSOperator.GreaterThan ||
+                op == SBSOperator.GreaterThanOrEqual || op == SBSOperator.LessThan || op == SBSOperator.LessThanOrEqual)
+                return true;
+            return false;
+        }
+
         #endregion
 
     }

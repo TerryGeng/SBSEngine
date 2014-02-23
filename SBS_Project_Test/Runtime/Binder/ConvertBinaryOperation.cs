@@ -9,6 +9,10 @@ using System.Reflection;
 
 namespace SBSEngine.Runtime.Binder
 {
+    /* NOTE: THIS CLASS IS NOT IN USE.
+     *       This is an instance for testing a dynamic convertion method. According to our current situation,
+     *       this is not really necessary. However, it may bu used in the future. Reserve it.
+     */
     public static class ConvertBinaryOperationDelegate
     {
         public static T MakeLeftConvertedDelegate<T>(Type leftType, Type rightType, Func<object, object> convertDele, Func<object, object, object> method)

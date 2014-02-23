@@ -9,18 +9,33 @@ namespace SBSEngine.Runtime
     {
         Null,
 
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
+        Add,                // '+'
+        Subtract,           // '-'
+        Multiply,           // '*'
+        Divide,             // '/'
 
-        Assign,
-        AddAssign,
+        Assign,             // '='
+        AddAssign,          // '+='
 
-        GreaterThan,
-        LessThan,
-        GreaterThanOrEqual,
-        LessThanOrEqual,
-        Equal
+        GreaterThan,        // '>'
+        LessThan,           // '<'
+        GreaterThanOrEqual, // '>='
+        LessThanOrEqual,    // '<='
+        Equal,              // '=='
+        NotEqual,           // '<>'
+
+        And,                // 'AND'
+        Or                  // 'OR'
     }
+
+    /*
+     * Precedence(From high to low):
+     * '*' '/'
+     * '+' '/'
+     * '>' '<' '>=' '<='
+     * '==' '<>'
+     * 'AND'
+     * 'OR'
+     * '=' '+='
+     */
 }
