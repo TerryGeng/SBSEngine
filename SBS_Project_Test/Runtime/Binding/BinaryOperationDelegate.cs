@@ -5,7 +5,7 @@ using System.Text;
 using System.Runtime.CompilerServices;
 using SBSEngine.Runtime;
 
-namespace SBSEngine.Runtime.Binder
+namespace SBSEngine.Runtime.Binding
 {
     public static class BinaryOperationDelegate
     {

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Runtime.CompilerServices;
 using SBSEngine.Runtime;
-using SBSEngine.Runtime.Binder;
+using SBSEngine.Runtime.Binding;
 using System.Diagnostics;
 
-namespace SBSEngine.Runtime.Binder
+namespace SBSEngine.Runtime.Binding
 {
     /// <summary>
     /// This is a binder which provide runtime operations like add, subtract.

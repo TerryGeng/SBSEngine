@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using SBSEngine.Runtime;
 using System.Reflection;
 
-namespace SBSEngine.Runtime.Binder
+namespace SBSEngine.Runtime.Binding
 {
     /* NOTE: THIS CLASS IS NOT IN USE.
      *       This is an instance for testing a dynamic convertion method. According to our current situation,
