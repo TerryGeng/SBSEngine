@@ -57,8 +57,9 @@
     <Compile Include="Parsing\Ast\VariableAccess.cs" />
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
-    <Compile Include="Runtime\Binder\BinaryOperationDelegate.cs" />
-    <Compile Include="Runtime\Binder\ConvertBinaryOperation.cs" />
+    <Compile Include="Runtime\Binding\BinaryOperationDelegate.cs" />
+    <Compile Include="Runtime\Binding\BindingInfo.cs" />
+    <Compile Include="Runtime\Binding\BinaryConvertDelegate.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />
     <Compile Include="Parsing\Parser\ScopePacker.cs" />
@@ -67,8 +68,8 @@
     <Compile Include="Parsing\Scope.cs" />
     <Compile Include="Parsing\ParsingContext.cs" />
     <Compile Include="Parsing\SourcePosition.cs" />
-    <Compile Include="Runtime\Binder\BinaryOpBinder.cs" />
-    <Compile Include="Runtime\TypeConversion.cs" />
+    <Compile Include="Runtime\Binding\BinaryOpBinder.cs" />
+    <Compile Include="Runtime\SBSType.cs" />
     <Compile Include="Tokenization\IRule.cs" />
     <Compile Include="Tokenization\SBSRules.cs" />
     <Compile Include="Tokenization\Tokenizer.cs" />
