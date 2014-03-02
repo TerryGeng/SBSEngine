@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using SBSEngine.Runtime;
 using SBSEngine.Runtime.Binding;
 using System.Diagnostics;
+using SBSEngine.Runtime.Binding.Sorter;
 
 namespace SBSEngine.Runtime.Binding
 {
@@ -14,6 +15,8 @@ namespace SBSEngine.Runtime.Binding
     /// </summary>
     class BinaryOpBinder : CallSiteBinder
     {
+        private BinaryOpSorter sorter;
+
         public override System.Linq.Expressions.Expression Bind(object[] args, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.ParameterExpression> parameters, System.Linq.Expressions.LabelTarget returnLabel)
         {
             return null;
