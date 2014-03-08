@@ -12,6 +12,7 @@ namespace SBSEngine.Runtime.Binding.Sorter
     using ISorterDictionary = IDictionary<Tuple<Type, SBSOperator>, SorterDelegate>;
     using SorterDictionary = Dictionary<Tuple<Type, SBSOperator>, SorterDelegate>;
     using BindDelegate = Func<CallSite, object, object, SBSOperator,object>;
+    using DelegateDictionary = Dictionary<Tuple<Type, Type, SBSOperator>, /*BindDelegate*/Func<CallSite, object, object, SBSOperator, object>>;
     using System.Reflection;
 
     delegate Expression SorterDelegate(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result);
@@ -19,22 +20,33 @@ namespace SBSEngine.Runtime.Binding.Sorter
     class BinaryOpSorter
     {
         public ISorterDictionary Sorters;
+        public DelegateDictionary DelegateBuffer;
 
         MethodInfo update;
 
         public BinaryOpSorter()
         {
             Sorters = new SorterDictionary();
+            DelegateBuffer = new DelegateDictionary();
             update = typeof(BinaryOpSorter).GetMethod("Update");
         }
 
         public BinaryOpSorter(ISorterDictionary sorters)
         {
             Sorters = sorters;
+            DelegateBuffer = new DelegateDictionary();
             update = typeof(BinaryOpSorter).GetMethod("Update");
         }
 
-        public T GetBinaryDelegate<T>(Type leftType,Type rightType,SBSOperator op,BindDelegate updateDele){            
+        public T GetBinaryDelegate<T>(Type leftType, Type rightType, SBSOperator op, BindDelegate updateDele)
+        {
+            BindDelegate compiled;
+            Tuple<Type, Type, SBSOperator> bufferKey = new Tuple<Type, Type, SBSOperator>(leftType, rightType, op);
+            if (DelegateBuffer.TryGetValue(bufferKey, out compiled))
+            {
+                return (T)(object)compiled;
+            }
+
             SorterDelegate Sorter;
             if (!Sorters.TryGetValue(new Tuple<Type, SBSOperator>(leftType, op), out Sorter))
             {
@@ -57,7 +69,11 @@ namespace SBSEngine.Runtime.Binding.Sorter
                     result
                 );
 
-            return (T)(object)(Expression.Lambda<BindDelegate>(body, site, left, right, opParam).Compile());
+            compiled = Expression.Lambda<BindDelegate>(body, site, left, right, opParam).Compile();
+
+            DelegateBuffer.Add(bufferKey, compiled);
+
+            return (T)(object)(compiled);
 
         }
 
