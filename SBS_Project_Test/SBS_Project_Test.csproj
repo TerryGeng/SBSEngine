@@ -58,9 +58,10 @@
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
     <Compile Include="Runtime\Binding\BinaryOperationDelegate.cs" />
-    <Compile Include="Runtime\Binding\BinaryOpSortor.cs" />
+    <Compile Include="Runtime\Binding\Sorter\BinaryOpSorter.cs" />
     <Compile Include="Runtime\Binding\BindingInfo.cs" />
     <Compile Include="Runtime\Binding\BinaryConvertDelegate.cs" />
+    <Compile Include="Runtime\Binding\Sorter\NumericOpSorter.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />
     <Compile Include="Parsing\Parser\ScopePacker.cs" />
@@ -99,6 +100,7 @@
   <ItemGroup>
     <Content Include="Note.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

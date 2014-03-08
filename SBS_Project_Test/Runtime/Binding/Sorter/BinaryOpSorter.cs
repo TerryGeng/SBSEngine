@@ -38,7 +38,7 @@ namespace SBSEngine.Runtime.Binding.Sorter
             update = typeof(BinaryOpSorter).GetMethod("Update");
         }
 
-        public T GetBinaryDelegate<T>(Type leftType, Type rightType, SBSOperator op, BindDelegate updateDele)
+        public T GetBinaryDelegate<T>(Type leftType, Type rightType, SBSOperator op)
         {
             BindDelegate compiled;
             Tuple<Type, Type, SBSOperator> bufferKey = new Tuple<Type, Type, SBSOperator>(leftType, rightType, op);
@@ -57,7 +57,7 @@ namespace SBSEngine.Runtime.Binding.Sorter
             ParameterExpression site = Expression.Parameter(typeof(CallSite), "site");
             ParameterExpression left = Expression.Parameter(typeof(object), "left");
             ParameterExpression right = Expression.Parameter(typeof(object), "right");
-            ParameterExpression opParam = Expression.Parameter(typeof(object), "op");
+            ParameterExpression opParam = Expression.Parameter(typeof(SBSOperator), "op");
             ParameterExpression result = Expression.Parameter(typeof(object));
 
             Expression body = Expression.Block(

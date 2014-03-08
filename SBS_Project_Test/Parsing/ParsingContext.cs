@@ -6,6 +6,7 @@ using System.Text;
 using SBSEngine.Tokenization;
 using SBSEngine.Runtime;
 using SBSEngine.Runtime.Binding;
+using SBSEngine.Runtime.Binding.Sorter;
 using SBSEngine.Parsing.Ast;
 
 namespace SBSEngine.Parsing
@@ -16,6 +17,7 @@ namespace SBSEngine.Parsing
         private SourcePosition Position;
         public ParsingError Error { get; private set; }
         public BinaryOpBinder BinaryBinder;
+        public BinaryOpSorter BinarySorter;
 
         public ParsingContext(TextReader reader)
         {
@@ -33,9 +35,16 @@ namespace SBSEngine.Parsing
 
             Position = new SourcePosition();
             Error = new ParsingError(Tokenizer, Position);
-            BinaryBinder = new BinaryOpBinder();
+            BinarySorter = new BinaryOpSorter();
+            RegisterOpSorter();
+            BinaryBinder = new BinaryOpBinder(BinarySorter);
 
             MaybeNext(LexiconType.LLineBreak); 
+        }
+
+        private void RegisterOpSorter()
+        {
+            NumericOpSorter.SelfRegister(BinarySorter);
         }
 
         /*
@@ -115,12 +124,6 @@ namespace SBSEngine.Parsing
         }
         #endregion
 
-        /*
-         * Functions about scopes.
-         */
-        #region Scope Operating
-        
-        #endregion
 
     }
 }
