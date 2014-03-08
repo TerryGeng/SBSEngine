@@ -16,8 +16,15 @@ namespace SBSEngine.Runtime.Binding.Sorter
         {
             sorter.RegisterOperation(typeof(int), SBSOperator.Add, NumericAdd);
             sorter.RegisterOperation(typeof(double), SBSOperator.Add, NumericAdd);
+            sorter.RegisterOperation(typeof(int), SBSOperator.Subtract, NumericSub);
+            sorter.RegisterOperation(typeof(double), SBSOperator.Subtract, NumericSub);
+            sorter.RegisterOperation(typeof(int), SBSOperator.Multiply, NumericMul);
+            sorter.RegisterOperation(typeof(double), SBSOperator.Multiply, NumericMul);
+            sorter.RegisterOperation(typeof(int), SBSOperator.Divide, NumericDiv);
+            sorter.RegisterOperation(typeof(double), SBSOperator.Divide, NumericDiv);
         }
 
+        #region Operation Delegate Generators
         public static Expression NumericAdd(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
         {
             Type leftTarget, rightTarget;
@@ -28,6 +35,41 @@ namespace SBSEngine.Runtime.Binding.Sorter
 
             return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.Add(left, right), typeof(object))));
         }
+
+        public static Expression NumericSub(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
+        {
+            Type leftTarget, rightTarget;
+            GetConvertTarget(leftType, rightType, out leftTarget, out rightTarget);
+
+            left = GetConvert(leftType, leftTarget, left);
+            right = GetConvert(rightType, rightTarget, right);
+
+            return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.Subtract(left, right), typeof(object))));
+        }
+
+        public static Expression NumericMul(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
+        {
+            Type leftTarget, rightTarget;
+            GetConvertTarget(leftType, rightType, out leftTarget, out rightTarget);
+
+            left = GetConvert(leftType, leftTarget, left);
+            right = GetConvert(rightType, rightTarget, right);
+
+            return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.Multiply(left, right), typeof(object))));
+        }
+
+        public static Expression NumericDiv(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
+        {
+            Type leftTarget, rightTarget;
+            GetConvertTarget(leftType, rightType, out leftTarget, out rightTarget);
+
+            left = GetConvert(leftType, typeof(double), left);
+            right = GetConvert(rightType, typeof(double), right);
+
+            return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.Divide(left, right), typeof(object))));
+        }
+
+        #endregion
 
         public static Expression GetConvert(Type type, Type targetType, Expression param)
         {
