@@ -124,7 +124,7 @@
             Func<object> code;
             textBox2.AppendText("Compiling... ");
             Watch = Stopwatch.StartNew();
-            code = Expression.Lambda<Func<object>>(expr).Compile();
+            code = Expression.Lambda<Func<object>>(Expression.Convert(expr, typeof(object))).Compile();
             Watch.Stop();
             textBox2.AppendText("Done. ");
             textBox2.AppendText(string.Format("Elapsed: {0:d}ms.", Watch.ElapsedMilliseconds) + "\r\n\r\n");

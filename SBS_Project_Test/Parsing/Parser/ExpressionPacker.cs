@@ -3,6 +3,7 @@ using MSAst = System.Linq.Expressions;
 using SBSEngine.Tokenization;
 using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
+using System.Diagnostics;
 
 namespace SBSEngine.Parsing.Packer
 {
@@ -38,107 +39,191 @@ namespace SBSEngine.Parsing.Packer
          */
         public static MSAst.Expression Pack(ParsingContext context, Scope scope)
         {
-            return PackAssign(context,scope);
-        }
-        /*
-         * Return an AssignExpr or a lower-level expr.
-         * 
-         * AssignExpr = Variable AssignOp ArithExpr
-         *                (*1*)   (*2*)     (*3*)
-         *                
-         * This function will return a expr from PackComparison(if don't have 1 and 2) or a AssignExpr.
-         */
-        public static MSAst.Expression PackAssign(ParsingContext context, Scope scope)
-        {
-            MSAst.Expression first = PackComparison(context, scope);
-
-            if (first == null)
-                context.Error.ThrowUnexpectedTokenException("Invaild expression.");
-
-            SBSOperator op = PeekSBSOperator(context);
-            if (IsAssignOperator(op))
-            {
-                if (first is VariableAccess)
-                {
-                    context.NextToken();
-
-                    MSAst.Expression second = Pack(context, scope);
-                    if (second != null)
-                        return new AssignExpression((VariableAccess)first, second, op);
-                    else
-                        context.Error.ThrowUnexpectedTokenException("Invaild expression.");
-                }
-                else
-                {
-                    context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
-                    return null;
-                }
-            }
-
-            return first;
+            return PackLevel(context,scope,6);
         }
 
-        /*
-         * Return a Comparison or a lower-level expr from PackArith.
-         * Comparison = ArithExpr ComparisonOp ArithExpr
-         *                (*1*)      (*2*)       (*3*)
-         */
-        public static MSAst.Expression PackComparison(ParsingContext context, Scope scope)
+        // /*
+        // * Return an AssignExpr or a lower-level expr.
+        // * 
+        // * AssignExpr = Variable AssignOp ArithExpr
+        // *                (*1*)   (*2*)     (*3*)
+        // *                
+        // * This function will return a expr from PackComparison(if don't have 1 and 2) or a AssignExpr.
+        // */
+        //public static MSAst.Expression PackAssign(ParsingContext context, Scope scope)
+        //{
+        //    MSAst.Expression first = PackComparison(context, scope);
+
+        //    if (first == null)
+        //        context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+
+        //    SBSOperator op = PeekSBSOperator(context);
+        //    if (IsAssignOperator(op))
+        //    {
+        //        if (first is VariableAccess)
+        //        {
+        //            context.NextToken();
+
+        //            MSAst.Expression second = Pack(context, scope);
+        //            if (second != null)
+        //                return new AssignExpression((VariableAccess)first, second, op);
+        //            else
+        //                context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+        //        }
+        //        else
+        //        {
+        //            context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+        //            return null;
+        //        }
+        //    }
+
+        //    return first;
+        //}
+
+        // /*
+        // * Return a Comparison or a lower-level expr from PackArith.
+        // * Comparison = ArithExpr ComparisonOp ArithExpr
+        // *                (*1*)      (*2*)       (*3*)
+        // */
+        //public static MSAst.Expression PackComparison(ParsingContext context, Scope scope)
+        //{
+        //    MSAst.Expression first = PackArith(context,scope);
+
+        //    if (first == null) 
+        //        context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+
+        //    SBSOperator op = PeekSBSOperator(context);
+        //    if (IsComparisonOperator(op))
+        //    {
+        //        context.NextToken();
+        //        MSAst.Expression second = PackArith(context,scope);
+
+        //        if (first == null)
+        //            context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+
+        //        return new BinaryExpression(first, second, op, context);
+        //    }
+
+        //    return first;
+        //}
+
+
+        // /* 
+        // * ArithExpr = ['+'|'-'] Term   [('+'|'-') Term]*
+        // *                  (*1*)              (*2*)
+        // */
+        //public static MSAst.Expression PackArith(ParsingContext context, Scope scope)
+        //{
+        //    MSAst.Expression mainExpr = null;
+        //    MSAst.Expression currentExpr = null;
+        //    SBSOperator op;
+
+        //    while (true)
+        //    {
+        //        op = PeekSBSOperator(context);
+
+        //        if (!IsTermOperator(op))
+        //        {
+        //            if (op == SBSOperator.Null && mainExpr == null) // (*1*)
+        //                op = SBSOperator.Add;
+        //            else
+        //                return mainExpr;
+        //        }
+        //        else
+        //        {
+        //            context.NextToken();
+        //        }
+
+
+        //        if ((currentExpr = PackTerm(context, scope)) != null)
+        //        {
+        //            if (mainExpr == null)
+        //                mainExpr = currentExpr;
+        //            else
+        //                mainExpr = new BinaryExpression(mainExpr, currentExpr, op, context);
+        //        }
+        //        else
+        //        {
+        //            context.Error.ThrowUnexpectedTokenException("Invalid expression term.");
+        //        }
+
+        //    }
+        //}
+
+        // /* 
+        // * Term = Factor   [('*'|'/') Factor]*
+        // *          (*1*)      (*2*)
+        // */
+        //private static MSAst.Expression PackTerm(ParsingContext context ,Scope scope)
+        //{
+        //    MSAst.Expression factors = null;
+        //    MSAst.Expression factor = null;
+        //    SBSOperator op;
+
+        //    // Dealing with (*1*).
+        //    if ((factors = PackFactor(context ,scope)) == null)
+        //        return null;
+
+        //    // Dealing with (*2*).
+        //    while (true)
+        //    {
+        //        op = PeekSBSOperator(context);
+        //        if (!IsFactorOperator(op))
+        //            return factors;
+        //        else
+        //            context.NextToken();
+
+        //        factor = PackFactor(context,scope);
+
+        //        if (factor != null)
+        //        {
+        //            factors = new BinaryExpression(factors,factor,op,context);
+        //        }
+        //        else
+        //            context.Error.ThrowUnexpectedTokenException("Invalid factor term.");
+        //    }
+        //}
+
+        private static MSAst.Expression PackLevel(ParsingContext context, Scope scope, int level)
         {
-            MSAst.Expression first = PackArith(context,scope);
+            if (level == -1)
+                return PackFactor(context, scope);
 
-            if (first == null) 
-                context.Error.ThrowUnexpectedTokenException("Invaild expression.");
-
-            SBSOperator op = PeekSBSOperator(context);
-            if (IsComparisonOperator(op))
-            {
-                context.NextToken();
-                MSAst.Expression second = PackArith(context,scope);
-
-                if (first == null)
-                    context.Error.ThrowUnexpectedTokenException("Invaild expression.");
-
-                return new BinaryExpression(first, second, op, context);
-            }
-
-            return first;
-        }
-
-
-        /* 
-         * ArithExpr = ['+'|'-'] Term   [('+'|'-') Term]*
-         *                  (*1*)              (*2*)
-         */
-        public static MSAst.Expression PackArith(ParsingContext context, Scope scope)
-        {
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
             SBSOperator op;
+            int opLevel;
 
             while (true)
             {
-                op = PeekSBSOperator(context);
+                op = PeekSBSOperatorWithLevel(context, out opLevel);
 
-                if (!IsTermOperator(op))
+                if (opLevel == -1)
                 {
-                    if (op == SBSOperator.Null && mainExpr == null) // (*1*)
-                        op = SBSOperator.Add;
-                    else
+                    if (mainExpr != null)
                         return mainExpr;
                 }
-                else
-                {
-                    context.NextToken();
-                }
+                else if (opLevel > level) return mainExpr;
+                else if (opLevel < level) Debug.Assert(false,"Uneated sub-level operator.");
+                else context.NextToken();
 
 
-                if ((currentExpr = PackTerm(context, scope)) != null)
+                if ((currentExpr = PackLevel(context, scope, level - 1)) != null)
                 {
                     if (mainExpr == null)
-                        mainExpr = currentExpr;
+                    {
+                        if (op != SBSOperator.Null)
+                        {
+                            if (level == 1 && op == SBSOperator.Subtract)
+                                mainExpr = new BinaryExpression(MSAst.Expression.Constant(0), currentExpr, SBSOperator.Subtract, context);
+                            else
+                                context.Error.ThrowUnexpectedTokenException("Unexpected operator.");
+                        }
+                        else
+                            mainExpr = currentExpr;
+                    }
                     else
-                        mainExpr = new BinaryExpression(mainExpr, currentExpr, op, context);
+                        mainExpr = MakeBinaryExpr(mainExpr, currentExpr, op, context);
                 }
                 else
                 {
@@ -146,41 +231,10 @@ namespace SBSEngine.Parsing.Packer
                 }
 
             }
+
         }
 
-        /* 
-         * Term = Factor   [('*'|'/') Factor]*
-         *          (*1*)      (*2*)
-         */
-        private static MSAst.Expression PackTerm(ParsingContext context ,Scope scope)
-        {
-            MSAst.Expression factors = null;
-            MSAst.Expression factor = null;
-            SBSOperator op;
 
-            // Dealing with (*1*).
-            if ((factors = PackFactor(context ,scope)) == null)
-                return null;
-
-            // Dealing with (*2*).
-            while (true)
-            {
-                op = PeekSBSOperator(context);
-                if (!IsFactorOperator(op))
-                    return factors;
-                else
-                    context.NextToken();
-
-                factor = PackFactor(context,scope);
-
-                if (factor != null)
-                {
-                    factors = new BinaryExpression(factors,factor,op,context);
-                }
-                else
-                    context.Error.ThrowUnexpectedTokenException("Invalid factor term.");
-            }
-        }
 
         private static MSAst.Expression PackFactor(ParsingContext context, Scope scope)
         {
@@ -228,6 +282,29 @@ namespace SBSEngine.Parsing.Packer
             return expr;
         }
 
+        private static MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
+        {
+            switch (op)
+            {
+                case SBSOperator.Assign:
+                case SBSOperator.AddAssign:
+                    if (left is VariableAccess)
+                    {
+                        if (right != null)
+                            return new AssignExpression((VariableAccess)left, right, op);
+                        else
+                            context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+                    }
+                    else
+                    {
+                        context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+                    }
+                    return null;
+            }
+
+            return new BinaryExpression(left, right, op, context);
+        }
+
         #region Operator
 
         /* Note: Why There Isn't A 'NextSBSOperator':
@@ -261,6 +338,51 @@ namespace SBSEngine.Parsing.Packer
 
             return 0;
         }
+
+        private static SBSOperator PeekSBSOperatorWithLevel(ParsingContext content, out int level)
+        {
+            switch (content.PeekTokenType())
+            {
+                case LexiconType.LSPlus:
+                    level = 1;
+                    return SBSOperator.Add;
+                case LexiconType.LSMinus:
+                    level = 1;
+                    return SBSOperator.Subtract;
+                case LexiconType.LSAsterisk:
+                    level = 0;
+                    return SBSOperator.Multiply;
+                case LexiconType.LSSlash:
+                    level = 0;
+                    return SBSOperator.Divide;
+                case LexiconType.LSEqual:
+                    level = 6;
+                    return SBSOperator.Assign;
+                case LexiconType.LSDoubleEqual:
+                    level = 3;
+                    return SBSOperator.Equal;
+                case LexiconType.LSPlusEqual:
+                    level = 6;
+                    return SBSOperator.AddAssign;
+                case LexiconType.LSGreater:
+                    level = 2;
+                    return SBSOperator.GreaterThan;
+            }
+
+            level = -1;
+            return 0;
+        }
+
+        public static SBSOperator GetFirstOp(int level)
+        {
+            switch (level)
+            {
+                case 1: return SBSOperator.Add;
+            }
+
+            return SBSOperator.Null;
+        }
+
 
         private static bool IsTermOperator(SBSOperator op)
         {
