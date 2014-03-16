@@ -31,6 +31,7 @@ namespace SBSEngine.Parsing
         public Scope(Scope parent)
         {
             parentScope = parent;
+            localVarsDict = new Dictionary<string, Variable>(10);
             localVars = new List<MSAst.ParameterExpression>(10);
         }
 
