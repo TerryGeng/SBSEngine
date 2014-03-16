@@ -25,14 +25,20 @@ namespace SBSEngine.Tokenization
         LSEqual,
         LSDoubleEqual,
         LSGreater,
+        LSGreaterEqual,
         LSLess,
+        LSLessEqual,
         LSPlusEqual,
+        LSLessGreater,
         LSDot,
 
         LKIf,
+        LKThen,
         LKElse,
         LKFor,
         LKWhile,
+        LKEnd,
+        LKNext,
 
         LComment
     }
@@ -193,6 +199,11 @@ namespace SBSEngine.Tokenization
                     value = null;
                     type = (int)LexiconType.LKIf;
                 }
+                else if (string.Compare(value, "then", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKThen;
+                }
                 else if (string.Compare(value, "else", true) == 0)
                 {
                     value = null;
@@ -207,6 +218,16 @@ namespace SBSEngine.Tokenization
                 {
                     value = null;
                     type = (int)LexiconType.LKWhile;
+                }
+                else if (string.Compare(value, "end", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKEnd;
+                }
+                else if (string.Compare(value, "next", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKNext;
                 }
 
                 
@@ -268,14 +289,16 @@ namespace SBSEngine.Tokenization
                         return new ScannerResult { Result = ScannerStatus.Finished };
                     case '=':
                         type = LexiconType.LSEqual;
-                        status = 2;
+                        status = 1;
                         return new ScannerResult { Result = ScannerStatus.Continued };
 
                     case '>':
                         type = LexiconType.LSGreater;
+                        status = 1;
                         return new ScannerResult { Result = ScannerStatus.Finished };
                     case '<':
                         type = LexiconType.LSLess;
+                        status = 1;
                         return new ScannerResult { Result = ScannerStatus.Finished };
                     case '.':
                         type = LexiconType.LSDot;
@@ -286,15 +309,33 @@ namespace SBSEngine.Tokenization
             }
             else
             {
-                if (status == 1 && (char)character == '=')
+                if (type == LexiconType.LSPlus && (char)character == '=')
                 {
                     type = LexiconType.LSPlusEqual;
                     return new ScannerResult { Result = ScannerStatus.Finished };
                 }
-                else if (status == 2 && (char)character == '=')
+                else if (type == LexiconType.LSEqual && (char)character == '=')
                 {
                     type = LexiconType.LSDoubleEqual;
                     return new ScannerResult { Result = ScannerStatus.Finished };
+                }
+                else if (type == LexiconType.LSGreater && (char)character == '=')
+                {
+                    type = LexiconType.LSGreaterEqual;
+                    return new ScannerResult { Result = ScannerStatus.Finished };
+                }
+                else if (type == LexiconType.LSLess)
+                {
+                    if ((char)character == '=')
+                    {
+                        type = LexiconType.LSLessEqual;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    }
+                    else if ((char)character == '>')
+                    {
+                        type = LexiconType.LSLessGreater;
+                        return new ScannerResult { Result = ScannerStatus.Finished };
+                    }
                 }
                 return new ScannerResult { Result = ScannerStatus.PreviousFinished };
             }

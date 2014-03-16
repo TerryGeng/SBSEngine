@@ -32,6 +32,8 @@ namespace SBSEngine.Runtime.Binding.Sorter
             sorter.RegisterOperation(typeof(double), SBSOperator.GreaterThanOrEqual, NumericGreaterEqual);
             sorter.RegisterOperation(typeof(int), SBSOperator.LessThanOrEqual, NumericLessEqual);
             sorter.RegisterOperation(typeof(double), SBSOperator.LessThanOrEqual, NumericLessEqual);
+            sorter.RegisterOperation(typeof(int), SBSOperator.NotEqual, NumericNotEqual);
+            sorter.RegisterOperation(typeof(double), SBSOperator.NotEqual, NumericNotEqual);
         }
 
         #region Operation Delegate Generators
@@ -67,6 +69,12 @@ namespace SBSEngine.Runtime.Binding.Sorter
         {
             GetProcessedLeftRight(leftType, rightType, ref left, ref right);
             return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.Equal(left, right), typeof(object))));
+        }
+
+        public static Expression NumericNotEqual(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
+        {
+            GetProcessedLeftRight(leftType, rightType, ref left, ref right);
+            return Expression.Block(Expression.Assign(result, Expression.Convert(Expression.NotEqual(left, right), typeof(object))));
         }
 
         public static Expression NumericGreater(Type leftType, Type rightType, SBSOperator op, Expression left, Expression right, ParameterExpression result)
