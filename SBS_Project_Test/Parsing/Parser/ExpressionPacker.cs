@@ -204,8 +204,8 @@ namespace SBSEngine.Parsing.Packer
                         return mainExpr;
                 }
                 else if (opLevel > level) return mainExpr;
-                else if (opLevel < level) Debug.Assert(false,"Uneated sub-level operator.");
-                else context.NextToken();
+                else if (opLevel == level) context.NextToken();
+                else if (opLevel < level) op = SBSOperator.Null; // This operator belongs to lower-level packer. Ignore it.
 
 
                 if ((currentExpr = PackLevel(context, scope, level - 1)) != null)
@@ -367,6 +367,9 @@ namespace SBSEngine.Parsing.Packer
                 case LexiconType.LSGreater:
                     level = 2;
                     return SBSOperator.GreaterThan;
+                case LexiconType.LSLess:
+                    level = 2;
+                    return SBSOperator.LessThan;
             }
 
             level = -1;
