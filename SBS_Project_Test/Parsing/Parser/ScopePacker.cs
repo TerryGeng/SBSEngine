@@ -4,6 +4,7 @@ using MSAst = System.Linq.Expressions;
 using SBSEngine.Tokenization;
 using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
+using System.Diagnostics;
 
 namespace SBSEngine.Parsing.Packer
 {
@@ -25,7 +26,7 @@ namespace SBSEngine.Parsing.Packer
                         list.AddLast(PackIf(context, scope));
                         break;
                     case LexiconType.LKEnd:
-                        context.NextToken();
+                    case LexiconType.LKElse:
                         return new ScopeStatment(list, scope);
                     default:
                         list.AddLast(BinaryExprPacker.Pack(context, scope).Reduce());
@@ -40,18 +41,60 @@ namespace SBSEngine.Parsing.Packer
             return new ScopeStatment(list, scope);
         }
 
+        /*
+         * IfStmt = 'If' + Expression + 'Then' + LineBreak +
+         *               Statments +                                     --(1)--
+         *           [('Else' + 'If' + Expression + 'Then'  + LineBreak
+         *               Statments)*]                                    --(2)--
+         *           ['Else' + LineBreak +
+         *               Statments]                                      --(3)--
+         *          'End' + 'If' + LineBreak                             --(4)--
+         * 
+         */
         public static MSAst.Expression PackIf(ParsingContext context, Scope scope)
         {
+            MSAst.Expression condition = null;
+            MSAst.Expression then = null;
+            MSAst.Expression elseStmt = null;
+            // --(1)--
             context.NextToken(LexiconType.LKIf);
 
-            //var condition = new BinaryExpression(BinaryExprPacker.Pack(context, scope).Reduce(), MSAst.Expression.Constant(0), SBSOperator.NotEqual, context).Reduce();
-            var condition = BinaryExprPacker.Pack(context, scope).Reduce();
+            condition = BinaryExprPacker.Pack(context, scope).Reduce();
             context.NextToken(LexiconType.LKThen, "Expected 'Then'.");
             context.NextToken(LexiconType.LLineBreak);
-            var then = Pack(context,scope).Reduce();
-            context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
 
-            return MSAst.Expression.IfThen(MSAst.Expression.Convert(condition,typeof(bool)), then);
+            then = Pack(context, scope).Reduce();
+
+            if (!context.MaybeNext(LexiconType.LKEnd))
+            {
+                if (context.MaybeNext(LexiconType.LKElse))
+                {
+                    if (context.PeekToken(LexiconType.LKIf))
+                    {
+                        //--(2)--
+                        elseStmt = PackIf(context, scope).Reduce();
+                        return MSAst.Expression.IfThenElse(MSAst.Expression.Convert(condition, typeof(bool)), then, elseStmt);
+                    }
+                    else if (context.MaybeNext(LexiconType.LLineBreak))
+                    {
+                        //--(3)--
+                        elseStmt = Pack(context, scope).Reduce();
+                        context.NextToken(LexiconType.LKEnd);
+                        context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
+                        return MSAst.Expression.IfThenElse(MSAst.Expression.Convert(condition, typeof(bool)), then, elseStmt);
+                    }
+
+                    context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Expected Statments for 'Else'.");
+                }
+            }
+            else
+            {
+                context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
+                return MSAst.Expression.IfThen(MSAst.Expression.Convert(condition, typeof(bool)), then);
+            }
+
+            Debug.Assert(false);
+            return null;
         }
     }
 }

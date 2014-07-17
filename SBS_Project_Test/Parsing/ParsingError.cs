@@ -14,11 +14,6 @@ namespace SBSEngine.Parsing
             this.position = position;
         }
 
-        public void ThrowUnexpectedTokenException(string message = null)
-        {
-            ThrowUnexpectedTokenException(tokenizer.PeekToken(), message);
-        }
-
         public void ThrowUnexpectedTokenException(Token token, string message = null)
         {
             throw new UnexpectedTokenException(position.InLinePosition, position.LineNum, token,

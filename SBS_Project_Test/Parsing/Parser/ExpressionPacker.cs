@@ -9,7 +9,7 @@ namespace SBSEngine.Parsing.Packer
 {
     internal static class ExpressionStmtPacker
     {
-        public static MSAst.Expression PackStatment(ParsingContext content)
+        public static MSAst.Expression PackStatment(ParsingContext context)
         {
             return null; // TODO
         }
@@ -75,7 +75,7 @@ namespace SBSEngine.Parsing.Packer
                             if (level == 1 && op == SBSOperator.Subtract)
                                 mainExpr = new BinaryExpression(MSAst.Expression.Constant(0), currentExpr, SBSOperator.Subtract, context);
                             else
-                                context.Error.ThrowUnexpectedTokenException("Unexpected operator.");
+                                context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Unexpected operator.");
                         }
                         else
                             mainExpr = currentExpr;
@@ -85,7 +85,7 @@ namespace SBSEngine.Parsing.Packer
                 }
                 else
                 {
-                    context.Error.ThrowUnexpectedTokenException("Invalid expression term.");
+                    context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Invalid expression term.");
                 }
 
             }
@@ -110,32 +110,32 @@ namespace SBSEngine.Parsing.Packer
         /*
          * ConstantFactor = (Integer|Double)
          */
-        private static MSAst.Expression PackConstantFactor(ParsingContext content)
+        private static MSAst.Expression PackConstantFactor(ParsingContext context)
         {
-            Token token = content.PeekToken();
+            Token token = context.PeekToken();
 
             switch ((LexiconType)token.Type)
             {
                 case LexiconType.LInteger:
-                    content.NextToken();
+                    context.NextToken();
                     return MSAst.Expression.Constant((object)Int32.Parse(token.Value));
                 case LexiconType.LFloat:
-                    content.NextToken();
+                    context.NextToken();
                     return MSAst.Expression.Constant((object)Double.Parse(token.Value));
                 case LexiconType.LString:
-                    content.NextToken();
+                    context.NextToken();
                     return MSAst.Expression.Constant(token.Value);
                 default:
-                    content.Error.ThrowUnexpectedTokenException("Invalid constant value factor.");
+                    context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Invalid constant value factor.");
                     return null;
             }
         }
 
-        private static MSAst.Expression PackExprFactor(ParsingContext content,Scope scope)
+        private static MSAst.Expression PackExprFactor(ParsingContext context,Scope scope)
         {
-            content.NextTokenType(LexiconType.LSLRoundBracket);
-            MSAst.Expression expr = Pack(content, scope);
-            content.NextTokenType(LexiconType.LSRRoundBracket, "Invalid expression factor ending.");
+            context.NextTokenType(LexiconType.LSLRoundBracket);
+            MSAst.Expression expr = Pack(context, scope);
+            context.NextTokenType(LexiconType.LSRRoundBracket, "Invalid expression factor ending.");
 
             return expr;
         }
@@ -151,11 +151,11 @@ namespace SBSEngine.Parsing.Packer
                         if (right != null)
                             return new AssignExpression((VariableAccess)left, right, op);
                         else
-                            context.Error.ThrowUnexpectedTokenException("Invaild expression.");
+                            context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Invaild expression.");
                     }
                     else
                     {
-                        context.Error.ThrowUnexpectedTokenException("Unexpected Assign operator. Only variable can be left value.");
+                        context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Unexpected Assign operator. Only variable can be left value.");
                     }
                     return null;
             }
@@ -164,9 +164,9 @@ namespace SBSEngine.Parsing.Packer
         }
 
         #region Operator
-        private static SBSOperator PeekSBSOperator(ParsingContext content, out int level)
+        private static SBSOperator PeekSBSOperator(ParsingContext context, out int level)
         {
-            switch (content.PeekTokenType())
+            switch (context.PeekTokenType())
             {
                 case LexiconType.LSPlus:
                     level = 1;

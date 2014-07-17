@@ -59,7 +59,7 @@ namespace SBSEngine.Parsing
             Token t;
             if (_peekToken.Type == 0)
             {
-                t = Tokenizer.NextToken();
+                while((t = Tokenizer.NextToken()).Type == (int)LexiconType.LBlank || t.Type == (int)LexiconType.LComment);
             }
             else
             {
@@ -79,7 +79,7 @@ namespace SBSEngine.Parsing
             Token t = NextToken();
 
             if(t.Type != (int)type)
-                Error.ThrowUnexpectedTokenException(error);
+                Error.ThrowUnexpectedTokenException(PeekToken(), error);
 
             return t;
         }
@@ -87,8 +87,15 @@ namespace SBSEngine.Parsing
         public Token PeekToken()
         {
             if (_peekToken.Type == 0)
-                _peekToken = Tokenizer.NextToken();
+                _peekToken = NextToken();
             return _peekToken;
+        }
+
+        public bool PeekToken(LexiconType type)
+        {
+            if (PeekTokenType() == type)
+                return true;
+            return false;
         }
 
         public LexiconType NextTokenType()
@@ -116,7 +123,7 @@ namespace SBSEngine.Parsing
         {
             if (!MaybeNext(type))
             {
-                Error.ThrowUnexpectedTokenException(error);
+                Error.ThrowUnexpectedTokenException(PeekToken(), error);
                 return false;
             }
 

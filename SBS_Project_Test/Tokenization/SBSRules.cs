@@ -50,40 +50,40 @@ namespace SBSEngine.Tokenization
         const int FLOAT = 2;
         int status = INT;
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             switch (status)
             {
                 case INT:
                     if (char.IsDigit((char)character))
                     {
-                        return new ScannerResult{ Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
                     }
                     else if ((char)character == '.')
                     {
                         status = DOT;
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued ;
                     }
                     break;
                 case DOT:
                     if (char.IsDigit((char)character))
                     {
                         status = FLOAT;
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
                     }
                     break;
                 case FLOAT:
                     if (char.IsDigit((char)character))
                     {
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
                     }
                     break;
             }
 
             if (status != DOT)
-                return new ScannerResult { Result = ScannerStatus.PreviousFinished };
+                return ScannerStatus.PreviousFinished;
             else
-                return new ScannerResult { Result = ScannerStatus.Unmatch };
+                return ScannerStatus.Unmatch;
         }
 
         Token IRule.Pack(StringBuilder buffer)
@@ -119,21 +119,19 @@ namespace SBSEngine.Tokenization
         const int SPACE = 0;
         const int LINEBREAK = 1;
         int status = SPACE;
-        ReadingOption option = ReadingOption.IgnoreCurrent;
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             if (char.IsWhiteSpace((char)character))
             {
                 if (character == '\n')
                 {
                     status = LINEBREAK;
-                    option = ReadingOption.Normal;
                 }
-                return new ScannerResult { Result = ScannerStatus.Continued };
+                return ScannerStatus.Continued;
             }
 
-            return new ScannerResult { Result = ScannerStatus.PreviousFinished ,Option = option };
+            return ScannerStatus.PreviousFinished;
         }
 
         Token IRule.Pack(StringBuilder buffer)
@@ -160,7 +158,6 @@ namespace SBSEngine.Tokenization
         void IRule.Reset() 
         {
             status = SPACE;
-            option = ReadingOption.IgnoreCurrent;
         }
     }
 
@@ -171,19 +168,19 @@ namespace SBSEngine.Tokenization
 
         int status = 0;
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             if (status == FIRST && (char.IsLetter((char)character) || character == '_'))
             {
                 status = AFTER;
-                return new ScannerResult { Result = ScannerStatus.Continued  };
+                return ScannerStatus.Continued;
             }
             else if (status == AFTER && (char.IsLetterOrDigit((char)character) || character == '_'))
             {
-                return new ScannerResult { Result = ScannerStatus.Continued };
+                return ScannerStatus.Continued;
             }
 
-            return new ScannerResult { Result = ScannerStatus.PreviousFinished };
+            return ScannerStatus.PreviousFinished;
         }
 
         Token IRule.Pack(StringBuilder buffer)
@@ -255,7 +252,7 @@ namespace SBSEngine.Tokenization
          * 2: '=' , '='
          */
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             if (status == 0)
             {
@@ -264,47 +261,47 @@ namespace SBSEngine.Tokenization
                     case '+':
                         type = LexiconType.LSPlus;
                         status = 1;
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
 
                     case '(':
                         type = LexiconType.LSLRoundBracket;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case ')':
                         type = LexiconType.LSRRoundBracket;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '$':
                         type = LexiconType.LSDollar;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case ',':
                         type = LexiconType.LSComma;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '-':
                         type = LexiconType.LSMinus;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '*':
                         type = LexiconType.LSAsterisk;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '/':
                         type = LexiconType.LSSlash;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '=':
                         type = LexiconType.LSEqual;
                         status = 1;
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
 
                     case '>':
                         type = LexiconType.LSGreater;
                         status = 1;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '<':
                         type = LexiconType.LSLess;
                         status = 1;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     case '.':
                         type = LexiconType.LSDot;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     default:
-                        return new ScannerResult { Result = ScannerStatus.Unmatch };
+                        return ScannerStatus.Unmatch;
                 }
             }
             else
@@ -312,32 +309,32 @@ namespace SBSEngine.Tokenization
                 if (type == LexiconType.LSPlus && (char)character == '=')
                 {
                     type = LexiconType.LSPlusEqual;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
+                    return ScannerStatus.Finished;
                 }
                 else if (type == LexiconType.LSEqual && (char)character == '=')
                 {
                     type = LexiconType.LSDoubleEqual;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
+                    return ScannerStatus.Finished;
                 }
                 else if (type == LexiconType.LSGreater && (char)character == '=')
                 {
                     type = LexiconType.LSGreaterEqual;
-                    return new ScannerResult { Result = ScannerStatus.Finished };
+                    return ScannerStatus.Finished;
                 }
                 else if (type == LexiconType.LSLess)
                 {
                     if ((char)character == '=')
                     {
                         type = LexiconType.LSLessEqual;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     }
                     else if ((char)character == '>')
                     {
                         type = LexiconType.LSLessGreater;
-                        return new ScannerResult { Result = ScannerStatus.Finished };
+                        return ScannerStatus.Finished;
                     }
                 }
-                return new ScannerResult { Result = ScannerStatus.PreviousFinished };
+                return ScannerStatus.PreviousFinished;
             }
         }
 
@@ -362,17 +359,17 @@ namespace SBSEngine.Tokenization
         bool firstChar = true;
         bool backslash = false;
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             if (firstChar)
             {
                 if (character == (int)'"')
                 {
                     firstChar = false;
-                    return new ScannerResult { Result = ScannerStatus.Continued };
+                    return ScannerStatus.Continued;
                 }
 
-                return new ScannerResult { Result = ScannerStatus.Unmatch };
+                return ScannerStatus.Unmatch;
             }
             else
             {
@@ -380,15 +377,15 @@ namespace SBSEngine.Tokenization
                 {
                     case '\\':
                         backslash = true;
-                        return new ScannerResult { Result = ScannerStatus.Continued };
+                        return ScannerStatus.Continued;
                     case '"':
                         if (!backslash)
-                            return new ScannerResult { Result = ScannerStatus.Finished };
+                            return ScannerStatus.Finished;
                         break;
                 }
 
                 backslash = false;
-                return new ScannerResult { Result = ScannerStatus.Continued };
+                return ScannerStatus.Continued;
             }
         }
 
@@ -412,26 +409,26 @@ namespace SBSEngine.Tokenization
     {
         bool firstChar = true;
 
-        ScannerResult IRule.Scan(int character)
+        ScannerStatus IRule.Scan(int character)
         {
             if (firstChar)
             {
                 if (character == (int)'\'')
                 {
                     firstChar = false;
-                    return new ScannerResult { Result = ScannerStatus.Continued };
+                    return ScannerStatus.Continued;
                 }
             }
             else
             {
                 if (character == (int)'\n')
                 {
-                    return new ScannerResult { Result = ScannerStatus.PreviousFinished , Option = ReadingOption.IgnoreCurrent};
+                    return ScannerStatus.PreviousFinished;
                 }
-                return new ScannerResult { Result = ScannerStatus.Continued };
+                return ScannerStatus.Continued;
             }
 
-            return new ScannerResult { Result = ScannerStatus.Unmatch };
+            return ScannerStatus.Unmatch;
         }
 
         Token IRule.Pack(StringBuilder buffer)
