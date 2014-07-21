@@ -59,11 +59,11 @@ namespace SBSEngine.Parsing.Packer
             // --(1)--
             context.NextToken(LexiconType.LKIf);
 
-            condition = ExpressionPacker.Pack(context, scope).Reduce();
+            condition = ExpressionPacker.Pack(context, scope);
             context.NextToken(LexiconType.LKThen, "Expected 'Then'.");
             context.NextToken(LexiconType.LLineBreak);
 
-            then = Pack(context, scope).Reduce();
+            then = Pack(context, scope);
 
             if (!context.MaybeNext(LexiconType.LKEnd))
             {
@@ -90,7 +90,7 @@ namespace SBSEngine.Parsing.Packer
             else
             {
                 context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
-                return MSAst.Expression.IfThen(MSAst.Expression.Convert(condition, typeof(bool)), then);
+                return new IfStatment(condition, then);
             }
 
             Debug.Assert(false);
