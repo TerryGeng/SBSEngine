@@ -29,7 +29,7 @@ namespace SBSEngine.Parsing.Packer
                     case LexiconType.LKElse:
                         return new ScopeStatment(list, scope);
                     default:
-                        list.AddLast(BinaryExprPacker.Pack(context, scope).Reduce());
+                        list.AddLast(ExpressionPacker.Pack(context, scope));
                         break;
                 }
 
@@ -59,7 +59,7 @@ namespace SBSEngine.Parsing.Packer
             // --(1)--
             context.NextToken(LexiconType.LKIf);
 
-            condition = BinaryExprPacker.Pack(context, scope).Reduce();
+            condition = ExpressionPacker.Pack(context, scope).Reduce();
             context.NextToken(LexiconType.LKThen, "Expected 'Then'.");
             context.NextToken(LexiconType.LLineBreak);
 
@@ -73,7 +73,7 @@ namespace SBSEngine.Parsing.Packer
                     {
                         //--(2)--
                         elseStmt = PackIf(context, scope).Reduce();
-                        return MSAst.Expression.IfThenElse(MSAst.Expression.Convert(condition, typeof(bool)), then, elseStmt);
+                        return new IfStatment(condition, then, elseStmt);
                     }
                     else if (context.MaybeNext(LexiconType.LLineBreak))
                     {
@@ -81,7 +81,7 @@ namespace SBSEngine.Parsing.Packer
                         elseStmt = Pack(context, scope).Reduce();
                         context.NextToken(LexiconType.LKEnd);
                         context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
-                        return MSAst.Expression.IfThenElse(MSAst.Expression.Convert(condition, typeof(bool)), then, elseStmt);
+                        return new IfStatment(condition, then, elseStmt);
                     }
 
                     context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Expected Statments for 'Else'.");
