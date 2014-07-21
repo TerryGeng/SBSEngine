@@ -7,39 +7,22 @@ using System.Diagnostics;
 
 namespace SBSEngine.Parsing.Packer
 {
-    internal static class ExpressionStmtPacker
+    internal static class ExpressionPacker
     {
-        public static MSAst.Expression PackStatment(ParsingContext context)
-        {
-            return null; // TODO
-        }
 
+        #region BinaryExpression
         /*
-         * Variable =  '$'   Name   (['(' (String|Integer) ')'])*
-         *            (*1*)  (*2*)            (*3*)<TODO>
+         * Expression(Operator) level(High to low):
+         * 6 AssignExpr
+         * 3 ConditionalExpr
+         * 2 Comparison
+         * 1 ArithExpr
          */
-        public static MSAst.Expression PackVariable(ParsingContext context, Scope scope)
-        {
-            context.NextTokenType(LexiconType.LSDollar);
+        const int MAX_LEVEL = 6;
 
-            string name = context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
-
-            return new VariableAccess(name, context, scope);
-        }
-    }
-
-    internal static class BinaryExprPacker
-    {
-        /*
-         * Expression level(High to low):
-         * AssignExpr
-         * ConditionalExpr
-         * Comparison
-         * ArithExpr
-         */
         public static MSAst.Expression Pack(ParsingContext context, Scope scope)
         {
-            return PackLevel(context,scope,6);
+            return PackLevel(context,scope,MAX_LEVEL);
         }
 
         private static MSAst.Expression PackLevel(ParsingContext context, Scope scope, int level)
@@ -101,7 +84,7 @@ namespace SBSEngine.Parsing.Packer
                 case LexiconType.LSLRoundBracket:
                     return PackExprFactor(context, scope);
                 case LexiconType.LSDollar:
-                    return ExpressionStmtPacker.PackVariable(context, scope);
+                    return ExpressionPacker.PackVariable(context, scope);
                 default:
                     return PackConstantFactor(context);
             }
@@ -140,6 +123,19 @@ namespace SBSEngine.Parsing.Packer
             return expr;
         }
 
+        /*
+        * Variable =  '$'   Name   (['(' (String|Integer) ')'])*
+        *            (*1*)  (*2*)            (*3*)<TODO>
+        */
+        public static MSAst.Expression PackVariable(ParsingContext context, Scope scope)
+        {
+            context.NextTokenType(LexiconType.LSDollar);
+
+            string name = context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
+
+            return new VariableAccess(name, context, scope);
+        }
+
         private static MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
         {
             switch (op)
@@ -162,6 +158,7 @@ namespace SBSEngine.Parsing.Packer
 
             return new BinaryExpression(left, right, op, context);
         }
+        #endregion
 
         #region Operator
         private static SBSOperator PeekSBSOperator(ParsingContext context, out int level)
@@ -251,6 +248,6 @@ namespace SBSEngine.Parsing.Packer
         }
 
         #endregion
-
     }
+
 }
