@@ -9,10 +9,9 @@ using System.Diagnostics;
 
 namespace SBSEngine.Parsing.Ast
 {
-    class VariableAccess : MSAst.Expression
+    class VariableAccess : Expression
     {
         private string _name;
-        private string _sub;
         private ParsingContext _context;
         private Scope _scope;
 

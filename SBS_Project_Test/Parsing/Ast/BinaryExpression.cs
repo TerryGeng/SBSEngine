@@ -8,7 +8,7 @@ using SBSEngine.Parsing;
 
 namespace SBSEngine.Parsing.Ast
 {
-    class BinaryExpression : MSAst.Expression
+    class BinaryExpression : Expression
     {
         private MSAst.Expression left;
         private MSAst.Expression right;

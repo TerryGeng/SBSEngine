@@ -8,7 +8,7 @@ using SBSEngine.Parsing;
 
 namespace SBSEngine.Parsing.Ast
 {
-    class AssignExpression : MSAst.Expression
+    class AssignExpression : Expression
     {
         private VariableAccess _variable;
         private MSAst.Expression _value;

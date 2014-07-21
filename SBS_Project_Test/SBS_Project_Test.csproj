@@ -54,6 +54,8 @@
     </Compile>
     <Compile Include="Parsing\Ast\AssignExpression.cs" />
     <Compile Include="Parsing\Ast\BinaryExpression.cs" />
+    <Compile Include="Parsing\Ast\IfStatment.cs" />
+    <Compile Include="Parsing\Ast\SBSAst.cs" />
     <Compile Include="Parsing\Ast\VariableAccess.cs" />
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
