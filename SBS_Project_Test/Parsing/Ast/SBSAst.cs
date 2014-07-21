@@ -10,6 +10,14 @@ namespace SBSEngine.Parsing.Ast
 {
     abstract class SBSAst : MSAst.Expression
     {
+        public override bool CanReduce
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public override MSAst.ExpressionType NodeType
         {
             get
@@ -22,7 +30,7 @@ namespace SBSEngine.Parsing.Ast
         {
             get
             {
-                return base.Type;
+                return typeof(void);
             }
         }
     }

@@ -6,7 +6,7 @@ using MSAst = System.Linq.Expressions;
 
 namespace SBSEngine.Parsing.Ast
 {
-    class ScopeStatment : MSAst.Expression
+    class ScopeStatment : SBSAst
     {
         public IEnumerable<MSAst.Expression> Statments;
         public Scope LocalScope;
