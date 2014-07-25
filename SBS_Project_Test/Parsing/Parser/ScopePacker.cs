@@ -10,9 +10,12 @@ namespace SBSEngine.Parsing.Packer
 {
     internal static class ScopePacker
     {
-        public static MSAst.Expression Pack(ParsingContext context, Scope parent = null)
+        public static MSAst.Expression Pack(ParsingContext context, Scope parent = null, bool createChildScope = true)
         {
-            Scope scope = new Scope(parent);
+            Scope scope;
+
+            if (createChildScope) scope = new Scope(parent);
+            else scope = parent;
 
             var list = new LinkedList<MSAst.Expression>();
             LexiconType type;
@@ -27,6 +30,12 @@ namespace SBSEngine.Parsing.Packer
                         break;
                     case LexiconType.LKWhile:
                         list.AddLast(PackWhile(context, scope));
+                        break;
+                    case LexiconType.LKBreak:
+                        list.AddLast(PackBreak(context, scope));
+                        break;
+                    case LexiconType.LKContinue:
+                        list.AddLast(PackContinue(context, scope));
                         break;
                     case LexiconType.LKEnd:
                     case LexiconType.LKElse:
@@ -111,18 +120,46 @@ namespace SBSEngine.Parsing.Packer
             MSAst.Expression body;
 
             var breakLabel = MSAst.Expression.Label();
+            var continueLabel = MSAst.Expression.Label();
+
+            Scope childScope = new Scope(scope);
+
+            childScope.BreakLabel = breakLabel;
+            childScope.ContinueLabel = continueLabel;
 
             context.NextToken(LexiconType.LKWhile);
 
             condition = ExpressionPacker.Pack(context,scope);
             context.NextToken(LexiconType.LLineBreak);
 
-            body = Pack(context,scope);
+            body = Pack(context,childScope,false);
 
             context.NextToken(LexiconType.LKEnd);
             context.NextToken(LexiconType.LKWhile, "Unexpected 'End' instruction for 'While' statment.");
 
-            return new WhileStatment(condition, body, breakLabel);
+            return new WhileStatment(condition, body, breakLabel, continueLabel);
+        }
+
+        public static MSAst.Expression PackBreak(ParsingContext context, Scope scope)
+        {
+            var token = context.NextToken(LexiconType.LKBreak);
+
+            var label = scope.BreakLabel;
+
+            if (label == null) context.Error.ThrowUnexpectedTokenException(token, "Not in a loop.");
+
+            return MSAst.Expression.Break(label);
+        }
+
+        public static MSAst.Expression PackContinue(ParsingContext context, Scope scope)
+        {
+            var token = context.NextToken(LexiconType.LKContinue);
+
+            var label = scope.ContinueLabel;
+
+            if (label == null) context.Error.ThrowUnexpectedTokenException(token, "Not in a loop.");
+
+            return MSAst.Expression.Continue(label);
         }
     }
 }

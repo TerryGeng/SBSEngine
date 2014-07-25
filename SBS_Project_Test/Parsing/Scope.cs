@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 using SBSEngine.Runtime;
 using MSAst = System.Linq.Expressions;
+using SBSEngine.Parsing.Ast;
 
 namespace SBSEngine.Parsing
 {
@@ -12,6 +13,36 @@ namespace SBSEngine.Parsing
         private Scope parentScope;
         private Dictionary<string, Variable> localVarsDict;
         private List<MSAst.ParameterExpression> localVars;
+
+        private LabelTarget breakLabel;
+        private LabelTarget continueLabel;
+
+        public LabelTarget BreakLabel
+        {
+            get
+            {
+                if (breakLabel != null) return breakLabel;
+                else if (parentScope != null) return parentScope.BreakLabel;
+
+                return null;
+            }
+
+            set { breakLabel = value; }
+        }
+
+        public LabelTarget ContinueLabel
+        {
+            get
+            {
+                if (continueLabel != null) return continueLabel;
+                else if (parentScope != null) return parentScope.ContinueLabel;
+
+                return null;
+            }
+
+            set { continueLabel = value; }
+        }
+
 
         public List<MSAst.ParameterExpression> LocalVariables
         {
@@ -70,6 +101,5 @@ namespace SBSEngine.Parsing
 
             return variable.Expr;
         }
-
     }
 }

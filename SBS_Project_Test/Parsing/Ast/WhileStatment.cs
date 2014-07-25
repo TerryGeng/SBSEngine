@@ -14,12 +14,14 @@ namespace SBSEngine.Parsing.Ast
         private MSAst.Expression condition;
         private MSAst.Expression body;
         private MSAst.LabelTarget breakLabel;
+        private MSAst.LabelTarget continueLabel;
 
-        public WhileStatment(MSAst.Expression condition, MSAst.Expression body, MSAst.LabelTarget breakLabel)
+        public WhileStatment(MSAst.Expression condition, MSAst.Expression body, MSAst.LabelTarget breakLabel, MSAst.LabelTarget continueLabel)
         {
             this.condition = condition;
             this.body = body;
             this.breakLabel = breakLabel;
+            this.continueLabel = continueLabel;
         }
 
         public override MSAst.Expression Reduce()
@@ -29,7 +31,8 @@ namespace SBSEngine.Parsing.Ast
                         MSAst.Expression.Convert(condition.Reduce(), typeof(bool)),
                         body.Reduce(),
                         MSAst.Expression.Break(breakLabel)), 
-                    breakLabel
+                    breakLabel,
+                    continueLabel
                     );
         }
     }

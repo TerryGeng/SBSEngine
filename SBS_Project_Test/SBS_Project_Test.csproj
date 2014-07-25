@@ -61,7 +61,6 @@
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
     <Compile Include="Runtime\Binding\Sorter\BinaryOpSorter.cs" />
-    <Compile Include="Runtime\Binding\BindingInfo.cs" />
     <Compile Include="Runtime\Binding\Sorter\NumericOpSorter.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />

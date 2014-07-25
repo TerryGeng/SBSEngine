@@ -38,7 +38,10 @@ namespace SBSEngine.Tokenization
         LKFor,
         LKWhile,
         LKEnd,
+        LKExit,
         LKNext,
+        LKBreak,
+        LKContinue,
 
         LComment
     }
@@ -189,7 +192,7 @@ namespace SBSEngine.Tokenization
             int type = (int)LexiconType.LName;
 
             // Dealing with keywords.
-            if (value.Length <= 5) // Note: Avoid trying to compare a long string(longer than the longest keyword).
+            if (value.Length <= 8) // Note: Avoid trying to compare a long string(longer than the longest keyword).
             {
                 if (string.Compare(value, "if", true) == 0)
                 {
@@ -216,10 +219,25 @@ namespace SBSEngine.Tokenization
                     value = null;
                     type = (int)LexiconType.LKWhile;
                 }
+                else if (string.Compare(value, "break", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKBreak;
+                }
+                else if (string.Compare(value, "continue", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKContinue;
+                }
                 else if (string.Compare(value, "end", true) == 0)
                 {
                     value = null;
                     type = (int)LexiconType.LKEnd;
+                }
+                else if (string.Compare(value, "exit", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKExit;
                 }
                 else if (string.Compare(value, "next", true) == 0)
                 {
