@@ -57,12 +57,11 @@
     <Compile Include="Parsing\Ast\IfStatment.cs" />
     <Compile Include="Parsing\Ast\SBSAst.cs" />
     <Compile Include="Parsing\Ast\VariableAccess.cs" />
+    <Compile Include="Parsing\Ast\WhileStatment.cs" />
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\Variable.cs" />
-    <Compile Include="Runtime\Binding\BinaryOperationDelegate.cs" />
     <Compile Include="Runtime\Binding\Sorter\BinaryOpSorter.cs" />
     <Compile Include="Runtime\Binding\BindingInfo.cs" />
-    <Compile Include="Runtime\Binding\BinaryConvertDelegate.cs" />
     <Compile Include="Runtime\Binding\Sorter\NumericOpSorter.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />
