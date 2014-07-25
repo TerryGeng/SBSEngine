@@ -25,6 +25,9 @@ namespace SBSEngine.Parsing.Packer
                     case LexiconType.LKIf:
                         list.AddLast(PackIf(context, scope));
                         break;
+                    case LexiconType.LKWhile:
+                        list.AddLast(PackWhile(context, scope));
+                        break;
                     case LexiconType.LKEnd:
                     case LexiconType.LKElse:
                         return new ScopeStatment(list, scope);
@@ -95,6 +98,31 @@ namespace SBSEngine.Parsing.Packer
 
             Debug.Assert(false);
             return null;
+        }
+
+        /*
+         * WhileStmt = 'While' + Expression(condition) + \n + 
+         *                  Statments(body) + 
+         *             'End' + 'While' + \n
+         */
+        public static MSAst.Expression PackWhile(ParsingContext context, Scope scope)
+        {
+            MSAst.Expression condition;
+            MSAst.Expression body;
+
+            var breakLabel = MSAst.Expression.Label();
+
+            context.NextToken(LexiconType.LKWhile);
+
+            condition = ExpressionPacker.Pack(context,scope);
+            context.NextToken(LexiconType.LLineBreak);
+
+            body = Pack(context,scope);
+
+            context.NextToken(LexiconType.LKEnd);
+            context.NextToken(LexiconType.LKWhile, "Unexpected 'End' instruction for 'While' statment.");
+
+            return new WhileStatment(condition, body, breakLabel);
         }
     }
 }
