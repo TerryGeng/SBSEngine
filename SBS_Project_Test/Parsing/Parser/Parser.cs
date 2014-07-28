@@ -11,7 +11,7 @@ namespace SBSEnvironment.Parsing
     {
         private ParsingContext context;
 
-        public static Parser CreateParserFromFile(string fileName,Encoding encoding){
+        public static Parser CreateParserFromFile(string fileName, Encoding encoding){
             Parser p = new Parser();
 
             p.context = new ParsingContext(new StreamReader(new FileStream(fileName, FileMode.Open), encoding));
@@ -30,7 +30,7 @@ namespace SBSEnvironment.Parsing
 
         public MSAst.Expression Parse()
         {
-            return PackScope().Reduce();
+            return MSAst.Expression.Convert(PackScope().Reduce(), typeof(object));
         }
     }
 }
