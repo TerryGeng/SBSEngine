@@ -1,10 +1,10 @@
 ﻿namespace SBSEngine.Tests
 {
     using System.Windows.Forms;
-    using SBSEngine.Tokenization;
+    using Tokenization;
     using System.Diagnostics;
     using System.Collections.Generic;
-    using SBSEngine.Parsing;
+    using Parsing;
     using System.Linq.Expressions;
     using System.IO;
     using System;
@@ -84,7 +84,7 @@
                     Token = tokenizer.NextToken();
                     if (Token.Type == (int)LexiconType.Null)
                         break;
-                    textBox2.AppendText("Token: " + ((SBSEngine.Tokenization.LexiconType)Token.Type).ToString() + " " + Token.Value + "\r\n");
+                    textBox2.AppendText("Token: " + ((Tokenization.LexiconType)Token.Type).ToString() + " " + Token.Value + "\r\n");
                     TokenCount += 1;
                 }
             }

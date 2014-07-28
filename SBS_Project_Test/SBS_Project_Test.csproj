@@ -8,8 +8,8 @@
     <ProjectGuid>{DA15F79D-F611-4A45-A78C-F86206DBBE4A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SBSEngine</RootNamespace>
-    <AssemblyName>SBSEngine</AssemblyName>
+    <RootNamespace>SBSEnvironment</RootNamespace>
+    <AssemblyName>SBSEnvironment</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -71,7 +71,7 @@
     <Compile Include="Parsing\ParsingContext.cs" />
     <Compile Include="Parsing\SourcePosition.cs" />
     <Compile Include="Runtime\Binding\BinaryOpBinder.cs" />
-    <Compile Include="Runtime\SBSType.cs" />
+    <Compile Include="SBSEngine.cs" />
     <Compile Include="Tokenization\IRule.cs" />
     <Compile Include="Tokenization\SBSRules.cs" />
     <Compile Include="Tokenization\Tokenizer.cs" />
