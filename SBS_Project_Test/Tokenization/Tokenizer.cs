@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace SBSEngine.Tokenization // Tokenizer core part
+namespace SBSEnvironment.Tokenization // Tokenizer core part
 {
     public struct Token
     {

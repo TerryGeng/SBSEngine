@@ -3,13 +3,13 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SBSEngine.Tokenization;
-using SBSEngine.Runtime;
-using SBSEngine.Runtime.Binding;
-using SBSEngine.Runtime.Binding.Sorter;
-using SBSEngine.Parsing.Ast;
+using SBSEnvironment.Tokenization;
+using SBSEnvironment.Runtime;
+using SBSEnvironment.Runtime.Binding;
+using SBSEnvironment.Runtime.Binding.Sorter;
+using SBSEnvironment.Parsing.Ast;
 
-namespace SBSEngine.Parsing
+namespace SBSEnvironment.Parsing
 {
     class ParsingContext
     {

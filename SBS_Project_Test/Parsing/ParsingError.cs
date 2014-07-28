@@ -1,7 +1,7 @@
 ﻿using System;
-using SBSEngine.Tokenization;
+using SBSEnvironment.Tokenization;
 
-namespace SBSEngine.Parsing
+namespace SBSEnvironment.Parsing
 {
     class ParsingError
     {

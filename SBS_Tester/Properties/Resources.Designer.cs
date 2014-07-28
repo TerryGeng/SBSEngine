@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SBSEngine.Tests.Properties {
+namespace SBSEnvironment.Tests.Properties {
     using System;
     
     

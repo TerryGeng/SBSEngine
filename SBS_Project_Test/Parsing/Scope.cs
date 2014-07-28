@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
-using SBSEngine.Runtime;
+using SBSEnvironment.Runtime;
 using MSAst = System.Linq.Expressions;
-using SBSEngine.Parsing.Ast;
+using SBSEnvironment.Parsing.Ast;
 
-namespace SBSEngine.Parsing
+namespace SBSEnvironment.Parsing
 {
     class Scope  // TODO: Move this to ScopeStatment
     {

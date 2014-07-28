@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace SBSEngine.Tokenization
+namespace SBSEnvironment.Tokenization
 {
     public enum LexiconType
     {

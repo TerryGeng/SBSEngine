@@ -7,7 +7,7 @@ using SBSEngine.Runtime;
 using SBSEngine.Parsing;
 using System.Diagnostics;
 
-namespace SBSEngine.Parsing.Ast
+namespace SBSEnvironment.Parsing.Ast
 {
     class IfStatment : SBSAst
     {

@@ -6,7 +6,7 @@ using System.Text;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
-namespace SBSEngine.Runtime.Binding.Sorter
+namespace SBSEnvironment.Runtime.Binding.Sorter
 {
 
     using ISorterDictionary = IDictionary<Tuple<Type, SBSOperator>, SorterDelegate>;

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.CompilerServices;
-using SBSEngine.Runtime;
-using SBSEngine.Runtime.Binding;
+using SBSEnvironment.Runtime;
+using SBSEnvironment.Runtime.Binding;
 using System.Diagnostics;
-using SBSEngine.Runtime.Binding.Sorter;
+using SBSEnvironment.Runtime.Binding.Sorter;
 
-namespace SBSEngine.Runtime.Binding
+namespace SBSEnvironment.Runtime.Binding
 {
     /// <summary>
     /// This is a binder which provide runtime operations like add, subtract.

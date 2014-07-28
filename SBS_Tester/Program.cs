@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace SBSEngine.Tests
+namespace SBSEnvironment.Tests
 {
     static class Program
     {

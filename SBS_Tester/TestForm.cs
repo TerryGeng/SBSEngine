@@ -1,4 +1,4 @@
-﻿namespace SBSEngine.Tests
+﻿namespace SBSEnvironment.Tests
 {
     using System.Windows.Forms;
     using Tokenization;

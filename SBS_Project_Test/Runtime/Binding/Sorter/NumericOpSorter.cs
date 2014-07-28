@@ -5,7 +5,7 @@ using System.Text;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace SBSEngine.Runtime.Binding.Sorter
+namespace SBSEnvironment.Runtime.Binding.Sorter
 {
     using SorterDelegate = Func<Type, Type, SBSOperator, ParameterExpression, ParameterExpression, Expression>;
     using System.Diagnostics;

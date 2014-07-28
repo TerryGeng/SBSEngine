@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using MSAst = System.Linq.Expressions;
-using SBSEngine.Tokenization;
-using SBSEngine.Parsing.Ast;
-using SBSEngine.Runtime;
+using SBSEnvironment.Tokenization;
+using SBSEnvironment.Parsing.Ast;
+using SBSEnvironment.Runtime;
 using System.Diagnostics;
 
-namespace SBSEngine.Parsing
+namespace SBSEnvironment.Parsing
 {
     partial class Parser
     {

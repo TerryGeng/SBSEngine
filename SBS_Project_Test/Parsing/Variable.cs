@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace SBSEngine.Parsing
+namespace SBSEnvironment.Parsing
 {
     class Variable
     {

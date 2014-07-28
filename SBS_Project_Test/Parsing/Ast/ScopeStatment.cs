@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using MSAst = System.Linq.Expressions;
 
-namespace SBSEngine.Parsing.Ast
+namespace SBSEnvironment.Parsing.Ast
 {
     class ScopeStatment : SBSAst
     {

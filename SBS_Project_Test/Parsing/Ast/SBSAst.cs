@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MSAst = System.Linq.Expressions;
-using SBSEngine.Runtime;
-using SBSEngine.Parsing;
+using SBSEnvironment.Runtime;
+using SBSEnvironment.Parsing;
 
-namespace SBSEngine.Parsing.Ast
+namespace SBSEnvironment.Parsing.Ast
 {
     abstract class SBSAst : MSAst.Expression
     {
