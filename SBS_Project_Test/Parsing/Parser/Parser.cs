@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using MSAst = System.Linq.Expressions;
 using SBSEngine.Tokenization;
 using System.Text;
-using SBSEngine.Parsing.Packer;
 
 namespace SBSEngine.Parsing 
 {
-    public class Parser
+    public partial class Parser
     {
         private ParsingContext context;
 
@@ -31,7 +30,7 @@ namespace SBSEngine.Parsing
 
         public MSAst.Expression Parse()
         {
-            return ScopePacker.Pack(context).Reduce();
+            return PackScope().Reduce();
         }
     }
 }

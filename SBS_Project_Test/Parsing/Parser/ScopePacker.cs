@@ -6,11 +6,11 @@ using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
 using System.Diagnostics;
 
-namespace SBSEngine.Parsing.Packer
+namespace SBSEngine.Parsing
 {
-    internal static class ScopePacker
+    partial class Parser
     {
-        public static MSAst.Expression Pack(ParsingContext context, Scope parent = null, bool createChildScope = true)
+        private MSAst.Expression PackScope(Scope parent = null, bool createChildScope = true)
         {
             Scope scope;
 
@@ -26,22 +26,22 @@ namespace SBSEngine.Parsing.Packer
                 switch (type)
                 {
                     case LexiconType.LKIf:
-                        list.AddLast(PackIf(context, scope));
+                        list.AddLast(PackIf(scope));
                         break;
                     case LexiconType.LKWhile:
-                        list.AddLast(PackWhile(context, scope));
+                        list.AddLast(PackWhile(scope));
                         break;
                     case LexiconType.LKBreak:
-                        list.AddLast(PackBreak(context, scope));
+                        list.AddLast(PackBreak(scope));
                         break;
                     case LexiconType.LKContinue:
-                        list.AddLast(PackContinue(context, scope));
+                        list.AddLast(PackContinue(scope));
                         break;
                     case LexiconType.LKEnd:
                     case LexiconType.LKElse:
                         return new ScopeStatment(list, scope);
                     default:
-                        list.AddLast(ExpressionPacker.Pack(context, scope));
+                        list.AddLast(PackExpr(scope));
                         break;
                 }
 
@@ -63,7 +63,7 @@ namespace SBSEngine.Parsing.Packer
          *          'End' + 'If' + LineBreak                             --(4)--
          * 
          */
-        public static MSAst.Expression PackIf(ParsingContext context, Scope scope)
+        private MSAst.Expression PackIf(Scope scope)
         {
             MSAst.Expression condition = null;
             MSAst.Expression then = null;
@@ -71,11 +71,11 @@ namespace SBSEngine.Parsing.Packer
             // --(1)--
             context.NextToken(LexiconType.LKIf);
 
-            condition = ExpressionPacker.Pack(context, scope);
+            condition = PackExpr(scope);
             context.NextToken(LexiconType.LKThen, "Expected 'Then'.");
             context.NextToken(LexiconType.LLineBreak);
 
-            then = Pack(context, scope);
+            then = PackScope(scope);
 
             if (!context.MaybeNext(LexiconType.LKEnd))
             {
@@ -84,13 +84,13 @@ namespace SBSEngine.Parsing.Packer
                     if (context.PeekToken(LexiconType.LKIf))
                     {
                         //--(2)--
-                        elseStmt = PackIf(context, scope).Reduce();
+                        elseStmt = PackIf(scope).Reduce();
                         return new IfStatment(condition, then, elseStmt);
                     }
                     else if (context.MaybeNext(LexiconType.LLineBreak))
                     {
                         //--(3)--
-                        elseStmt = Pack(context, scope).Reduce();
+                        elseStmt = PackScope(scope).Reduce();
                         context.NextToken(LexiconType.LKEnd);
                         context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
                         return new IfStatment(condition, then, elseStmt);
@@ -114,7 +114,7 @@ namespace SBSEngine.Parsing.Packer
          *                  Statments(body) + 
          *             'End' + 'While' + \n
          */
-        public static MSAst.Expression PackWhile(ParsingContext context, Scope scope)
+        private MSAst.Expression PackWhile(Scope scope)
         {
             MSAst.Expression condition;
             MSAst.Expression body;
@@ -129,10 +129,10 @@ namespace SBSEngine.Parsing.Packer
 
             context.NextToken(LexiconType.LKWhile);
 
-            condition = ExpressionPacker.Pack(context,scope);
+            condition = PackExpr(scope);
             context.NextToken(LexiconType.LLineBreak);
 
-            body = Pack(context,childScope,false);
+            body = PackScope(childScope,false);
 
             context.NextToken(LexiconType.LKEnd);
             context.NextToken(LexiconType.LKWhile, "Unexpected 'End' instruction for 'While' statment.");
@@ -140,7 +140,7 @@ namespace SBSEngine.Parsing.Packer
             return new WhileStatment(condition, body, breakLabel, continueLabel);
         }
 
-        public static MSAst.Expression PackBreak(ParsingContext context, Scope scope)
+        private MSAst.Expression PackBreak(Scope scope)
         {
             var token = context.NextToken(LexiconType.LKBreak);
 
@@ -151,7 +151,7 @@ namespace SBSEngine.Parsing.Packer
             return MSAst.Expression.Break(label);
         }
 
-        public static MSAst.Expression PackContinue(ParsingContext context, Scope scope)
+        private MSAst.Expression PackContinue(Scope scope)
         {
             var token = context.NextToken(LexiconType.LKContinue);
 

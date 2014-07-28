@@ -5,10 +5,12 @@ using SBSEngine.Parsing.Ast;
 using SBSEngine.Runtime;
 using System.Diagnostics;
 
-namespace SBSEngine.Parsing.Packer
+namespace SBSEngine.Parsing
 {
-    internal static class ExpressionPacker
+    partial class Parser
     {
+
+        #region ExpressionPacker
 
         #region BinaryExpression
         /*
@@ -18,17 +20,17 @@ namespace SBSEngine.Parsing.Packer
          * 2 Comparison
          * 1 ArithExpr
          */
-        const int MAX_LEVEL = 6;
+        const int EXPR_MAX_LEVEL = 6;
 
-        public static MSAst.Expression Pack(ParsingContext context, Scope scope)
+        private MSAst.Expression PackExpr(Scope scope)
         {
-            return PackLevel(context,scope,MAX_LEVEL);
+            return PackExprLevel(scope,EXPR_MAX_LEVEL);
         }
 
-        private static MSAst.Expression PackLevel(ParsingContext context, Scope scope, int level)
+        private MSAst.Expression PackExprLevel(Scope scope, int level)
         {
             if (level == -1)
-                return PackFactor(context, scope);
+                return PackFactor(scope);
 
             MSAst.Expression mainExpr = null;
             MSAst.Expression currentExpr = null;
@@ -37,7 +39,7 @@ namespace SBSEngine.Parsing.Packer
 
             while (true)
             {
-                op = PeekSBSOperator(context, out opLevel);
+                op = PeekSBSOperator(out opLevel);
 
                 if (opLevel == -1)
                 {
@@ -49,7 +51,7 @@ namespace SBSEngine.Parsing.Packer
                 else if (opLevel < level) op = SBSOperator.Null; // This operator belongs to lower-level packer. Ignore it.
 
 
-                if ((currentExpr = PackLevel(context, scope, level - 1)) != null)
+                if ((currentExpr = PackExprLevel(scope, level - 1)) != null)
                 {
                     if (mainExpr == null)
                     {
@@ -77,23 +79,23 @@ namespace SBSEngine.Parsing.Packer
 
 
 
-        private static MSAst.Expression PackFactor(ParsingContext context, Scope scope)
+        private MSAst.Expression PackFactor(Scope scope)
         {
             switch (context.PeekTokenType())
             {
                 case LexiconType.LSLRoundBracket:
-                    return PackExprFactor(context, scope);
+                    return PackExprFactor(scope);
                 case LexiconType.LSDollar:
-                    return ExpressionPacker.PackVariable(context, scope);
+                    return PackVariable(scope);
                 default:
-                    return PackConstantFactor(context);
+                    return PackConstantFactor();
             }
         }
 
         /*
          * ConstantFactor = (Integer|Double)
          */
-        private static MSAst.Expression PackConstantFactor(ParsingContext context)
+        private MSAst.Expression PackConstantFactor()
         {
             Token token = context.PeekToken();
 
@@ -114,10 +116,10 @@ namespace SBSEngine.Parsing.Packer
             }
         }
 
-        private static MSAst.Expression PackExprFactor(ParsingContext context,Scope scope)
+        private  MSAst.Expression PackExprFactor(Scope scope)
         {
             context.NextTokenType(LexiconType.LSLRoundBracket);
-            MSAst.Expression expr = Pack(context, scope);
+            MSAst.Expression expr = PackExpr(scope);
             context.NextTokenType(LexiconType.LSRRoundBracket, "Invalid expression factor ending.");
 
             return expr;
@@ -127,7 +129,7 @@ namespace SBSEngine.Parsing.Packer
         * Variable =  '$'   Name   (['(' (String|Integer) ')'])*
         *            (*1*)  (*2*)            (*3*)<TODO>
         */
-        public static MSAst.Expression PackVariable(ParsingContext context, Scope scope)
+        private MSAst.Expression PackVariable(Scope scope)
         {
             context.NextTokenType(LexiconType.LSDollar);
 
@@ -136,7 +138,7 @@ namespace SBSEngine.Parsing.Packer
             return new VariableAccess(name, context, scope);
         }
 
-        private static MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
+        private MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
         {
             switch (op)
             {
@@ -161,7 +163,7 @@ namespace SBSEngine.Parsing.Packer
         #endregion
 
         #region Operator
-        private static SBSOperator PeekSBSOperator(ParsingContext context, out int level)
+        private SBSOperator PeekSBSOperator(out int level)
         {
             switch (context.PeekTokenType())
             {
@@ -207,45 +209,36 @@ namespace SBSEngine.Parsing.Packer
             return 0;
         }
 
-        public static SBSOperator GetFirstOp(int level)
-        {
-            switch (level)
-            {
-                case 1: return SBSOperator.Add;
-            }
-
-            return SBSOperator.Null;
-        }
-
-
-        private static bool IsTermOperator(SBSOperator op)
+        private bool IsTermOperator(SBSOperator op)
         {
             if (op == SBSOperator.Add || op == SBSOperator.Subtract)
                 return true;
             return false;
         }
 
-        private static bool IsFactorOperator(SBSOperator op)
+        private bool IsFactorOperator(SBSOperator op)
         {
             if (op == SBSOperator.Multiply || op == SBSOperator.Divide)
                 return true;
             return false;
         }
 
-        private static bool IsAssignOperator(SBSOperator op)
+        private bool IsAssignOperator(SBSOperator op)
         {
             if (op == SBSOperator.Assign || op == SBSOperator.AddAssign)
                 return true;
             return false;
         }
 
-        private static bool IsComparisonOperator(SBSOperator op)
+        private bool IsComparisonOperator(SBSOperator op)
         {
             if (op == SBSOperator.Equal || op == SBSOperator.NotEqual || op == SBSOperator.GreaterThan ||
                 op == SBSOperator.GreaterThanOrEqual || op == SBSOperator.LessThan || op == SBSOperator.LessThanOrEqual)
                 return true;
             return false;
         }
+
+        #endregion
 
         #endregion
     }
