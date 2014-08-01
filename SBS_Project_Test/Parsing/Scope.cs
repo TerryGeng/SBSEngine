@@ -11,8 +11,8 @@ namespace SBSEnvironment.Parsing
     class Scope  // TODO: Move this to ScopeStatment
     {
         private Scope parentScope;
-        private Dictionary<string, Variable> localVarsDict;
-        private List<MSAst.ParameterExpression> localVars;
+        private Dictionary<string, MSAst.Expression> localVarsDict;
+        private List<ParameterExpression> localVars;
 
         private LabelTarget breakLabel;
         private LabelTarget continueLabel;
@@ -54,7 +54,7 @@ namespace SBSEnvironment.Parsing
 
         public Scope()
         {
-            localVarsDict = new Dictionary<string, Variable>(10);
+            localVarsDict = new Dictionary<string, MSAst.Expression>(10);
             localVars = new List<MSAst.ParameterExpression>(10);
             parentScope = null;
         }
@@ -62,14 +62,14 @@ namespace SBSEnvironment.Parsing
         public Scope(Scope parent)
         {
             parentScope = parent;
-            localVarsDict = new Dictionary<string, Variable>(10);
+            localVarsDict = new Dictionary<string, MSAst.Expression>(10);
             localVars = new List<MSAst.ParameterExpression>(10);
         }
 
         /// <summary>
         /// Get or make a variable's parameter expression by it's name.
         /// </summary>
-        public ParameterExpression GetOrMakeVariableExpr(string name)
+        public MSAst.Expression GetOrMakeVariableExpr(string name)
         {
             return GetVariableExpr(name) ?? MakeVaribaleExpr(name);
         }
@@ -79,10 +79,10 @@ namespace SBSEnvironment.Parsing
         /// If specific variable isn't exist in this scope, it will look up outer scope, if this
         /// is already the outest scope, return null.
         /// </summary>
-        public ParameterExpression GetVariableExpr(string name)
+        public MSAst.Expression GetVariableExpr(string name)
         {
             if (localVarsDict.ContainsKey(name))
-                return localVarsDict[name].Expr;
+                return localVarsDict[name];
 
             if (parentScope != null)
                 return parentScope.GetVariableExpr(name);
@@ -95,11 +95,36 @@ namespace SBSEnvironment.Parsing
         /// </summary>
         public ParameterExpression MakeVaribaleExpr(string name)
         {
-            Variable variable = new Variable(name, typeof(object));
-            localVars.Add(variable.Expr);
-            localVarsDict.Add(name, variable);
+            var vari = MSAst.Expression.Parameter(typeof(object), name);
+            localVars.Add(vari);
+            localVarsDict.Add(name, vari);
 
-            return variable.Expr;
+            return vari;
+        }
+
+        public void AddVariable(MSAst.ParameterExpression vari)
+        {
+            localVars.Add(vari);
+            if (vari.Name != null)
+                localVarsDict.Add(vari.Name, vari);
+        }
+
+        public void AddVariable(SBSVariable vari)
+        {
+            MSAst.ParameterExpression para;
+            if(vari.Name != null)
+                localVarsDict.Add(vari.Name, vari.Expr);
+
+            if((para = vari.Expr as ParameterExpression) != null)
+                localVars.Add(para);
+        }
+
+        public void AddVariable(IList<SBSVariable> varis)
+        {
+            foreach (SBSVariable vari in varis)
+            {
+                AddVariable(vari);
+            }
         }
     }
 }
