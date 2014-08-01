@@ -1,10 +1,10 @@
 ﻿namespace SBSEnvironment.Tests
 {
     using System.Windows.Forms;
-    using Tokenization;
+    using SBSEnvironment.Tokenization;
     using System.Diagnostics;
     using System.Collections.Generic;
-    using Parsing;
+    using SBSEnvironment.Parsing;
     using System.Linq.Expressions;
     using System.IO;
     using System;

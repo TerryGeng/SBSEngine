@@ -58,10 +58,14 @@
     <Compile Include="Parsing\Ast\SBSAst.cs" />
     <Compile Include="Parsing\Ast\VariableAccess.cs" />
     <Compile Include="Parsing\Ast\WhileStatment.cs" />
+    <Compile Include="Parsing\Parser\FunctionPacker.cs" />
     <Compile Include="Parsing\Parser\Parser.cs" />
-    <Compile Include="Parsing\Variable.cs" />
+    <Compile Include="Parsing\SBSVariable.cs" />
     <Compile Include="Runtime\Binding\Sorter\BinaryOpSorter.cs" />
     <Compile Include="Runtime\Binding\Sorter\NumericOpSorter.cs" />
+    <Compile Include="Runtime\ExecutableUnit.cs" />
+    <Compile Include="Runtime\Function.cs" />
+    <Compile Include="Runtime\IFunction.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />
     <Compile Include="Parsing\Ast\ScopeStatment.cs" />
     <Compile Include="Parsing\Parser\ScopePacker.cs" />
