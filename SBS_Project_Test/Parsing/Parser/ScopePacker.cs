@@ -10,6 +10,8 @@ namespace SBSEnvironment.Parsing
 {
     partial class Parser
     {
+        private bool ifInFunc;
+
         private MSAst.Expression PackScope(Scope parent = null, bool createChildScope = true)
         {
             Scope scope;
@@ -18,12 +20,12 @@ namespace SBSEnvironment.Parsing
             else scope = parent;
 
             var list = new LinkedList<MSAst.Expression>();
-            LexiconType type;
+            Token token;
 
             while (true)
             {
-                type = context.PeekTokenType();
-                switch (type)
+                token = context.PeekToken();
+                switch ((LexiconType)token.Type)
                 {
                     case LexiconType.LKIf:
                         list.AddLast(PackIf(scope));
@@ -36,6 +38,18 @@ namespace SBSEnvironment.Parsing
                         break;
                     case LexiconType.LKContinue:
                         list.AddLast(PackContinue(scope));
+                        break;
+                    case LexiconType.LKFunction:
+                        if (!ifInFunc)
+                        {
+                            ifInFunc = true;
+                            PackFunction();
+                            ifInFunc = false;
+                        }
+                        else
+                        {
+                            context.Error.ThrowUnexpectedTokenException(token, "Unexpected function declaration.");
+                        }
                         break;
                     case LexiconType.LKEnd:
                     case LexiconType.LKElse:
@@ -84,13 +98,13 @@ namespace SBSEnvironment.Parsing
                     if (context.PeekToken(LexiconType.LKIf))
                     {
                         //--(2)--
-                        elseStmt = PackIf(scope).Reduce();
+                        elseStmt = PackIf(scope);
                         return new IfStatment(condition, then, elseStmt);
                     }
                     else if (context.MaybeNext(LexiconType.LLineBreak))
                     {
                         //--(3)--
-                        elseStmt = PackScope(scope).Reduce();
+                        elseStmt = PackScope(scope);
                         context.NextToken(LexiconType.LKEnd);
                         context.NextToken(LexiconType.LKIf, "Unexpected 'End' instruction for 'If' statment.");
                         return new IfStatment(condition, then, elseStmt);

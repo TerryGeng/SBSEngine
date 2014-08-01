@@ -42,6 +42,7 @@ namespace SBSEnvironment.Tokenization
         LKNext,
         LKBreak,
         LKContinue,
+        LKFunction,
 
         LComment
     }
@@ -228,6 +229,11 @@ namespace SBSEnvironment.Tokenization
                 {
                     value = null;
                     type = (int)LexiconType.LKContinue;
+                }
+                else if (string.Compare(value, "function", true) == 0)
+                {
+                    value = null;
+                    type = (int)LexiconType.LKFunction;
                 }
                 else if (string.Compare(value, "end", true) == 0)
                 {
