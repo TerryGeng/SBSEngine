@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using MSAst = System.Linq.Expressions;
 using SBSEnvironment.Tokenization;
+using SBSEnvironment.Runtime;
 using System.Text;
 
 namespace SBSEnvironment.Parsing 
@@ -10,6 +11,7 @@ namespace SBSEnvironment.Parsing
     public partial class Parser
     {
         private ParsingContext context;
+        private ExecutableUnit unit;
 
         public static Parser CreateParserFromFile(string fileName, Encoding encoding){
             Parser p = new Parser();
