@@ -86,7 +86,7 @@ namespace SBSEnvironment.Parsing
                 case LexiconType.LSLRoundBracket:
                     return PackExprFactor(scope);
                 case LexiconType.LSDollar:
-                    return PackVariable(scope);
+                    return PackVariableAccess(scope);
                 default:
                     return PackConstantFactor();
             }
@@ -129,13 +129,17 @@ namespace SBSEnvironment.Parsing
         * Variable =  '$'   Name   (['(' (String|Integer) ')'])*
         *            (*1*)  (*2*)            (*3*)<TODO>
         */
-        private MSAst.Expression PackVariable(Scope scope)
+        private MSAst.Expression PackVariableAccess(Scope scope)
         {
-            context.NextTokenType(LexiconType.LSDollar);
+            return new VariableAccess(PackVariable(), context, scope);
+        }
 
-            string name = context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
-
-            return new VariableAccess(name, context, scope);
+        private string PackVariable()
+        {
+            if (context.MaybeNext(LexiconType.LSDollar))
+                return context.NextToken(LexiconType.LName, "Unexpected variable name.").Value;
+            else
+                return null;
         }
 
         private MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
