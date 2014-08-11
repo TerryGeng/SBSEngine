@@ -27,7 +27,7 @@ namespace SBSEnvironment.Parsing.Ast
             {
                 for (int i = 0; i < argsArray.Count; ++i)
                 {
-                    argsArray[i] = argsArray[i].Reduce();
+                    argsArray[i] = Expression.Convert(argsArray[i].Reduce(), typeof(object));
                 }
 
                 MSAst.Expression args = Expression.NewArrayInit(typeof(object), argsArray);

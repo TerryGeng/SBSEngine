@@ -111,6 +111,8 @@ namespace SBSEnvironment.Parsing
                     return PackExprFactor(scope);
                 case LexiconType.LSDollar:
                     return PackVariableAccess(scope);
+                case LexiconType.LName:
+                    return PackFunctionInvoke(scope);
                 default:
                     return PackConstantFactor();
             }

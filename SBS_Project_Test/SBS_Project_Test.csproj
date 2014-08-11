@@ -63,9 +63,11 @@
     <Compile Include="Parsing\Parser\Parser.cs" />
     <Compile Include="Parsing\SBSVariable.cs" />
     <Compile Include="Runtime\Binding\FunctionInvokeBinder.cs" />
+    <Compile Include="Runtime\Binding\LibFunction.cs" />
     <Compile Include="Runtime\Binding\Sorter\BinaryOpSorter.cs" />
     <Compile Include="Runtime\Binding\Sorter\NumericOperations.cs" />
     <Compile Include="Runtime\ExecutableUnit.cs" />
+    <Compile Include="Runtime\FuncLibrary\DebugFunctions.cs" />
     <Compile Include="Runtime\Function.cs" />
     <Compile Include="Runtime\IFunction.cs" />
     <Compile Include="Runtime\SBSOperator.cs" />

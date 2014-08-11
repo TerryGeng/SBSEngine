@@ -5,6 +5,7 @@ using System.Text;
 using MSAst = System.Linq.Expressions;
 using SBSEnvironment.Parsing;
 using SBSEnvironment.Parsing.Ast;
+using System.Diagnostics;
 
 namespace SBSEnvironment.Runtime
 {
@@ -14,18 +15,19 @@ namespace SBSEnvironment.Runtime
         public int ArgCount { get; private set; }
 
         public IList<SBSVariable> Arguments;
-        public Func<object[], object> EmitDelegate
+        public MSAst.Expression<Func<object[], object>> Lambda
         {
             get
             {
-                if (funcDelegate == null)
-                    funcDelegate = Compile();
+                if (lambda == null)
+                    lambda = GetLambda();
 
-                return funcDelegate;
+                return lambda;
             }
         }
 
         private ScopeStatment funcCode;
+        private MSAst.Expression<Func<object[], object>> lambda;
         private Func<object[], object> funcDelegate;
 
         public Function(string name, IList<SBSVariable> args, ScopeStatment funcCode)
@@ -40,16 +42,31 @@ namespace SBSEnvironment.Runtime
         public object Emit(object[] args)
         {
             if (funcDelegate == null)
-                funcDelegate = Compile();
+                funcDelegate = Lambda.Compile();
 
-            return funcDelegate.Invoke(args);
+            return funcDelegate(args);
         }
 
-        private Func<object[], object> Compile()
+        private MSAst.Expression<Func<object[], object>> GetLambda()
         {
             var args = funcCode.LocalScope.GetVariableExpr("@{args}") as MSAst.ParameterExpression;
 
-            return MSAst.Expression.Lambda<Func<object[], object>>(funcCode.Reduce(), new[] { args }).Compile();
+            return MSAst.Expression.Lambda<Func<object[], object>>(funcCode.Reduce(), new[] { args });
+        }
+
+        public MSAst.Expression GetInvokeExpr(MSAst.ParameterExpression argsList)
+        {
+            var args = funcCode.LocalScope.GetVariableExpr("@{args}") as MSAst.ParameterExpression;
+
+            //MSAst.BlockExpression code = funcCode.Reduce() as MSAst.BlockExpression;
+            //MSAst.Expression body = MSAst.Expression.Block(
+            //    new[] { args },
+            //    MSAst.Expression.Assign(args , argsList),
+            //    code
+            //    );
+            //return body;
+
+            return Expression.Invoke(Lambda, argsList);
         }
     }
 }

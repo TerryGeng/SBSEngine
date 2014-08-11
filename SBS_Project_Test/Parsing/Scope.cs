@@ -102,21 +102,16 @@ namespace SBSEnvironment.Parsing
             return vari;
         }
 
-        public void AddVariable(MSAst.ParameterExpression vari)
+        public void AddVariable(SBSVariable vari, bool declareInScope = true)
         {
-            localVars.Add(vari);
-            if (vari.Name != null)
-                localVarsDict.Add(vari.Name, vari);
-        }
+            localVarsDict.Add(vari.Name, vari.Expr);
 
-        public void AddVariable(SBSVariable vari)
-        {
-            MSAst.ParameterExpression para;
-            if(vari.Name != null)
-                localVarsDict.Add(vari.Name, vari.Expr);
-
-            if((para = vari.Expr as ParameterExpression) != null)
-                localVars.Add(para);
+            if (declareInScope)
+            {
+                MSAst.ParameterExpression para;
+                if ((para = vari.Expr as ParameterExpression) != null)
+                    localVars.Add(para);
+            }
         }
 
         public void AddVariable(IList<SBSVariable> varis)

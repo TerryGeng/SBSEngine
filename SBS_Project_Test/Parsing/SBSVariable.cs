@@ -11,13 +11,13 @@ namespace SBSEnvironment.Parsing
         public string Name { get; private set; }
         public MSAst.Expression Expr { get; private set; }
 
-        public SBSVariable(string name)
+        public SBSVariable(string name, bool ifDeclare = true)
         {
             Name = name;
             Expr = Expression.Parameter(typeof(object), name);
         }
 
-        public SBSVariable(string name, MSAst.Expression expr)
+        public SBSVariable(string name, MSAst.Expression expr, bool ifDeclare = true)
         {
             Name = name;
             Expr = expr;

@@ -37,18 +37,19 @@ namespace SBSEnvironment.Runtime.Binding
             IFunction func;
             string name = (string)args[0];
 
-            if ((func = unit.GetFunction(name)) != null && func.ArgCount != ((object[])args[1]).Length)
+            if ((func = unit.GetFunction(name)) == null || func.ArgCount != ((object[])args[1]).Length)
             {
                 Debug.Assert(false, "Undefined function."); // TODO: Error process.
                 return default(T);
             }
 
             ParameterExpression site = Expression.Parameter(typeof(CallSite), "site");
+            ParameterExpression namePara = Expression.Parameter(typeof(string), "name");
             ParameterExpression argsList = Expression.Parameter(typeof(object[]), "argsList");
 
-            Expression body = Expression.Call(func.EmitDelegate.Method, argsList);
+            Expression body = func.GetInvokeExpr(argsList);
 
-            var compiled = Expression.Lambda<Func<CallSite, object[], object>>(body, argsList).Compile();
+            var compiled = Expression.Lambda<Func<CallSite, string, object[], object>>(body, site, namePara, argsList).Compile();
 
             return (T)(object)compiled;
         }

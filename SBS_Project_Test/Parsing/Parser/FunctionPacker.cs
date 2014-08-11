@@ -30,7 +30,7 @@ namespace SBSEnvironment.Parsing
 
             context.NextToken(LexiconType.LLineBreak);
 
-            scope.AddVariable(argsArray);
+            scope.AddVariable(new SBSVariable("@{args}", argsArray), false);
             scope.AddVariable(args);
 
             body = PackScope(scope, false) as ScopeStatment;
