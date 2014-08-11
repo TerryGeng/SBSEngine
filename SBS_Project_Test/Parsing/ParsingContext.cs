@@ -13,15 +13,18 @@ namespace SBSEnvironment.Parsing
 {
     class ParsingContext
     {
-        private Tokenizer Tokenizer;
-        private SourcePosition Position;
         public ParsingError Error { get; private set; }
-        public BinaryOpBinder BinaryBinder;
-        public BinaryOpSorter BinarySorter;
+        public BinaryOpBinder BinaryBinder { get; private set; }
+        public BinaryOpSorter BinarySorter { get; private set; }
+        public FunctionInvokeBinder FunctionBinder { get; private set; }
+        public ExecutableUnit ExecutableUnit;
+
+        private Tokenizer tokenizer;
+        private SourcePosition position;
 
         public ParsingContext(TextReader reader)
         {
-            Tokenizer = new Tokenizer(
+            tokenizer = new Tokenizer(
                 new IRule[]{
                 new NumberRule(),
                 new BlankRule(),
@@ -33,18 +36,21 @@ namespace SBSEnvironment.Parsing
                 reader
             );
 
-            Position = new SourcePosition();
-            Error = new ParsingError(Tokenizer, Position);
+            position = new SourcePosition();
+            ExecutableUnit = new ExecutableUnit();
+
+            Error = new ParsingError(tokenizer, position);
             BinarySorter = new BinaryOpSorter();
-            RegisterOpSorter();
+            RegisterOperations();
             BinaryBinder = new BinaryOpBinder(BinarySorter);
+            FunctionBinder = new FunctionInvokeBinder(ExecutableUnit);
 
             MaybeNext(LexiconType.LLineBreak); 
         }
 
-        private void RegisterOpSorter()
+        private void RegisterOperations()
         {
-            NumericOpSorter.SelfRegister(BinarySorter);
+            NumericOperations.SelfRegister(BinarySorter);
         }
 
         /*
@@ -59,7 +65,7 @@ namespace SBSEnvironment.Parsing
             Token t;
             if (_peekToken.Type == 0)
             {
-                while((t = Tokenizer.NextToken()).Type == (int)LexiconType.LBlank || t.Type == (int)LexiconType.LComment);
+                while((t = tokenizer.NextToken()).Type == (int)LexiconType.LBlank || t.Type == (int)LexiconType.LComment);
             }
             else
             {
@@ -67,9 +73,9 @@ namespace SBSEnvironment.Parsing
                 _peekToken = default(Token);
             }
 
-            Position.SetPosition(Tokenizer.Position);
+            position.SetPosition(tokenizer.Position);
             if (t.Type == (int)LexiconType.LLineBreak)
-                Position.AddLine();
+                position.AddLine();
 
             return t;
         }

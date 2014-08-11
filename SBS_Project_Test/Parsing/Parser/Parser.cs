@@ -11,7 +11,6 @@ namespace SBSEnvironment.Parsing
     public partial class Parser
     {
         private ParsingContext context;
-        private ExecutableUnit unit;
 
         public static Parser CreateParserFromFile(string fileName, Encoding encoding){
             Parser p = new Parser();

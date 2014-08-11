@@ -14,6 +14,16 @@ namespace SBSEnvironment.Runtime
         public int ArgCount { get; private set; }
 
         public IList<SBSVariable> Arguments;
+        public Func<object[], object> EmitDelegate
+        {
+            get
+            {
+                if (funcDelegate == null)
+                    funcDelegate = Compile();
+
+                return funcDelegate;
+            }
+        }
 
         private ScopeStatment funcCode;
         private Func<object[], object> funcDelegate;
@@ -32,7 +42,7 @@ namespace SBSEnvironment.Runtime
             if (funcDelegate == null)
                 funcDelegate = Compile();
 
-            return funcDelegate.DynamicInvoke(args);
+            return funcDelegate.Invoke(args);
         }
 
         private Func<object[], object> Compile()
