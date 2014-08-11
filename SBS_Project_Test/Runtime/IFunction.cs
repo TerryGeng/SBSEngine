@@ -9,6 +9,7 @@ namespace SBSEnvironment.Runtime
     {
         string Name { get; }
         int ArgCount { get; }
+        Func<object[], object> EmitDelegate { get; }
         object Emit(object[] args);
     }
 }

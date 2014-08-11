@@ -26,7 +26,7 @@ namespace SBSEnvironment.Parsing
 
             context.NextToken(LexiconType.LKFunction);
             name = context.NextToken(LexiconType.LName, "Unexpected function name.").Value;
-            args = PackArgsList(out argsArray);
+            args = PackArgsDecList(out argsArray);
 
             context.NextToken(LexiconType.LLineBreak);
 
@@ -38,10 +38,10 @@ namespace SBSEnvironment.Parsing
             context.NextToken(LexiconType.LKEnd);
             context.NextToken(LexiconType.LKFunction);
 
-            unit.AddFunction(new Function(name, args, body));
+            context.ExecutableUnit.AddFunction(new Function(name, args, body));
         }
 
-        private List<SBSVariable> PackArgsList(out MSAst.ParameterExpression argsArray)
+        private List<SBSVariable> PackArgsDecList(out MSAst.ParameterExpression argsArray)
         {
             argsArray = MSAst.Expression.Parameter(typeof(object[]), "@{args}");
 

@@ -10,7 +10,7 @@ namespace SBSEnvironment.Runtime.Binding.Sorter
     using SorterDelegate = Func<Type, Type, SBSOperator, ParameterExpression, ParameterExpression, Expression>;
     using System.Diagnostics;
 
-    static class NumericOpSorter
+    static class NumericOperations
     {
         public static void SelfRegister(BinaryOpSorter sorter)
         {

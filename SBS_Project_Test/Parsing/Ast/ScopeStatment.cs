@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using MSAst = System.Linq.Expressions;
 
 namespace SBSEnvironment.Parsing.Ast
@@ -25,6 +26,8 @@ namespace SBSEnvironment.Parsing.Ast
 
         public override MSAst.Expression Reduce()
         {
+            if (statments == null || statments.Count<object>() == 0) MSAst.Expression.Constant(null);
+
             var list = new LinkedList<MSAst.Expression>();
             var iterator = statments.GetEnumerator();
 

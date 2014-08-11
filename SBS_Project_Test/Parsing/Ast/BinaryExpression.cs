@@ -26,7 +26,7 @@ namespace SBSEnvironment.Parsing.Ast
         public override MSAst.Expression Reduce()
         {
             if (left == null || right == null)
-                return left ?? right;
+                return left.Reduce() ?? right.Reduce();
 
             return MSAst.Expression.Dynamic(
                 _context.BinaryBinder,

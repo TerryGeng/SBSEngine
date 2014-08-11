@@ -8,7 +8,7 @@ using SBSEnvironment.Parsing.Ast;
 
 namespace SBSEnvironment.Parsing
 {
-    class Scope  // TODO: Move this to ScopeStatment
+    class Scope
     {
         private Scope parentScope;
         private Dictionary<string, MSAst.Expression> localVarsDict;
