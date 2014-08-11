@@ -8,6 +8,7 @@ using SBSEnvironment.Runtime;
 using SBSEnvironment.Runtime.Binding;
 using SBSEnvironment.Runtime.Binding.Sorter;
 using SBSEnvironment.Parsing.Ast;
+using SBSEnvironment.Runtime.FuncLibrary;
 
 namespace SBSEnvironment.Parsing
 {
@@ -41,9 +42,11 @@ namespace SBSEnvironment.Parsing
 
             Error = new ParsingError(tokenizer, position);
             BinarySorter = new BinaryOpSorter();
-            RegisterOperations();
             BinaryBinder = new BinaryOpBinder(BinarySorter);
             FunctionBinder = new FunctionInvokeBinder(ExecutableUnit);
+
+            RegisterOperations();
+            RegisterDebugFunctions();
 
             MaybeNext(LexiconType.LLineBreak); 
         }
@@ -51,6 +54,11 @@ namespace SBSEnvironment.Parsing
         private void RegisterOperations()
         {
             NumericOperations.SelfRegister(BinarySorter);
+        }
+
+        private void RegisterDebugFunctions()
+        {
+            DebugFunctions.LoadFunctions(this.ExecutableUnit);
         }
 
         /*
