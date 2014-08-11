@@ -4,14 +4,12 @@ using SBSEnvironment.Tokenization;
 using SBSEnvironment.Parsing.Ast;
 using SBSEnvironment.Runtime;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace SBSEnvironment.Parsing
 {
     partial class Parser
     {
-
-        #region ExpressionPacker
-
         #region BinaryExpression
         /*
          * Expression(Operator) level(High to low):
@@ -77,7 +75,33 @@ namespace SBSEnvironment.Parsing
 
         }
 
+        private MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
+        {
+            switch (op)
+            {
+                case SBSOperator.Assign:
+                case SBSOperator.AddAssign:
+                    if (left is VariableAccess)
+                    {
+                        if (right != null)
+                            return new AssignExpression((VariableAccess)left, right, op);
+                        else
+                            context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Invaild expression.");
+                    }
+                    else
+                    {
+                        context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Unexpected Assign operator. Only variable can be left value.");
+                    }
+                    return null;
+            }
 
+            return new BinaryExpression(left, right, op, context);
+        }
+
+
+        #endregion
+
+        #region Factor
 
         private MSAst.Expression PackFactor(Scope scope)
         {
@@ -142,28 +166,43 @@ namespace SBSEnvironment.Parsing
                 return null;
         }
 
-        private MSAst.Expression MakeBinaryExpr(MSAst.Expression left, MSAst.Expression right, SBSOperator op, ParsingContext context)
+        private MSAst.Expression PackFunctionInvoke(Scope scope)
         {
-            switch (op)
+            string name;
+            List<MSAst.Expression> argsList;
+
+            name = context.NextToken(LexiconType.LName).Value;
+            argsList = PackArgsInvokeList(scope);
+
+            return new FunctionInvoke(name, argsList, context);
+        }
+
+        private List<MSAst.Expression> PackArgsInvokeList(Scope scope)
+        {
+            List<MSAst.Expression> argsArray = null;
+            MSAst.Expression arg;
+
+            context.NextToken(LexiconType.LSLRoundBracket);
+
+            if ((arg = PackExpr(scope)) != null)
             {
-                case SBSOperator.Assign:
-                case SBSOperator.AddAssign:
-                    if (left is VariableAccess)
-                    {
-                        if (right != null)
-                            return new AssignExpression((VariableAccess)left, right, op);
-                        else
-                            context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Invaild expression.");
-                    }
-                    else
-                    {
-                        context.Error.ThrowUnexpectedTokenException(context.PeekToken(), "Unexpected Assign operator. Only variable can be left value.");
-                    }
-                    return null;
+                argsArray = new List<MSAst.Expression>();
+                argsArray.Add(arg);
+
+                while (context.MaybeNext(LexiconType.LSComma))
+                {
+                    arg = PackExpr(scope);
+                    argsArray.Add(arg);
+                }
             }
 
-            return new BinaryExpression(left, right, op, context);
+            context.NextToken(LexiconType.LSRRoundBracket);
+
+            return argsArray;
         }
+
+
+
         #endregion
 
         #region Operator
@@ -241,9 +280,6 @@ namespace SBSEnvironment.Parsing
                 return true;
             return false;
         }
-
-        #endregion
-
         #endregion
     }
 
