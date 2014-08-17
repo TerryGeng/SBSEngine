@@ -37,7 +37,7 @@ namespace SBSEnvironment.Runtime.Binding
             IFunction func;
             string name = (string)args[0];
 
-            if ((func = unit.GetFunction(name)) == null || func.ArgCount != ((object[])args[1]).Length)
+            if ((func = unit.GetFunction(name)) == null || (args[1] != null && func.ArgCount != ((object[])args[1]).Length))
             {
                 Debug.Assert(false, "Undefined function."); // TODO: Error process.
                 return default(T);

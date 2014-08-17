@@ -50,8 +50,9 @@ namespace SBSEnvironment.Runtime
         private MSAst.Expression<Func<object[], object>> GetLambda()
         {
             var args = funcCode.LocalScope.GetVariableExpr("@{args}") as MSAst.ParameterExpression;
+            var lambda = funcCode.Reduce();
 
-            return MSAst.Expression.Lambda<Func<object[], object>>(funcCode.Reduce(), new[] { args });
+            return MSAst.Expression.Lambda<Func<object[], object>>(lambda, new[] { args });
         }
 
         public MSAst.Expression GetInvokeExpr(MSAst.ParameterExpression argsList)

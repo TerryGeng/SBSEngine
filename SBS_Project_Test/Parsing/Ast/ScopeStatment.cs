@@ -11,17 +11,23 @@ namespace SBSEnvironment.Parsing.Ast
     {
         public Scope LocalScope;
 
-        private IEnumerable<MSAst.Expression> statments;
+        private LinkedList<MSAst.Expression> statments;
 
-        public ScopeStatment(IEnumerable<MSAst.Expression> _statments, Scope scope)
+        public ScopeStatment(LinkedList<MSAst.Expression> _statments, Scope scope = null)
         {
             statments = _statments;
             LocalScope = scope;
         }
 
-        public ScopeStatment(IEnumerable<MSAst.Expression> _statments){
-            LocalScope = null;
-            statments = _statments;
+        public ScopeStatment(Scope scope = null)
+        {
+            statments = new LinkedList<MSAst.Expression>();
+            LocalScope = scope;
+        }
+
+        public void AddStatment(MSAst.Expression stmt)
+        {
+            statments.AddLast(stmt);
         }
 
         public override MSAst.Expression Reduce()
@@ -36,7 +42,7 @@ namespace SBSEnvironment.Parsing.Ast
                 list.AddLast(stmt.Reduce());
             }
 
-            return MSAst.Expression.Block(LocalScope.LocalVariables,list);
+            return MSAst.Expression.Block(typeof(object), LocalScope.LocalVariables, list);
         }
     }
 }

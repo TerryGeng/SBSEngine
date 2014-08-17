@@ -186,15 +186,18 @@ namespace SBSEnvironment.Parsing
 
             context.NextToken(LexiconType.LSLRoundBracket);
 
-            if ((arg = PackExpr(scope)) != null)
+            if (!context.PeekToken(LexiconType.LSRRoundBracket))
             {
-                argsArray = new List<MSAst.Expression>();
-                argsArray.Add(arg);
-
-                while (context.MaybeNext(LexiconType.LSComma))
+                if ((arg = PackExpr(scope)) != null)
                 {
-                    arg = PackExpr(scope);
+                    argsArray = new List<MSAst.Expression>();
                     argsArray.Add(arg);
+
+                    while (context.MaybeNext(LexiconType.LSComma))
+                    {
+                        arg = PackExpr(scope);
+                        argsArray.Add(arg);
+                    }
                 }
             }
 

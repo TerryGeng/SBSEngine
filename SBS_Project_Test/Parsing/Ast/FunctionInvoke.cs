@@ -45,7 +45,7 @@ namespace SBSEnvironment.Parsing.Ast
                     context.FunctionBinder,
                     typeof(object),
                     Expression.Constant(name),
-                    Expression.Constant(null)
+                    Expression.Constant(null, typeof(object[]))
                     );
 
 
