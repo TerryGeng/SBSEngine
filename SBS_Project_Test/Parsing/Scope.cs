@@ -16,6 +16,8 @@ namespace SBSEnvironment.Parsing
 
         private LabelTarget breakLabel;
         private LabelTarget continueLabel;
+        private LabelTarget returnLabel;
+        private MSAst.ParameterExpression returnVal;
 
         public LabelTarget BreakLabel
         {
@@ -41,6 +43,32 @@ namespace SBSEnvironment.Parsing
             }
 
             set { continueLabel = value; }
+        }
+
+        public LabelTarget ReturnLabel
+        {
+            get
+            {
+                if (returnLabel != null) return returnLabel;
+                else if (parentScope != null) return parentScope.ReturnLabel;
+
+                return null;
+            }
+
+            set { returnLabel = value; }
+        }
+
+        public MSAst.ParameterExpression ReturnValue
+        {
+            get
+            {
+                if (returnVal != null) return returnVal;
+                else if (parentScope != null) return parentScope.ReturnValue;
+
+                return null;
+            }
+
+            set { returnVal = value; }
         }
 
 

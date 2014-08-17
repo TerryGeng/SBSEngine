@@ -51,6 +51,10 @@ namespace SBSEnvironment.Parsing
                             context.Error.ThrowUnexpectedTokenException(token, "Unexpected function declaration.");
                         }
                         break;
+                    case LexiconType.LKReturn:
+                        if (!ifInFunc) context.Error.ThrowUnexpectedTokenException(token, "Unexpected 'return'.");
+                        list.AddLast(PackReturn(scope));
+                        break;
                     case LexiconType.LKEnd:
                     case LexiconType.LKElse:
                         return new ScopeStatment(list, scope);
@@ -174,6 +178,22 @@ namespace SBSEnvironment.Parsing
             if (label == null) context.Error.ThrowUnexpectedTokenException(token, "Not in a loop.");
 
             return MSAst.Expression.Continue(label);
+        }
+
+        private MSAst.Expression PackReturn(Scope scope)
+        {
+            var token = context.NextToken(LexiconType.LKReturn);
+            var label = scope.ReturnLabel;
+
+            if (context.PeekToken(LexiconType.LLineBreak))
+            {
+                return MSAst.Expression.Return(label);
+            }
+            else
+            {
+                var val = PackExpr(scope);
+                return MSAst.Expression.Return(label, MSAst.Expression.Convert(val, typeof(object)));
+            }
         }
     }
 }

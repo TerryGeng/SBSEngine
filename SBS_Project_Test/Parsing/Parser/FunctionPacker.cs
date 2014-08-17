@@ -24,6 +24,12 @@ namespace SBSEnvironment.Parsing
             ScopeStatment body;
             Scope scope = new Scope();
 
+            var returnLabel = MSAst.Expression.Label(typeof(object));
+            var returnVal = MSAst.Expression.Parameter(typeof(object), "@{returnVal}");
+
+            scope.ReturnValue = returnVal;
+            scope.ReturnLabel = returnLabel;
+
             context.NextToken(LexiconType.LKFunction);
             name = context.NextToken(LexiconType.LName, "Unexpected function name.").Value;
             args = PackArgsDecList(out argsArray);
@@ -37,6 +43,8 @@ namespace SBSEnvironment.Parsing
 
             context.NextToken(LexiconType.LKEnd);
             context.NextToken(LexiconType.LKFunction);
+
+            body.AddStatment(MSAst.Expression.Label(returnLabel, MSAst.Expression.Constant(null)));
 
             context.ExecutableUnit.AddFunction(new Function(name, args, body));
         }
@@ -60,6 +68,7 @@ namespace SBSEnvironment.Parsing
 
                 while (context.MaybeNext(LexiconType.LSComma))
                 {
+                    ++argsCount;
                     name = PackVariable();
                     nameList.Add(new SBSVariable(name, MakeArrayAccess(argsArray, argsCount - 1)));
                 }
